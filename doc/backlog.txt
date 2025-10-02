@@ -1,0 +1,32 @@
+Fonctionnalités :
+
+Accéder à la page d'accueil : Tristan Letts
+	Tâches :
+		-Création du serveur 
+		-Création de la page d'accueil
+
+S'inscrire : André Léo
+	Tâches :
+		-Création de la page d'inscription
+		-Gérer la persistance des données de l'utilisateur
+
+Se connecter : Evrard Baptiste
+	Tâches : 
+		-Création de la page de connexion
+		-Gérer la connexion
+
+Afficher les évenements sur la page principale : Abarca Elliot
+	Tâches : 
+		-Création de la page principale
+		-Création d'un évenement
+		-Afficher une liste des événements dans l'ordre
+
+Se déconnecter : Cornette Rohan
+	Tâches: 
+		-Gérer la déconnexion	
+
+
+
+	
+	
+	

@@ -1,1 +1,3 @@
 *.org
+node_modules/
+.env

@@ -10,6 +10,7 @@ const PORT = 6969;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../client')));
+app.use(express.static(path.join(__dirname, '../public')));
 
 app.get('/hello', (_req, res) => {
     res.json("Hello from json");
@@ -17,6 +18,10 @@ app.get('/hello', (_req, res) => {
 
 app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, "../public/index.html"));
+});
+
+app.get('/login', (_req, res) => {
+    res.sendFile(path.join(__dirname, "../public/login.html"));
 });
 
 app.listen(PORT, (_err) => {

@@ -1,0 +1,71 @@
+/* Le body occupe toute la hauteur de la fenêtre */
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(0deg, #373038, #360071);
+}
+
+#loginConteneur {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#loginConteneur form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #948794;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    width: 300px;
+}
+
+#loginConteneur h1 {
+    color: #948794;
+    margin-bottom: 1rem;
+}
+
+#loginConteneur input {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#buttons {
+    display: flex;
+    color: #cccccc;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+/* Boutons */
+#connexionButton,
+#inscriptionButton {
+    margin-top: 5px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background: #FFc341;
+    color: white;
+    font-size: 1rem;
+}
+
+#inscriptionButton {
+    background: #FB702D;
+}
+
+#connexionButton:hover {
+    background: #b97d00;
+}
+
+#inscriptionButton:hover {
+    background: #8e3e18;
+}

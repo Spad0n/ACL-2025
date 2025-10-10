@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/stylesheet1.css">
+    <script src="js/switch.js"></script>
+</head>
+<body>
+
+<div id="conteneur" class="actif">
+    <h1>Bienvenue chez le<br>CROQUEMITAINE</h1>
+
+    <form method="post" class="connexion" action="/login">
+        <label for="utilisateur">Adresse mail</label>
+        <input type="text" id="utilisateur" name="utilisateur" required><br><br>
+
+        <label for="mdp">Mot de passe</label>
+        <input type="password" id="mdp" name="mdp" required><br><br>
+        <input id="connexionBouton" type="submit" value="Se connecter">
+    </form>
+
+    <div id="boutons">
+        <p>ou</p>
+        <button id="inscriptionBouton" onclick="handleSwitch()">S'inscrire</button>
+    </div>
+</div>
+
+<div id="conteneur1">
+    <h1>Bienvenue chez le<br>CROQUEMITAINE</h1>
+
+    <form method="post" class="connexion" action="/login">
+        <label for="utilisateur">Adresse mail</label>
+        <input type="text" id="utilisateur" name="utilisateur" required><br><br>
+
+        <label for="mdp">Mot de passe</label>
+        <input type="password" id="mdp" name="mdp" required><br><br>
+        <label for="mdpRepeat">Confirmez le mot de passe</label>
+        <input type="password" id="mdpRepeat" name="mdpRepeat" required><br><br>
+        <input id="connexionBouton" type="submit" value="S'inscrire">
+    </form>
+
+    <div id="boutons">
+        <p>ou</p>
+        <button id="inscriptionBouton" onclick="handleSwitch()">Se connecter</button>
+    </div>
+</div>
+
+</body>
+</html>

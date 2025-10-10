@@ -5,16 +5,20 @@ html, body {
     background: linear-gradient(0deg, #373038, #360071);
 }
 
-#connexionConteneur {
-    display: flex;
+#conteneur {
+    display: none;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
 }
 
+#conteneur.actif{
+    display: flex;
+}
 
-#connexionConteneur form {
+
+#conteneur form {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -25,18 +29,64 @@ html, body {
     width: 300px;
 }
 
-#connexionConteneur h1 {
+#conteneur h1 {
     color: #948794;
     margin-bottom: 1rem;
+    text-align: center;
 }
 
-#connexionConteneur input {
+#conteneur input {
     padding: 0.5rem;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
 
-#connexionConteneur #boutons {
+#conteneur #boutons {
+    display: flex;
+    color: #cccccc;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+#conteneur1 {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#conteneur1.actif{
+    display: flex;
+}
+
+
+#conteneur1 form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #948794;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    width: 300px;
+}
+
+#conteneur1 h1 {
+    color: #948794;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+#conteneur1 input {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#conteneur1 #boutons {
     display: flex;
     color: #cccccc;
     flex-direction: column;
@@ -46,7 +96,8 @@ html, body {
 }
 
 #connexionBouton, #inscriptionBouton {
-    margin-top: 5px;
+
+    margin: 5px;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -55,6 +106,14 @@ html, body {
     color: white;
     font-size: 1rem;
 }
+
+
+
+#connexionBouton {
+    margin-left: auto;
+    margin-right: auto;
+}
+
 
 #inscriptionBouton {
     background: #FB702D;

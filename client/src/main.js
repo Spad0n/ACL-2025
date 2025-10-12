@@ -1,89 +1,225 @@
-import { Application, Geometry, Mesh, Shader } from "pixi.js";
+import { eventListenersModule, init, h } from "snabbdom";
+
+const patch = init([
+    eventListenersModule
+])
+
+const STORAGE_KEY = "app";
 
 /**
- * @param {string} name 
- * @returns {HTMLElement}
+ * @typedef {import("snabbdom").VNode} VNode
  */
-function getElementId(name) {
-    const elem = document.getElementById(name);
-    if (elem === null) {
-	throw new Error("");
+
+/**
+ * @typedef {object} Event
+ * @property {string} id
+ * @property {string} title
+ * @property {string} description
+ * @property {string} startDate
+ * @property {string} endDate
+ */
+
+/**
+ * @typedef {object} FormState
+ * @property {string} title
+ * @property {string} description
+ * @property {string} startDate
+ * @property {string} endDate
+ */
+
+/**
+ * @typedef {object} Model
+ * @property {'list' | 'form'} route
+ * @property {Event[]} events
+ * @property {FormState} form
+ */
+
+/**
+ * @typedef {'NAVIGATE_TO_FORM' | 'CREATE_EVENT' | 'CANCEL_CREATION' | 'UPDATE_FORM_FIELD' | 'DELETE_EVENT'} Type
+ */
+
+/**
+ * @returns {Model}
+ */
+function initModel() {
+    return {
+	route: 'list',
+	events: [],
+	form: {
+	    title: "",
+	    description: "",
+	    startDate: "",
+	    endDate: "",
+	}
     }
-    return elem;
 }
 
 /**
- * @param {string} url 
- * @returns {Promise<string>}
+ * @returns {Model}
  */
-async function loadShader(url) {
-    const response = await fetch(url);
-    return await response.text();
+function loadModel() {
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (savedState) {
+	try {
+	    return JSON.parse(savedState)
+	} catch (e) {
+	    console.error("Impossible de lire l'état sauvegardé, on repart de zéro.", e);
+	    return initModel();
+	}
+    }
+    return initModel();
 }
+
+/**
+ * @param {{type: Type, payload?: any}} msg 
+ * @param {Model} model 
+ * @returns {Model}
+ */
+function update(msg, model) {
+    switch (msg.type) {
+    case 'NAVIGATE_TO_FORM':
+	return { ...model, route: 'form' };
+    case 'UPDATE_FORM_FIELD':
+	return {
+	    ...model,
+	    form: {
+		...model.form,
+		[msg.payload.field]: msg.payload.value
+	    }
+	};
+    case 'CREATE_EVENT':
+	if (!model.form.title) {
+	    return model;
+	}
+	const newEvent = {
+	    id: Date.now().toString(),
+	    ...model.form
+	};
+
+	return {
+	    ...model,
+	    route: 'list',
+	    events: [...model.events, newEvent],
+	    form: initModel().form
+	};
+    case 'CANCEL_CREATION':
+	return {
+	    ...model,
+	    route: 'list',
+	    form: initModel().form
+	};
+    case 'DELETE_EVENT':
+	return {
+	    ...model,
+	    route: 'list',
+	    events: [...model.events.filter((value, _index, _arr) => value.id !== msg.payload)]
+	}
+    default:
+	return model;
+    }
+}
+
+/**
+ * @param {Model} model
+ * @param {(msg: {type: Type, payload?: any}) => void} dispatch
+ * @returns {VNode}
+ */
+function view(model, dispatch) {
+    switch (model.route) {
+    case 'form':
+	return viewForm(model, dispatch);
+    case 'list':
+    default:
+	return viewList(model, dispatch);
+    }
+}
+
+/**
+ * @param {Model} model
+ * @param {(msg: {type: Type, payload?: any}) => void} dispatch
+ * @returns {VNode}
+ */
+function viewList(model, dispatch) {
+    return h('div.container', [
+	h('h1', 'Mes evenements'),
+	h('button', { on: { click: () => dispatch({ type: 'NAVIGATE_TO_FORM' }) } }, 'Créer un evenements'),
+	model.events.length === 0
+	    ? h('p', 'Aucun événement pour le moment.')
+	    : h('ul', model.events.map(event =>
+		    //h('li', `${event.title} ${event.description} (du ${event.startDate} au  ${event.endDate})`)
+		h('li', [
+		    `${event.title} ${event.description} (du ${event.startDate} au  ${event.endDate})`,
+		    h('button', { props: { type: 'button' }, on: {click: () => dispatch({type: 'DELETE_EVENT', payload: event.id}) }}, "Delete")
+		])
+	    ))
+    ]);
+}
+
+/**
+ * @param {Model} model
+ * @param {(msg: {type: Type, payload?: any}) => void} dispatch
+ * @returns {VNode}
+ */
+function viewForm(model, dispatch) {
+    /**
+     * @param {string} label 
+     * @param {string} type 
+     * @param {keyof FormState} field 
+     * @param {boolean} required 
+     * @returns {VNode}
+     */
+    function formInput(label, type, field, required) {
+    	return h('div.form-group', [
+    	    h('label', { props: { for: field } }, label),
+    	    h('input', {
+    		props: { id: field, type, required, value: model.form[field] },
+    		on: { input: (e) => {
+		    const target = /** @type {HTMLInputElement} */ (e.target);
+		    dispatch({ type: 'UPDATE_FORM_FIELD', payload: { field, value: target.value}})
+		}}
+    	    }),
+    	]);
+    }
+    //const formInput = (label, type, field, required) => 
+
+    return h('div.container', [
+	h('h1', 'Crée un nouvel événement'),
+	h('form', { on: { submit: (e) => { e.preventDefault(); dispatch({type: 'CREATE_EVENT' }); }}}, [
+	    formInput("Titre de l'evenement", "text", "title", true),
+	    formInput("Description (optionnel)", "text", "description", false),
+	    formInput("Date de debut", "date", "startDate", true),
+	    formInput("Date de fin", "date", "endDate", true),
+	    h('div.buttons', [
+		h('button', { props: { type: 'submit' } }, "Sauvegarder"),
+		h('button', { props: { type: 'button' }, on: { click: () => dispatch({type: 'CANCEL_CREATION' }) } }, "Annuler"),
+	    ])
+	])
+    ]);
+}
+
 
 (async () => {
-    const canvas = /** @type {HTMLCanvasElement} */ (getElementId("calendar"));
+    const container = /** @type {HTMLElement} */ (document.getElementById("app"));
 
-    const app = new Application();
-    await app.init({
-	canvas: canvas,
-	width: canvas.width,
-	height: canvas.height,
-	backgroundColor: 0x334C4C,
-	preference: "webgl",
-	autoDensity: true,
-    });
+    let model = loadModel();
+    let vnode = view(model, dispatch);
 
-    const ratio = window.devicePixelRatio;
+    patch(container, vnode);
 
-    const quadGeometry = new Geometry();
-    quadGeometry.addAttribute('aPosition', [
-	0, 0,
-	app.screen.width, 0,
-	app.screen.width, app.screen.height,
-	0, app.screen.height,
-    ]);
-    quadGeometry.addAttribute('aUv', [
-	0, 0, // UV pour le coin haut gauche
-	1, 0, // UV pour le coin haut droit
-	1, 1, // UV pour le coin bas droit
-	0, 1, // UV pour le coin bas gauche
-    ]);
-    quadGeometry.addIndex([0, 1, 2, 0, 2, 3]);
+    /**
+     * @param {{type: Type, payload?: any}} msg 
+     */
+    function dispatch(msg) {
+	console.log('Action: ', msg);
 
-    const vert_shader = await loadShader("/shaders/shader.vert");
-    const frag_shader = await loadShader("/shaders/shader.frag");
+	model = update(msg, model);
 
-    const quadShader = Shader.from({
-	gl: {
-	    vertex: vert_shader,
-	    fragment: frag_shader,
-	},
-	resources: {
-	    shaderUniforms: {
-		iResolution: {value: [app.screen.width * ratio, app.screen.height * ratio, 1], type: 'vec3<f32>'},
-		iTime: {value: 0, type: 'f32'},
-		iTimeDelta: {value: 0, type: 'f32'},
-		iFrame: {value: 0, type: 'i32'},
-		iMouse: {value: [0, 0, 0, 0], type: 'vec4<f32>'},
-		iDate: {value: [0, 0, 0, 0], type: 'vec4<f32>'},
-	    }
-	}
-    });
+	localStorage.setItem(STORAGE_KEY, JSON.stringify(model));
 
-    const quadMesh = new Mesh({
-	geometry: quadGeometry,
-	shader: quadShader
-    });
+	const newVNode = view(model, dispatch);
 
-    app.stage.addChild(quadMesh);
+	patch(vnode, newVNode);
 
-    app.ticker.add((ticker) => {
-	const uniforms = quadShader.resources.shaderUniforms.uniforms;
-
-	uniforms.iTime += ticker.deltaMS / 1000.0;
-	uniforms.iTimeDelta = ticker.deltaMS / 1000.0;
-	uniforms.iFrame += 1;
-	uniforms.iFrameRate = ticker.FPS;
-    });
+	vnode = newVNode;
+    }
 })();

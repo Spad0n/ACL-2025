@@ -9,7 +9,7 @@ const app = express();
 const PORT = 6969;
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../client')));
+app.use(express.static(path.join(__dirname, '..', 'dist')));
 
 app.get('/hello', (_req, res) => {
     res.json("Hello from json");

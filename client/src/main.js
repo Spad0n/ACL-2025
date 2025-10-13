@@ -1,6 +1,7 @@
-import { eventListenersModule, init, h } from "snabbdom";
+import { eventListenersModule, init, h, classModule } from "snabbdom";
 
 const patch = init([
+    classModule,
     eventListenersModule
 ])
 
@@ -140,9 +141,9 @@ function view(model, dispatch) {
  * @returns {VNode}
  */
 function viewList(model, dispatch) {
-    return h('div.container', [
+    return h('div#conteneur', [
 	h('h1', 'Mes evenements'),
-	h('button', { on: { click: () => dispatch({ type: 'NAVIGATE_TO_FORM' }) } }, 'Créer un evenements'),
+	h('button#inscriptionBouton', { on: { click: () => dispatch({ type: 'NAVIGATE_TO_FORM' }) } }, 'Créer un evenements'),
 	model.events.length === 0
 	    ? h('p', 'Aucun événement pour le moment.')
 	    : h('ul', model.events.map(event =>
@@ -182,7 +183,7 @@ function viewForm(model, dispatch) {
     }
     //const formInput = (label, type, field, required) => 
 
-    return h('div.container', [
+    return h('div#conteneur', [
 	h('h1', 'Crée un nouvel événement'),
 	h('form', { on: { submit: (e) => { e.preventDefault(); dispatch({type: 'CREATE_EVENT' }); }}}, [
 	    formInput("Titre de l'evenement", "text", "title", true),
@@ -190,8 +191,8 @@ function viewForm(model, dispatch) {
 	    formInput("Date de debut", "date", "startDate", true),
 	    formInput("Date de fin", "date", "endDate", true),
 	    h('div.buttons', [
-		h('button', { props: { type: 'submit' } }, "Sauvegarder"),
-		h('button', { props: { type: 'button' }, on: { click: () => dispatch({type: 'CANCEL_CREATION' }) } }, "Annuler"),
+		h('button#inscriptionBouton', { props: { type: 'submit' } }, "Sauvegarder"),
+		h('button#connexionBouton', { props: { type: 'button' }, on: { click: () => dispatch({type: 'CANCEL_CREATION' }) } }, "Annuler"),
 	    ])
 	])
     ]);

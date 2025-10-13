@@ -22,12 +22,8 @@ app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
-app.get('/logintest', (req, res) => {
+app.get('/login', (req, res) => {
     res.render('login');
-});
-
-app.get('/login', (_req, res) => {
-    res.sendFile(path.join(__dirname, "../public/login.html"));
 });
 
 app.listen(PORT, (_err) => {

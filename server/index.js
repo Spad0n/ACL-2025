@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import * as routes from './route.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,6 +27,10 @@ app.get('/', (_req, res) => {
 app.get('/login', (req, res) => {
     res.render('login');
 });
+
+app.get("/account/new", routes.getAccountCreationPage);
+app.post("/account/new", routes.createAccount);
+
 app.post('/login', (req, res) => {
     const { utilisateur, mdp } = req.body;
     console.log(mdp);

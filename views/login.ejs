@@ -23,29 +23,23 @@
         });
 
         async function validateAccountCreation() {
-             console.log("Acc");
-
-            const mdp       = document.getElementById("mdp").value ;
-
-            const mdpRepeat = document.getElementById("mdpRepeat").value ;
-            const email     = document.getElementById("utilisateur").value ;
-            
-            console.log(email);
-            console.log(mdp);
-            console.log(mdpRepeat);
-
-
-            const h1 = mdp;
-            const h2 = mdpRepeat;
-
-            if(h1 == h2) {
-                console.log("Account created");
-                const accountForm = document.forms.accountCreation ;
-
-                const utilisateur = { mail: email, motDePasse: mdp } ; 
-                const utilisateurToJson = JSON.stringify(utilisateur);
-                localStorage.setItem(utilisateur.mail, utilisateurToJson) ;
+            const accountForm = document.forms.accountCreation ;
+            const passwordMessage = document.getElementById("passwordMessage");
+            const passwordRepeated = document.getElementById("passwordMessage");
+            console.log("mdp",passwordMessage.textContent);
+            console.log("mdp repeat",passwordRepeated.textContent);
+            const passwordRepeatedMessage = document.getElementById("passwordRepeatedMessage");
+            passwordMessage.textContent = "";
+            passwordRepeatedMessage.textContent = "";
+            if (accountForm.password.value.length < 8) {
+                passwordMessage.textContent = "Le mot de passe doit contenir au moins 8caractères.";
+            } else if (accountForm.password.value != passwordRepeated.value) {
+                passwordRepeatedMessage.textContent = "Les mots de passe ne correspondent pas.";
+            } else {
+                const rawValue = accountForm.password.value;
+                accountForm.password.value = await hashSHA256(rawValue);
                 accountForm.submit();
+                accountForm.password.value = rawValue;
             }
         }
 
@@ -70,21 +64,22 @@
 </div>
 
 <div id="conteneur1">
-    <h1>Bienvenue chez le<br>CROQUEMITAINE</h1>
-
-    <form id="testtest" name="accountCreation" method="post" class="connexion" action="/account/new">
-
-        <label for="utilisateur">Adresse mail</label>
-        <input type="email" id="utilisateur" name="utilisateur" required><br><br>
-
-        <label for="mdp">Mot de passe</label>
-        <input type="password" id="mdp" name="mdp" required><br><br>
-
-        <label for="mdpRepeat">Confirmez le mot de passe</label>
-        <input type="password" id="mdpRepeat" name="mdpRepeat" required><br><br>
-
-        <input id="connexionBouton" type="submit" value="S'inscrire">
-    </form>
+   <form name="accountCreation" action="/account/new" method="POST">
+    <table>
+        <tbody>
+            <tr><td><label for="username">Entrez le nom d'utilisateur</label></td>
+            <td><input name="username" value="<%= locals.username ?? '' %>" /></td>
+            <td><label><%= locals.message ?? '' %></label></td></tr>
+            <tr><td><label for="password">Entrez le mot de passe</label></td>
+            <td><input type="password" name="password" value="" /></td>
+            <td><label id="passwordMessage"></label></td></tr>
+            <tr><td><label for="passwordRepeated">Confirmez le mot de passe</label></td>
+            <td><input type="password" id="passwordRepeated" value="" /></td>
+            <td><label id="passwordRepeatedMessage"></label></td></tr>
+        </tbody>
+    </table>
+    <div><input type="submit" /></div>
+   </form> 
 
     <div id="boutons">
         <p>ou</p>

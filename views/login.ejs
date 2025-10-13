@@ -6,23 +6,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/stylesheet1.css">
     <script src="js/switch.js"></script>
+
 </head>
 <body>
+    
+    <script>
+
+        // on attend que le DOM soit completement charger, et ensuite on place l'ecouteur.
+        document.addEventListener("DOMContentLoaded", function() {
+            const accountForm = document.forms.accountCreation ;
+            console.log(accountForm); // This should log the form object
+            accountForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                validateAccountCreation();
+            });
+        });
+
+        async function validateAccountCreation() {
+             console.log("Acc");
+
+            const mdp       = document.getElementById("mdp").value ;
+
+            const mdpRepeat = document.getElementById("mdpRepeat").value ;
+            const email     = document.getElementById("utilisateur").value ;
+            
+            console.log(email);
+            console.log(mdp);
+            console.log(mdpRepeat);
+
+
+            const h1 = mdp;
+            const h2 = mdpRepeat;
+
+            if(h1 == h2) {
+                console.log("Account created");
+                const accountForm = document.forms.accountCreation ;
+
+                const utilisateur = { mail: email, motDePasse: mdp } ; 
+                const utilisateurToJson = JSON.stringify(utilisateur);
+                localStorage.setItem(utilisateur.mail, utilisateurToJson) ;
+                accountForm.submit();
+            }
+        }
+
+    </script>
 
 <div id="conteneur" class="actif">
     <h1>Bienvenue chez le<br>CROQUEMITAINE</h1>
 
-    <form method="post" class="connexion" action="/login">
+    <form name="formLogIn" method="post" class="connexion" action="/login">
         <label for="utilisateur">Adresse mail</label>
-        <input type="text" id="utilisateur" name="utilisateur" required><br><br>
+        <input type="text" id="utilisateurLogin" name="utilisateur" required><br><br>
 
         <label for="mdp">Mot de passe</label>
-        <input type="password" id="mdp" name="mdp" required><br><br>
+        <input type="password" id="mdpLogin" name="mdp" required><br><br>
         <input id="connexionBouton" type="submit" value="Se connecter">
     </form>
 
     <div id="boutons">
-        <p>ou</p>
+        <p>ou</p> 
         <button id="inscriptionBouton" onclick="handleSwitch()">S'inscrire</button>
     </div>
 </div>
@@ -30,14 +72,17 @@
 <div id="conteneur1">
     <h1>Bienvenue chez le<br>CROQUEMITAINE</h1>
 
-    <form method="post" class="connexion" action="/login">
+    <form id="testtest" name="accountCreation" method="post" class="connexion" action="/account/new">
+
         <label for="utilisateur">Adresse mail</label>
-        <input type="text" id="utilisateur" name="utilisateur" required><br><br>
+        <input type="email" id="utilisateur" name="utilisateur" required><br><br>
 
         <label for="mdp">Mot de passe</label>
         <input type="password" id="mdp" name="mdp" required><br><br>
+
         <label for="mdpRepeat">Confirmez le mot de passe</label>
         <input type="password" id="mdpRepeat" name="mdpRepeat" required><br><br>
+
         <input id="connexionBouton" type="submit" value="S'inscrire">
     </form>
 

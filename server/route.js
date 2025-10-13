@@ -1,4 +1,5 @@
 import { createHash } from "crypto"; 
+import { createJWT } from "./outils/jwt.js";
 
 const forum = createDefaultForum();
 
@@ -44,8 +45,32 @@ export function createAccount(req, res) {
     };
     
     forum.users.push(user);
-
+    const token = createJWT(user);
+    res.cookie("accessToken", token, { httpOnly: true });
     res.redirect("/login");
+  }
+}
+
+
+export function authenticate(req, res, next) {
+  try {
+    const token = req.cookies.accessToken;
+    const user = jwt.verify(token, process.env.SECRET);
+    res.locals.user = user;
+  } catch {}
+  next();
+}
+
+
+export function login(req, res) {
+  const { username, password } = req.body;
+  const user = forum.users.find((user) => user.username === username);
+  if (user && user.password === createHash("sha256").update(password).digest("hex")) {
+    const token = createJWT(user);
+    res.cookie("accessToken", token, { httpOnly: true });
+    res.redirect("/");
+  } else {
+    res.render("login", { message: "Nom d'utilisateur/mot de passe invalide." });
   }
 }
 

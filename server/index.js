@@ -28,8 +28,10 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
-app.get("/account/new", routes.getAccountCreationPage);
+app.get("/register", routes.getAccountCreationPage);
+
 app.post("/account/new", routes.createAccount);
+
 
 app.post('/login', (req, res) => {
     const { utilisateur, mdp } = req.body;

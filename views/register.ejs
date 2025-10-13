@@ -14,6 +14,7 @@
         // on attend que le DOM soit completement load, et ensuite on place l'ecouteur.
         document.addEventListener("DOMContentLoaded", function() {
             const accountForm = document.forms.accountCreation ;
+            console.log(accountForm); // This should log the form object
             accountForm.addEventListener("submit", (e) => {
                 e.preventDefault();
                 validateAccountCreation();
@@ -53,28 +54,23 @@
 
     </script>
 
-<div id="conteneur" class="actif">
-    <h1>Bienvenue chez le<br>CROQUEMITAINE</h1>
-
-    <form name="formLogIn" method="post" class="connexion" action="/login">
-        <label for="utilisateur">Adresse mail</label>
-        <input type="text" id="utilisateurLogin" name="utilisateur" required><br><br>
-
-        <label for="mdp">Mot de passe</label>
-        <input type="password" id="mdpLogin" name="mdp" required><br><br>
-        <input id="connexionBouton" type="submit" value="Se connecter">
-    </form>
-
-    <div id="boutons">
-        <p>ou</p> 
-        <button id="inscriptionBouton" onclick="window.location.href='/register';">S'inscrire</button>
-    </div>
-    </div>
-
-    <div id="boutons">
-        <p>ou</p>
-        <button id="inscriptionBouton" onclick="">Se connecter</button>
-    </div>
+<div id="conteneur1" class="actif">
+   <form name="accountCreation" action="/account/new" method="POST">
+    <table>
+        <tbody>
+            <tr><td><label for="username">Entrez le nom d'utilisateur</label></td>
+            <td><input name="username" value="<%= locals.username ?? '' %>" /></td>
+            <td><label><%= locals.message ?? '' %></label></td></tr>
+            <tr><td><label for="password">Entrez le mot de passe</label></td>
+            <td><input type="password" name="password" value="" /></td>
+            <td><label id="passwordMessage"></label></td></tr>
+            <tr><td><label for="passwordRepeated">Confirmez le mot de passe</label></td>
+            <td><input type="password" id="passwordRepeated" value="" /></td>
+            <td><label id="passwordRepeatedMessage"></label></td></tr>
+        </tbody>
+    </table>
+    <div><input type="submit" /></div>
+   </form> 
 </div>
 
 </body>

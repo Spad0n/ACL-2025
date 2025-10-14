@@ -1,0 +1,50 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #360071;
+}
+
+#conteneur {
+    color: white;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#connexionBouton, #inscriptionBouton {
+    margin: 5px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background: #FFc341;
+    color: white;
+    font-size: 1rem;
+}
+
+#inscriptionBouton {
+    background: #FB702D;
+}
+
+#inscriptionBouton:hover {
+    background: #8e3e18;
+}
+
+input {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 8px;
+}
+
+.form-group label {
+    color: #cccccc;
+    font-weight: bold;
+}

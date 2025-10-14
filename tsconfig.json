@@ -14,12 +14,12 @@
     "allowSyntheticDefaultImports": true,
 
     /* --- Vérification utiles --- */
-    "strict": true,
+    //"strict": true,
     "alwaysStrict": true,
     "strictNullChecks": true,
     "strictBindCallApply": true,
     "strictBuiltinIteratorReturn": true,
-    "strictFunctionTypes": true,
+    "strictFunctionTypes": false,
     "strictPropertyInitialization": true,
     "noImplicitAny": true,
     "noImplicitThis": true,

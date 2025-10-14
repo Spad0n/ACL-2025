@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/stylesheet1.css">
+    <script src="js/switch.js"></script>
+
+</head>
+<body>
+    <script>
+
+        // on attend que le DOM soit completement load, et ensuite on place l'ecouteur.
+        document.addEventListener("DOMContentLoaded", function() {
+            const accountForm = document.forms.accountCreation ;
+            console.log(accountForm); // This should log the form object
+            accountForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                validateAccountCreation();
+            });
+        });
+
+        async function validateAccountCreation() {
+
+            const accountForm       = document.forms.accountCreation ;
+            const passwordMessage   = document.getElementById("passwordMessage");
+            const passwordRepeated  = document.getElementById("passwordRepeated");
+
+            const passwordRepeatedMessage = document.getElementById("passwordRepeatedMessage");
+            
+            passwordMessage.textContent             = "";
+            passwordRepeatedMessage.textContent     = "";
+
+
+            if (accountForm.password.value.length < 8) {
+
+                passwordMessage.textContent = "Le mot de passe doit contenir au moins 8 caractères.";
+            } 
+            
+            else if (accountForm.password.value != passwordRepeated.value) {
+
+                passwordRepeatedMessage.textContent = "Les mots de passe ne correspondent pas.";
+            } 
+            
+            else {
+
+                const rawValue = accountForm.password.value;
+                //accountForm.password.value = await hashSHA256(rawValue);
+                accountForm.submit();
+                accountForm.password.value = rawValue;
+            }
+        }
+
+    </script>
+
+<div id="conteneur1" class="actif">
+   <form name="accountCreation" action="/account/new" method="POST">
+    <table>
+        <tbody>
+            <tr><td><label for="username">Entrez le nom d'utilisateur</label></td>
+            <td><input name="username" value="<%= locals.username ?? '' %>" /></td>
+            <td><label><%= locals.message ?? '' %></label></td></tr>
+            <tr><td><label for="password">Entrez le mot de passe</label></td>
+            <td><input type="password" name="password" value="" /></td>
+            <td><label id="passwordMessage"></label></td></tr>
+            <tr><td><label for="passwordRepeated">Confirmez le mot de passe</label></td>
+            <td><input type="password" id="passwordRepeated" value="" /></td>
+            <td><label id="passwordRepeatedMessage"></label></td></tr>
+        </tbody>
+    </table>
+    <div><input type="submit" /></div>
+   </form> 
+</div>
+
+</body>
+</html>

@@ -20,11 +20,12 @@
   },
   "homepage": "https://github.com/Spad0n/ACL-2025#readme",
   "dependencies": {
-    "express": "^5.1.0"
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "@types/express": "^5.0.3",
-    "typescript": "^5.9.3",
-    "typescript-language-server": "^5.0.0"
+    "ejs": "^3.1.10"
   }
 }

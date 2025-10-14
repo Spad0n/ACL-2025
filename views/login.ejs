@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/stylesheet1.css">
+    <script src="js/switch.js"></script>
+
+</head>
+<body>
+
+<div id="conteneur" class="actif">
+    <h1>Bienvenue chez le<br>CROQUEMITAINE</h1>
+
+    <form name="formLogIn" method="post" class="connexion" action="/logUser">
+        <label for="username">Adresse mail</label>
+        <input type="text" id="username" name="username" required><br><br>
+        <label><%= locals.message ?? '' %></label>
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" name="password" required><br><br>
+        <input id="connexionBouton" type="submit" value="Se connecter">
+    </form>
+
+    <div id="boutons">
+        <p>ou</p> 
+        <button id="inscriptionBouton" onclick="window.location.href='/register';">S'inscrire</button>
+    </div>
+    </div>
+</div>
+
+</body>
+</html>
+

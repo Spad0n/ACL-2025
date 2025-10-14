@@ -22,6 +22,9 @@ app.use(express.json());
 
 app.use(express.static(path.join(__dirname, '../client')));
 app.use(express.static(path.join(__dirname, '../public')));
+
+app.use('/favicon.ico', express.static('../public/favicon.ico'));
+
 app.set("views", fileURLToPath(new URL("../views", import.meta.url)));
 app.set("view engine", "ejs");
 

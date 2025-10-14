@@ -25,7 +25,7 @@ export function getAccountCreationPage(req, res) {
 
 
 export function createAccount(req, res) {
-
+  console.log("createAccount");
   const { username, password } = req.body;
 
   const user = forum.users.find((user) => user.username === username);
@@ -45,6 +45,7 @@ export function createAccount(req, res) {
     };
     
     forum.users.push(user);
+    console.log(forum.users);
     const token = createJWT(user);
     res.cookie("accessToken", token, { httpOnly: true });
     res.redirect("/login");
@@ -65,12 +66,12 @@ export function authenticate(req, res, next) {
 export function login(req, res) {
   const { username, password } = req.body;
   const user = forum.users.find((user) => user.username === username);
-  if (user && user.password === createHash("sha256").update(password).digest("hex")) {
+  if (user && user.password == createHash("sha256").update(password).digest("hex")) {
     const token = createJWT(user);
     res.cookie("accessToken", token, { httpOnly: true });
     res.redirect("/");
   } else {
-    res.render("login", { message: "Nom d'utilisateur/mot de passe invalide." });
+    res.redirect("/login?message=Nom+d'utilisateur/mot+de+passe+invalide.") ;
   }
 }
 

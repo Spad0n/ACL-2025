@@ -16,12 +16,14 @@ const PORT = process.env.PORT || 6969;
 
 app.use(cookieParser());
 app.use(routes.authenticate);
+
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
 app.use(express.static(path.join(__dirname, '../client')));
 app.use(express.static(path.join(__dirname, '../public')));
 app.set("views", fileURLToPath(new URL("../views", import.meta.url)));
 app.set("view engine", "ejs");
-app.use(express.urlencoded({ extended: false }));
 
 app.get('/hello', (_req, res) => {
     res.json("Hello from json");
@@ -32,22 +34,17 @@ app.get('/', (_req, res) => {
 });
 
 app.get('/login', (req, res) => {
-    res.render('login');
+    const message = req.query.message;
+    res.render('login', { message });
 });
 
 app.get("/register", routes.getAccountCreationPage);
 
 app.post("/account/new", routes.createAccount);
 
-app.get("/logUser", routes.login);
 
 
-app.post('/login', (req, res) => {
-    const { utilisateur, mdp } = req.body;
-    console.log(mdp);
-    console.log(utilisateur);
-    res.redirect('/');
-})
+app.post("/logUser", routes.login);
 
 app.listen(PORT, (_err) => {
     console.log(`Serveur lancé sur https://localhost:${PORT}`);

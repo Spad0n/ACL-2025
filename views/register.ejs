@@ -46,7 +46,7 @@
             else {
 
                 const rawValue = accountForm.password.value;
-                accountForm.password.value = await hashSHA256(rawValue);
+                //accountForm.password.value = await hashSHA256(rawValue);
                 accountForm.submit();
                 accountForm.password.value = rawValue;
             }

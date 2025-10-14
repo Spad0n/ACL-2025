@@ -9,59 +9,16 @@
 
 </head>
 <body>
-    <script>
-
-        // on attend que le DOM soit completement load, et ensuite on place l'ecouteur.
-        document.addEventListener("DOMContentLoaded", function() {
-            const accountForm = document.forms.accountCreation ;
-            accountForm.addEventListener("submit", (e) => {
-                e.preventDefault();
-                validateAccountCreation();
-            });
-        });
-
-        async function validateAccountCreation() {
-
-            const accountForm       = document.forms.accountCreation ;
-            const passwordMessage   = document.getElementById("passwordMessage");
-            const passwordRepeated  = document.getElementById("passwordRepeated");
-
-            const passwordRepeatedMessage = document.getElementById("passwordRepeatedMessage");
-            
-            passwordMessage.textContent             = "";
-            passwordRepeatedMessage.textContent     = "";
-
-
-            if (accountForm.password.value.length < 8) {
-
-                passwordMessage.textContent = "Le mot de passe doit contenir au moins 8 caractères.";
-            } 
-            
-            else if (accountForm.password.value != passwordRepeated.value) {
-
-                passwordRepeatedMessage.textContent = "Les mots de passe ne correspondent pas.";
-            } 
-            
-            else {
-
-                const rawValue = accountForm.password.value;
-                accountForm.password.value = await hashSHA256(rawValue);
-                accountForm.submit();
-                accountForm.password.value = rawValue;
-            }
-        }
-
-    </script>
 
 <div id="conteneur" class="actif">
     <h1>Bienvenue chez le<br>CROQUEMITAINE</h1>
 
-    <form name="formLogIn" method="post" class="connexion" action="/login">
-        <label for="utilisateur">Adresse mail</label>
-        <input type="text" id="utilisateurLogin" name="utilisateur" required><br><br>
-
-        <label for="mdp">Mot de passe</label>
-        <input type="password" id="mdpLogin" name="mdp" required><br><br>
+    <form name="formLogIn" method="post" class="connexion" action="/logUser">
+        <label for="username">Adresse mail</label>
+        <input type="text" id="username" name="username" required><br><br>
+        <label><%= locals.message ?? '' %></label>
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" name="password" required><br><br>
         <input id="connexionBouton" type="submit" value="Se connecter">
     </form>
 
@@ -70,12 +27,8 @@
         <button id="inscriptionBouton" onclick="window.location.href='/register';">S'inscrire</button>
     </div>
     </div>
-
-    <div id="boutons">
-        <p>ou</p>
-        <button id="inscriptionBouton" onclick="window.location.href='/logUser';">Se connecter</button>
-    </div>
 </div>
 
 </body>
 </html>
+

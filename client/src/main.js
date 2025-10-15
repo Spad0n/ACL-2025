@@ -143,6 +143,13 @@ function view(model, dispatch) {
 function viewList(model, dispatch) {
     return h('div#conteneur', [
 	h('h1', 'Mes evenements'),
+	h('button#inscriptionBouton', {	on: { click: () => {
+				fetch('/login', { method: 'POST' })
+				.then(() => window.location.href = '/login') // redirection vers la page login
+				.catch((error) => console.error('La déconnexion a échoué:', error));
+			}
+		}
+	}, 'Se déconnecter'),
 	h('button#inscriptionBouton', { on: { click: () => dispatch({ type: 'NAVIGATE_TO_FORM' }) } }, 'Créer un evenements'),
 	model.events.length === 0
 	    ? h('p', 'Aucun événement pour le moment.')

@@ -20,7 +20,6 @@ app.use(routes.authenticate);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, '../dist')));
 app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/favicon.ico', express.static('../public/favicon.ico'));
@@ -32,8 +31,13 @@ app.get('/hello', (_req, res) => {
     res.json("Hello from json");
 });
 
-app.get('/', (_req, res) => {
-    res.sendFile(path.join(__dirname, "../dist/index.html"));
+app.get('/', (req, res) => {
+    if (req.cookies.accessToken !== undefined) {
+	app.use(express.static(path.join(__dirname, '../dist')));
+	res.sendFile(path.join(__dirname, "../dist/index.html"));
+    } else {
+	res.redirect("/login");
+    }
 });
 
 app.get('/login', (req, res) => {

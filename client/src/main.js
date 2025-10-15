@@ -144,7 +144,7 @@ function viewList(model, dispatch) {
     return h('div#conteneur', [
 	h('h1', 'Mes evenements'),
 	h('button#inscriptionBouton', {	on: { click: () => {
-				fetch('/login', { method: 'POST' })
+	    fetch('/logout', { method: 'GET', credentials: "include" })
 				.then(() => window.location.href = '/login') // redirection vers la page login
 				.catch((error) => console.error('La déconnexion a échoué:', error));
 			}

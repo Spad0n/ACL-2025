@@ -32,12 +32,21 @@ app.get('/hello', (_req, res) => {
 });
 
 app.get('/', (req, res) => {
+    console.log(req.cookies.accessToken);
     if (req.cookies.accessToken !== undefined) {
 	app.use(express.static(path.join(__dirname, '../dist')));
 	res.sendFile(path.join(__dirname, "../dist/index.html"));
     } else {
 	res.redirect("/login");
     }
+});
+
+app.get('/logout', (req, res) => {
+    res.clearCookie('accessToken', {
+	httpOnly: true,
+	secure: true,
+    });
+    res.redirect("/login");
 });
 
 app.get('/login', (req, res) => {

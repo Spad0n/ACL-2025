@@ -47,6 +47,7 @@ import { Assets, Container, Graphics, Sprite, Text, TextStyle } from "pixi.js";
  * @typedef {BaseVNodeProps & {
  *   text: string,
  *   style?: TextStyle
+ *   anchor?: number | {x: number, y: number}
  * }} TextProps
  *
  * @typedef {BaseVNodeProps & {
@@ -145,6 +146,13 @@ function createElm(vnode) {
 	const props = /** @type {TextProps} */ (vnode.props);
 	elm = new Text({text: props.text, style: props.style});
 	applyProps(elm, props);
+	if (props.anchor) {
+	    if (typeof props.anchor === "number") {
+		/** @type {Text} */(elm).anchor.set(props.anchor)
+	    } else {
+		/** @type {Text} */(elm).anchor.set(props.anchor.x, props.anchor.y)
+	    }
+	}
     } break;
     case "sprite": {
 	const props = /** @type {SpriteProps} */ (vnode.props);
@@ -235,35 +243,49 @@ function patchVnode(oldVnode, newVnode) {
     case "container":
 	updateChildren(/** @type {Container} */(elm), oldVnode.children, newVnode.children);
 	break;
-    case "graphics": {
-	const oldProps = /** @type {GraphicsProps} */ (oldVnode.props);
-	const newProps = /** @type {GraphicsProps} */ (newVnode.props);
-	if (oldProps.draw !== newProps.draw) {
-	    newProps.draw(/** @type {Graphics} */(elm));
+    case "graphics": 
+	if (elm instanceof Graphics) {
+	    const oldProps = /** @type {GraphicsProps} */ (oldVnode.props);
+	    const newProps = /** @type {GraphicsProps} */ (newVnode.props);
+	    if (oldProps.draw !== newProps.draw) {
+		newProps.draw(/** @type {Graphics} */(elm));
+	    }
 	}
-    } break;
-    case "text": {
-	const oldProps = /** @type {TextProps} */ (oldVnode.props);
-	const newProps = /** @type {TextProps} */ (newVnode.props);
-	if (oldProps.text !== newProps.text) /** @type {Text} */(elm).text = newProps.text;
-	if (oldProps.style !== newProps.style) /** @type {Text} */(elm).style = /** @type {TextStyle} */(newProps.style);
-    } break;
-    case "sprite": {
-	const elmSprite = /** @type {Sprite} */(elm);
-	const oldProps = /** @type {SpriteProps} */ (oldVnode.props);
-	const newProps = /** @type {SpriteProps} */ (newVnode.props);
-	if (oldProps.texture !== newProps.texture) elmSprite.texture = Assets.get(newProps.texture);
-	if (oldProps.anchor !== newProps.anchor) {
-	    if (newProps.anchor) {
-		if (typeof newProps.anchor === "number") {
-		    elmSprite.anchor.set(newProps.anchor)
-		} else {
-		    elmSprite.anchor.set(newProps.anchor.x, newProps.anchor.y);
+	break;
+    case "text": 
+	if (elm instanceof Text) {
+	    const oldProps = /** @type {TextProps} */ (oldVnode.props);
+	    const newProps = /** @type {TextProps} */ (newVnode.props);
+	    if (oldProps.text !== newProps.text) elm.text = newProps.text;
+	    if (oldProps.style !== newProps.style) elm.style = /** @type {TextStyle} */(newProps.style);
+	    if (oldProps.anchor !== newProps.anchor) {
+		if (newProps.anchor) {
+		    if (typeof newProps.anchor === "number") {
+			elm.anchor.set(newProps.anchor)
+		    } else {
+			elm.anchor.set(newProps.anchor.x, newProps.anchor.y);
+		    }
 		}
 	    }
 	}
-	if (oldProps.tint !== newProps.tint) elmSprite.tint = /** @type {number} */(newProps.tint);
-    } break;
+	break;
+    case "sprite":
+	if (elm instanceof Sprite) {
+	    const oldProps = /** @type {SpriteProps} */ (oldVnode.props);
+	    const newProps = /** @type {SpriteProps} */ (newVnode.props);
+	    if (oldProps.texture !== newProps.texture) elm.texture = Assets.get(newProps.texture);
+	    if (oldProps.anchor !== newProps.anchor) {
+		if (newProps.anchor) {
+		    if (typeof newProps.anchor === "number") {
+			elm.anchor.set(newProps.anchor)
+		    } else {
+			elm.anchor.set(newProps.anchor.x, newProps.anchor.y);
+		    }
+		}
+	    }
+	    if (oldProps.tint !== newProps.tint) elm.tint = /** @type {number} */(newProps.tint);
+	}
+	break;
     default:
 	throw new Error("Unreachable");
     }

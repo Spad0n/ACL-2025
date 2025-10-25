@@ -56,6 +56,11 @@ app.get('/login', (req, res) => {
 
 app.get("/register", routes.getAccountCreationPage);
 
+//route debug pour test
+app.get("/debugSlot", (req, res) => {
+    res.render('modifPopup');
+})
+
 app.post("/account/new", routes.createAccount);
 
 

@@ -1,7 +1,9 @@
-import { eventListenersModule, init, h, classModule } from "snabbdom";
+import { eventListenersModule, init, h, classModule, attributesModule, propsModule } from "snabbdom";
 
 const patch = init([
     classModule,
+    attributesModule,
+    propsModule,
     eventListenersModule
 ])
 
@@ -30,13 +32,14 @@ const STORAGE_KEY = "app";
 
 /**
  * @typedef {object} Model
- * @property {'list' | 'form'} route
+ * @property {'list' | 'form' | 'edit'} route
  * @property {Event[]} events
  * @property {FormState} form
+ * @property {string | null} editingEventId
  */
 
 /**
- * @typedef {'NAVIGATE_TO_FORM' | 'CREATE_EVENT' | 'CANCEL_CREATION' | 'UPDATE_FORM_FIELD' | 'DELETE_EVENT'} Type
+ * @typedef {'NAVIGATE_TO_FORM' | 'CREATE_EVENT' | 'CANCEL_CREATION' | 'UPDATE_FORM_FIELD' | 'DELETE_EVENT' | 'OPEN_EDIT' | 'SAVE_EDIT' | 'CANCEL_EDIT'} Type
  */
 
 /**
@@ -44,14 +47,15 @@ const STORAGE_KEY = "app";
  */
 function initModel() {
     return {
-	route: 'list',
-	events: [],
-	form: {
-	    title: "",
-	    description: "",
-	    startDate: "",
-	    endDate: "",
-	}
+        route: 'list',
+        events: [],
+        form: {
+            title: "",
+            description: "",
+            startDate: "",
+            endDate: "",
+        },
+        editingEventId: null,
     }
 }
 
@@ -61,62 +65,96 @@ function initModel() {
 function loadModel() {
     const savedState = localStorage.getItem(STORAGE_KEY);
     if (savedState) {
-	try {
-	    return JSON.parse(savedState)
-	} catch (e) {
-	    console.error("Impossible de lire l'état sauvegardé, on repart de zéro.", e);
-	    return initModel();
-	}
+        try {
+            const parsed = JSON.parse(savedState);
+            return { ...initModel(), ...parsed };
+        } catch (e) {
+            console.error("Impossible de lire l'état sauvegardé, on repart de zéro.", e);
+            return initModel();
+        }
     }
     return initModel();
 }
 
 /**
- * @param {{type: Type, payload?: any}} msg 
- * @param {Model} model 
+ * @param {{type: Type, payload?: any}} msg
+ * @param {Model} model
  * @returns {Model}
  */
 function update(msg, model) {
     switch (msg.type) {
-    case 'NAVIGATE_TO_FORM':
-	return { ...model, route: 'form' };
-    case 'UPDATE_FORM_FIELD':
-	return {
-	    ...model,
-	    form: {
-		...model.form,
-		[msg.payload.field]: msg.payload.value
-	    }
-	};
-    case 'CREATE_EVENT':
-	if (!model.form.title) {
-	    return model;
-	}
-	const newEvent = {
-	    id: Date.now().toString(),
-	    ...model.form
-	};
+        case 'NAVIGATE_TO_FORM':
+            return { ...model, route: 'form' };
+        case 'UPDATE_FORM_FIELD':
+            return {
+                ...model,
+                form: {
+                    ...model.form,
+                    [msg.payload.field]: msg.payload.value
+                }
+            };
+        case 'CREATE_EVENT':
+            if (!model.form.title) {
+                return model;
+            }
+            const newEvent = {
+                id: Date.now().toString(),
+                ...model.form
+            };
 
-	return {
-	    ...model,
-	    route: 'list',
-	    events: [...model.events, newEvent],
-	    form: initModel().form
-	};
-    case 'CANCEL_CREATION':
-	return {
-	    ...model,
-	    route: 'list',
-	    form: initModel().form
-	};
-    case 'DELETE_EVENT':
-	return {
-	    ...model,
-	    route: 'list',
-	    events: [...model.events.filter((value, _index, _arr) => value.id !== msg.payload)]
-	}
-    default:
-	return model;
+            return {
+                ...model,
+                route: 'list',
+                events: [...model.events, newEvent],
+                form: initModel().form
+            };
+        case 'CANCEL_CREATION':
+            return {
+                ...model,
+                route: 'list',
+                form: initModel().form
+            };
+        case 'DELETE_EVENT':
+            return {
+                ...model,
+                route: 'list',
+                events: [...model.events.filter((value, _index, _arr) => value.id !== msg.payload)]
+            };
+        case 'OPEN_EDIT':
+            const eventToEdit = model.events.find(e => e.id === msg.payload);
+            if (!eventToEdit) return model;
+            return {
+                ...model,
+                route: 'edit',
+                editingEventId: msg.payload,
+                form: { ...eventToEdit }
+            };
+        case 'SAVE_EDIT':
+            if (!model.form.title || !model.editingEventId) {
+                return model;
+            }
+            const updatedEvents = model.events.map(event => {
+                if (event.id === model.editingEventId) {
+                    return { ...event, ...model.form };
+                }
+                return event;
+            });
+            return {
+                ...model,
+                route: 'list',
+                events: updatedEvents,
+                form: initModel().form,
+                editingEventId: null,
+            };
+        case 'CANCEL_EDIT':
+            return {
+                ...model,
+                route: 'list',
+                form: initModel().form,
+                editingEventId: null,
+            };
+        default:
+            return model;
     }
 }
 
@@ -126,13 +164,22 @@ function update(msg, model) {
  * @returns {VNode}
  */
 function view(model, dispatch) {
-    switch (model.route) {
-    case 'form':
-	return viewForm(model, dispatch);
-    case 'list':
-    default:
-	return viewList(model, dispatch);
-    }
+    const currentView = () => {
+        switch (model.route) {
+            case 'form':
+                return viewForm(model, dispatch);
+            case 'edit':
+                return viewEdit(model, dispatch);
+            case 'list':
+            default:
+                return viewList(model, dispatch);
+        }
+    };
+
+    return h('div', [
+        viewList(model, dispatch),
+        currentView()
+    ]);
 }
 
 /**
@@ -142,24 +189,46 @@ function view(model, dispatch) {
  */
 function viewList(model, dispatch) {
     return h('div#conteneur', [
-	h('h1', 'Mes evenements'),
-	h('button#inscriptionBouton', {	on: { click: () => {
-	    fetch('/logout', { method: 'GET', credentials: "include" })
-				.then(() => window.location.href = '/login') // redirection vers la page login
-				.catch((error) => console.error('La déconnexion a échoué:', error));
-			}
-		}
-	}, 'Se déconnecter'),
-	h('button#inscriptionBouton', { on: { click: () => dispatch({ type: 'NAVIGATE_TO_FORM' }) } }, 'Créer un evenements'),
-	model.events.length === 0
-	    ? h('p', 'Aucun événement pour le moment.')
-	    : h('ul', model.events.map(event =>
-		    //h('li', `${event.title} ${event.description} (du ${event.startDate} au  ${event.endDate})`)
-		h('li', [
-		    `${event.title} ${event.description} (du ${event.startDate} au  ${event.endDate})`,
-		    h('button', { props: { type: 'button' }, on: {click: () => dispatch({type: 'DELETE_EVENT', payload: event.id}) }}, "Delete")
-		])
-	    ))
+        h('h1', 'Mes événements'),
+        h('button#inscriptionBouton', {	on: { click: () => {
+                    fetch('/logout', { method: 'GET', credentials: "include" })
+                        .then(() => window.location.href = '/login') // redirection vers la page login
+                        .catch((error) => console.error('La déconnexion a échoué:', error));
+                }
+            }
+        }, 'Se déconnecter'),
+        h('button#inscriptionBouton', { on: { click: () => dispatch({ type: 'NAVIGATE_TO_FORM' }) } }, 'Ajouter un événement'),
+        model.events.length === 0
+            ? h('p', 'Aucun événement pour le moment.')
+            : h('ul', model.events.map(event =>
+                h('li', [
+                    `${event.title} ${event.description} (du ${event.startDate} au  ${event.endDate})`,
+                    h('button', { props: { type: 'button' }, on: {click: () => dispatch({type: 'DELETE_EVENT', payload: event.id}) }}, "Delete"),
+                    h('button', { props: { type: 'button' }, on: {click: () => dispatch({ type: 'OPEN_EDIT', payload: event.id }) } }, "Modifier"),
+                ])
+            ))
+    ]);
+}
+
+/**
+ * @param {string} label
+ * @param {string} type
+ * @param {keyof FormState} field
+ * @param {boolean} required
+ * @param {Model} model
+ * @param {(msg: {type: Type, payload?: any}) => void} dispatch
+ * @returns {VNode}
+ */
+function formInput(label, type, field, required, model, dispatch) {
+    return h('div.form-group', [
+        h('label', { props: { for: field } }, label),
+        h('input', {
+            props: { id: field, type, required, value: model.form[field] },
+            on: { input: (e) => {
+                    const target = /** @type {HTMLInputElement} */ (e.target);
+                    dispatch({ type: 'UPDATE_FORM_FIELD', payload: { field, value: target.value}})
+                }}
+        }),
     ]);
 }
 
@@ -169,47 +238,66 @@ function viewList(model, dispatch) {
  * @returns {VNode}
  */
 function viewForm(model, dispatch) {
-    /**
-     * @param {string} label 
-     * @param {string} type 
-     * @param {keyof FormState} field 
-     * @param {boolean} required 
-     * @returns {VNode}
-     */
-    function formInput(label, type, field, required) {
-    	return h('div.form-group', [
-    	    h('label', { props: { for: field } }, label),
-    	    h('input', {
-    		props: { id: field, type, required, value: model.form[field] },
-    		on: { input: (e) => {
-		    const target = /** @type {HTMLInputElement} */ (e.target);
-		    dispatch({ type: 'UPDATE_FORM_FIELD', payload: { field, value: target.value}})
-		}}
-    	    }),
-    	]);
-    }
-    //const formInput = (label, type, field, required) => 
-
-    return h('div#conteneur', [
-	h('h1', 'Crée un nouvel événement'),
-	h('form', { on: { submit: (e) => { e.preventDefault(); dispatch({type: 'CREATE_EVENT' }); }}}, [
-	    formInput("Titre de l'evenement", "text", "title", true),
-	    formInput("Description (optionnel)", "text", "description", false),
-	    formInput("Date de debut", "date", "startDate", true),
-	    formInput("Date de fin", "date", "endDate", true),
-	    h('div.buttons', [
-		h('button#inscriptionBouton', { props: { type: 'submit' } }, "Sauvegarder"),
-		h('button#connexionBouton', { props: { type: 'button' }, on: { click: () => dispatch({type: 'CANCEL_CREATION' }) } }, "Annuler"),
-	    ])
-	])
+    return h('section.parent.show', {
+        on: { click: (e) => { if (e.target.classList.contains('parent')) dispatch({type: 'CANCEL_CREATION' }) } }
+    }, [
+        h('section.popup', [
+            h('button.close', { on: { click: () => dispatch({type: 'CANCEL_CREATION' }) } }, 'X'),
+            h('div.conteneur-modele', [
+                h('h2', 'Crée un nouvel événement'),
+                h('form', { on: { submit: (e) => { e.preventDefault(); dispatch({type: 'CREATE_EVENT' }); }}}, [
+                    formInput("Titre de l'événement", "text", "title", true, model, dispatch),
+                    formInput("Description (optionnel)", "text", "description", false, model, dispatch),
+                    formInput("Date de debut", "datetime-local", "startDate", true, model, dispatch),
+                    formInput("Date de fin", "datetime-local", "endDate", true, model, dispatch),
+                    h('div.buttons', [
+                        h('button#inscriptionBouton', { props: { type: 'submit' } }, "Sauvegarder"),
+                        h('button#connexionBouton', { props: { type: 'button' }, on: { click: () => dispatch({type: 'CANCEL_CREATION' }) } }, "Annuler"),
+                    ])
+                ])
+            ])
+        ])
     ]);
 }
 
+/**
+ * @param {Model} model
+ * @param {(msg: {type: Type, payload?: any}) => void} dispatch
+ * @returns {VNode}
+ */
+function viewEdit(model, dispatch) {
+    return h('section#parent-conteneur.parent.show', {
+        on: { click: (e) => { if (e.target.classList.contains('parent')) dispatch({type: 'CANCEL_EDIT' }) } }
+    }, [
+        h('section#popup.popup', [
+            h('button#close.close', { on: { click: () => dispatch({type: 'CANCEL_EDIT' }) } }, 'X'),
+            h('div.conteneur-modele#model', [
+                h('h2', "Modifier l'événement"),
+                h('form.form-group', { on: { submit: (e) => { e.preventDefault(); dispatch({type: 'SAVE_EDIT' }); }}}, [
+                    formInput("Nom de l'événement :", "text", "title", true, model, dispatch),
+                    formInput("Début :", "datetime-local", "startDate", true, model, dispatch),
+                    formInput("Fin :", "datetime-local", "endDate", true, model, dispatch),
+                    h('label', { props: { for: 'event-description' } }, "Description de l'événement :"),
+                    h('textarea#event-description', {
+                        props: { name: 'event-description', value: model.form.description },
+                        on: { input: (e) => {
+                                const target = /** @type {HTMLTextAreaElement} */ (e.target);
+                                dispatch({ type: 'UPDATE_FORM_FIELD', payload: { field: 'description', value: target.value }});
+                            }}
+                    }, model.form.description),
+                    h('button', { props: { type: 'submit' } }, 'Enregistrer les modifications')
+                ])
+            ])
+        ])
+    ]);
+}
+
+
 /* WEBGL */
 /**
- * @param {WebGL2RenderingContext} gl 
- * @param {GLenum} type 
- * @param {string} source 
+ * @param {WebGL2RenderingContext} gl
+ * @param {GLenum} type
+ * @param {string} source
  * @returns {WebGLShader | null}
  */
 function createShader(gl, type, source) {
@@ -217,17 +305,17 @@ function createShader(gl, type, source) {
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-	console.error(gl.getShaderInfoLog(shader));
-	gl.deleteShader(shader);
-	return null;
+        console.error(gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
     }
     return shader;
 }
 
 /**
- * @param {WebGL2RenderingContext} gl 
- * @param {string} vertexSource 
- * @param {string} fragmentSource 
+ * @param {WebGL2RenderingContext} gl
+ * @param {string} vertexSource
+ * @param {string} fragmentSource
  * @returns {WebGLProgram | null}
  */
 function createProgram(gl, vertexSource, fragmentSource) {
@@ -241,9 +329,9 @@ function createProgram(gl, vertexSource, fragmentSource) {
     gl.linkProgram(program);
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-	console.error(gl.getProgramInfoLog(program));
-	gl.deleteProgram(program);
-	return null;
+        console.error(gl.getProgramInfoLog(program));
+        gl.deleteProgram(program);
+        return null;
     }
 
     gl.deleteShader(vertexShader);
@@ -261,57 +349,57 @@ function createProgram(gl, vertexSource, fragmentSource) {
     patch(container, vnode);
 
     /**
-     * @param {{type: Type, payload?: any}} msg 
+     * @param {{type: Type, payload?: any}} msg
      */
     function dispatch(msg) {
-	console.log('Action: ', msg);
+        console.log('Action: ', msg);
 
-	model = update(msg, model);
+        model = update(msg, model);
 
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(model));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(model));
 
-	const newVNode = view(model, dispatch);
+        const newVNode = view(model, dispatch);
 
-	patch(vnode, newVNode);
+        patch(vnode, newVNode);
 
-	vnode = newVNode;
+        vnode = newVNode;
     }
 
     /* WEBGL */
     const backgroundCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("canvasBackground"));
     if (backgroundCanvas === null) {
-	return;
+        return;
     }
 
     Object.assign(backgroundCanvas.style, {
-	position: "fixed",
-	top: "0",
-	left: "0",
-	width: "100vw",
-	height: "100vh",
-	"z-index": "-1",
-	pointerEvents: "none",
+        position: "fixed",
+        top: "0",
+        left: "0",
+        width: "100vw",
+        height: "100vh",
+        "z-index": "-1",
+        pointerEvents: "none",
     });
 
     const vertices = new Float32Array([
-	-1, -1, 0,  // bas gauche
-	 1, -1, 0,  // bas droite
-	-1,  1, 0,  // haut gauche
-	-1,  1, 0,  // haut gauche
-	 1, -1, 0,  // bas droite
-	 1,  1, 0,  // haut droite
+        -1, -1, 0,  // bas gauche
+        1, -1, 0,  // bas droite
+        -1,  1, 0,  // haut gauche
+        -1,  1, 0,  // haut gauche
+        1, -1, 0,  // bas droite
+        1,  1, 0,  // haut droite
     ]);
 
     const gl = /** @type {WebGL2RenderingContext} */ (backgroundCanvas.getContext("webgl2"));
     if (gl === null) {
-	console.error("WebGL2 pas supporté");
-	return;
+        console.error("WebGL2 pas supporté");
+        return;
     }
 
     function resizeCanvas() {
-	backgroundCanvas.width = window.innerWidth;
-	backgroundCanvas.height = window.innerHeight;
-	gl.viewport(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+        backgroundCanvas.width = window.innerWidth;
+        backgroundCanvas.height = window.innerHeight;
+        gl.viewport(0, 0, backgroundCanvas.width, backgroundCanvas.height);
     }
 
     window.addEventListener("resize", resizeCanvas);
@@ -390,8 +478,8 @@ void main() {
 
     const program = createProgram(gl, vertexSource, fragmentSource);
     if (!program) {
-	console.error("echec de compilation des shaders");
-	return;
+        console.error("echec de compilation des shaders");
+        return;
     }
 
     gl.bindVertexArray(vao);
@@ -404,21 +492,21 @@ void main() {
     gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
 
     const uniform = {
-	iResolution: gl.getUniformLocation(program, "iResolution"),
-	iTime: gl.getUniformLocation(program, "iTime")
+        iResolution: gl.getUniformLocation(program, "iResolution"),
+        iTime: gl.getUniformLocation(program, "iTime")
     };
 
     function render(time) {
-	time *= 0.001;
+        time *= 0.001;
         gl.clearColor(0.2, 0.3, 0.3, 1.0)
         gl.clear(gl.COLOR_BUFFER_BIT)
 
-	gl.uniform3f(uniform.iResolution, backgroundCanvas.width, backgroundCanvas.height, 1.0);
-	gl.uniform1f(uniform.iTime, time);
+        gl.uniform3f(uniform.iResolution, backgroundCanvas.width, backgroundCanvas.height, 1.0);
+        gl.uniform1f(uniform.iTime, time);
 
-	gl.drawArrays(gl.TRIANGLES, 0, 6);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-	requestAnimationFrame(render);
+        requestAnimationFrame(render);
     }
 
     render();

@@ -68,5 +68,5 @@ app.post("/account/new", routes.createAccount);
 app.post("/logUser", routes.login);
 
 app.listen(PORT, (_err) => {
-    console.log(`Serveur lancé sur https://localhost:${PORT}`);
+    console.log(`Serveur lancé sur http://localhost:${PORT}`);
 });

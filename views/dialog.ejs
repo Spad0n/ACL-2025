@@ -1,0 +1,30 @@
+<dialog>
+  <form hx-post="/events" hx-target="#dialog-container" hx-swap="innerHTML">
+    <h3><%= action === "add" ? "Ajouter un événement" : "Modifier l'événement" %></h3>
+    
+    <% if (action === "edit") { %>
+      <input type="hidden" name="id" value="<%= event.id %>">
+    <% } %>
+    <input type="hidden" name="date" value="<%= date %>">
+
+    <div>
+      <label for="title">Titre</label>
+      <input type="text" id="title" name="title" value="<%= event.title || '' %>" required>
+    </div>
+    
+    <div>
+      <label for="description">Description</label>
+      <textarea id="description" name="description"><%= event.description || '' %></textarea>
+    </div>
+
+    <div>
+      <label for="color">Couleur</label>
+      <input type="color" id="color" name="color" value="<%= event.color || '#ff0000' %>">
+    </div>
+    
+    <footer>
+      <button type="button" onclick="this.closest('dialog').close()">Annuler</button>
+      <button type="submit">Enregistrer</button>
+    </footer>
+  </form>
+</dialog>

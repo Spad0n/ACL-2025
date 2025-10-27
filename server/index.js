@@ -62,6 +62,48 @@ app.post("/account/new", routes.createAccount);
 
 app.post("/logUser", routes.login);
 
+app.get('/dialog/event-form', (req, res) => {
+    const {action, date, id, title, description, color} = req.query;
+    const model = {
+	action: action, // add ou edit
+	date: date,
+	event: {
+	    id: id || null,
+	    title: title || '',
+	    description: description || '',
+	    color: color ? "#" + ('000000' + parseInt(color).toString(16)).slice(-6) : "#ff0000",
+	}
+    };
+    res.render('dialog', model)
+});
+
+app.post('/events', (req, res) => {
+    const { id, date, title, description, color } = req.body;
+
+    const parsedDate = new Date(date);
+
+    const savedEvent = {
+        // Si l'ID existe, on le garde (édition), sinon on en génère un nouveau (ajout)
+        id: id || `evt_${Date.now()}`, 
+        title: title,
+        description: description,
+        // On convertit la couleur hex (#RRGGBB) en nombre (0xRRGGBB) pour PixiJS
+        color: parseInt(color.substring(1), 16),
+        day: parsedDate.getDate(),
+        month: parsedDate.getMonth(),
+        year: parsedDate.getFullYear()
+    };
+
+    console.log('Événement sauvegardé côté serveur:', savedEvent);
+
+    // 3. On envoie l'événement au client via l'en-tête HX-Trigger
+    // La clé est le nom de l'événement ('eventSaved'), la valeur est la donnée.
+    res.set('HX-Trigger', JSON.stringify({ 'eventSaved': savedEvent }));
+
+    // 4. On renvoie une réponse vide pour que htmx vide le #dialog-container (grâce à innerHTML)
+    res.send('');
+});
+
 app.listen(PORT, (_err) => {
     console.log(`Serveur lancé sur https://localhost:${PORT}`);
 });

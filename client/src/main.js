@@ -59,12 +59,8 @@ function view(app, model, dispatch) {
     const weekDays = Array.from({length: 7}, (_, i) => addDays(model.currentWeekStart, i));
 
     const calendarDays = weekDays.map((date, index) => {
-        //const dayNumber = date.getDate();
-        //const month = date.getMonth();
-        //const year = date.getFullYear();
-
         const dayEvents = model.events.filter(event =>
-	    isSameDay(parseISO(event.start), date)
+            isSameDay(parseISO(event.start), date)
         );
 
         const dayWidth = 170;
@@ -78,9 +74,9 @@ function view(app, model, dispatch) {
                 //dayName: DAY_NAMES[date.getDay()],
                 dayName: format(date, 'eee', { locale: fr }),
                 events: dayEvents,
-		/** @param {CalendarEventData} event */
+                /** @param {CalendarEventData} event */
                 onEditEvent: (event) => dispatch({ type: 'EDIT_EVENT', event }),
-		/** @param {CalendarEventData} event */
+                /** @param {CalendarEventData} event */
                 onDeleteEvent: (event) => dispatch({ type: 'DELETE_EVENT', event }),
                 onAddEvent: () => dispatch({ type: 'ADD_EVENT', date: date }),
             })
@@ -91,11 +87,6 @@ function view(app, model, dispatch) {
     const weekDisplayEnd = weekDays[6];
 
     const headerText = `${format(weekDisplayStart, 'd MMMM yyyy', { locale: fr })} - ${format(weekDisplayEnd, 'd MMMM yyyy', { locale: fr })}`;
-    //if (weekDisplayStart.getMonth() !== weekDisplayEnd.getMonth() || weekDisplayStart.getFullYear() !== weekDisplayEnd.getFullYear()) {
-    //    headerText += ` - ${weekDisplayEnd.getDate()} ${MONTH_NAMES[weekDisplayEnd.getMonth()]} ${weekDisplayEnd.getFullYear()}`;
-    //} else if (weekDisplayStart.getDate() !== weekDisplayEnd.getDate()){ // Si le mois et l'année sont les mêmes, n'affiche pas deux fois le mois/année
-    //    headerText += ` - ${weekDisplayEnd.getDate()}`;
-    //}
 
     return h("container", "app-root", {}, [
         h("container", "calendar-header", { x: app.screen.width / 2, y: 30, pivot: 0.5 }, [
@@ -138,50 +129,50 @@ function update(msg, model) {
 
     switch (msg.type) {
     case 'PREV_WEEK':
-	newModel.currentWeekStart = addDays(newModel.currentWeekStart, - 7);
-	break;
+        newModel.currentWeekStart = addDays(newModel.currentWeekStart, - 7);
+        break;
     case 'NEXT_WEEK':
-	newModel.currentWeekStart = addDays(newModel.currentWeekStart, 7);
-	break;
+        newModel.currentWeekStart = addDays(newModel.currentWeekStart, 7);
+        break;
     case 'ADD_EVENT':
-	const addUrl = `/dialog/event-form?action=add&date=${msg.date?.toISOString()}`
-	triggerHtmxDialog(addUrl);
-	break;
+        const addUrl = `/dialog/event-form?action=add&date=${msg.date?.toISOString()}`
+        triggerHtmxDialog(addUrl);
+        break;
     case 'EDIT_EVENT':
-	const event = /** @type {CalendarEventData} */(msg.event);
-	// NOTE: Faire que le serveur va chercher les autres données via l'ID, c'est plus propre
-	const params = new URLSearchParams({
-	    action: "edit",
-	    id: event.id,
-	    title: event.title,
-	    description: event.description,
-	    start: event.start,
-	    end: event.end,
-	    color: event.color.toString(),
-	});
-	const editUrl = `/dialog/event-form?${params.toString()}`;
-	triggerHtmxDialog(editUrl);
-	break;
+        const event = /** @type {CalendarEventData} */(msg.event);
+        // NOTE: Faire que le serveur va chercher les autres données via l'ID, c'est plus propre
+        const params = new URLSearchParams({
+            action: "edit",
+            id: event.id,
+            title: event.title,
+            description: event.description,
+            start: event.start,
+            end: event.end,
+            color: event.color.toString(),
+        });
+        const editUrl = `/dialog/event-form?${params.toString()}`;
+        triggerHtmxDialog(editUrl);
+        break;
     case 'DELETE_EVENT':
-	newModel.events = newModel.events.filter(e => e.id !== msg.event?.id);
-	break;
+        newModel.events = newModel.events.filter(e => e.id !== msg.event?.id);
+        break;
     case 'SAVE_EVENT':
-	const savedEvent = msg.event;
+        const savedEvent = msg.event;
 
-	const eventIndex = newModel.events.findIndex(e => e.id === savedEvent?.id);
+        const eventIndex = newModel.events.findIndex(e => e.id === savedEvent?.id);
 
-	if (eventIndex > -1) {
-	    console.log("Mise à jour d'un evenement existant:", savedEvent);
+        if (eventIndex > -1) {
+            console.log("Mise à jour d'un evenement existant:", savedEvent);
             newModel.events = newModel.events.map((e) =>
                 e.id === savedEvent.id ? savedEvent : e
             );
-	} else {
-	    console.log("Ajout d'un nouvel événement:", savedEvent);
-	    newModel.events = [...newModel.events, savedEvent];
-	}
-	break;
+        } else {
+            console.log("Ajout d'un nouvel événement:", savedEvent);
+            newModel.events = [...newModel.events, savedEvent];
+        }
+        break;
     default:
-	console.warn("Unknown message type:", msg.type);
+        console.warn("Unknown message type:", msg.type);
     }
     return newModel;
 }
@@ -196,11 +187,11 @@ function triggerHtmxDialog(url) {
     triggerElement.setAttribute('hx-swap', "innerHTML");
 
     try {
-	document.body.appendChild(triggerElement);
-	htmx.process(triggerElement);
-	htmx.trigger(triggerElement, "click");
+        document.body.appendChild(triggerElement);
+        htmx.process(triggerElement);
+        htmx.trigger(triggerElement, "click");
     } finally {
-	document.body.removeChild(triggerElement);
+        document.body.removeChild(triggerElement);
     }
 }
 
@@ -212,12 +203,12 @@ function triggerHtmxDialog(url) {
     }
 
     Object.assign(canvas.style, {
-    	position: "fixed",
-    	top: "0",
-    	left: "0",
-    	width: "100vw",
-    	height: "100vh",
-    	"z-index": "-1",
+        position: "fixed",
+        top: "0",
+        left: "0",
+        width: "100vw",
+        height: "100vh",
+        "z-index": "-1",
     });
 
     const app = new Application();
@@ -243,26 +234,26 @@ function triggerHtmxDialog(url) {
     let scene = patch(appContainer, null, view(app, model, dispatch));
 
     function reRender() {
-	const newScene = view(app, model, dispatch);
-	scene = patch(appContainer, scene, newScene);
+        const newScene = view(app, model, dispatch);
+        scene = patch(appContainer, scene, newScene);
     }
 
     /**
      * @param {Msg} msg 
      */
     function dispatch(msg) {
-	model = update(msg, model);
-	const newScene = view(app, model, dispatch);
-	scene = patch(appContainer, scene, newScene);
+        model = update(msg, model);
+        const newScene = view(app, model, dispatch);
+        scene = patch(appContainer, scene, newScene);
     }
 
     app.renderer.on("resize", () => {
-	reRender();
+        reRender();
     });
 
     document.body.addEventListener('eventSaved', (evt) => {
-	const savedEvent = evt.detail;
-	dispatch({ type: 'SAVE_EVENT', event: savedEvent });
+        const savedEvent = evt.detail;
+        dispatch({ type: 'SAVE_EVENT', event: savedEvent });
     });
 })();
 

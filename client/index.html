@@ -8,7 +8,15 @@
   </head>
   <body>
     <canvas id="canvasBackground"></canvas>
-    <div id="app"></div>
+    <div id="dialog-container"></div>
     <script type="module" src="/src/main.js"></script>
+    <script>
+     document.body.addEventListener('htmx:afterSwap', function (event) {
+         const dialog = event.detail.elt.querySelector('dialog');
+         if (dialog) {
+             dialog.showModal();
+         }
+     });
+    </script>
   </body>
 </html>

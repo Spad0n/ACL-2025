@@ -74,14 +74,14 @@ import { Assets, Container, Graphics, Sprite, Text, TextStyle } from "pixi.js";
  */
 export function h(type, key, props, children = []) {
     return {
-	type,
-	props: {
-	    key,
-	    ...props || {}
-	},
-	children: Array.isArray(children) ? children : (children ? [children] : []),
-	elm: undefined,
-	renderedVnode: undefined,
+        type,
+        props: {
+            key,
+            ...props || {}
+        },
+        children: Array.isArray(children) ? children : (children ? [children] : []),
+        elm: undefined,
+        renderedVnode: undefined,
     }
 }
 
@@ -96,10 +96,10 @@ function applyProps(elm, props) {
     elm.visible = props.visible ?? true;
     elm.rotation = props.rotation || 0;
     if (props.pivot) {
-	typeof props.pivot === "number" ? elm.pivot.set(props.pivot) : elm.pivot.set(props.pivot.x, props.pivot.y)
+        typeof props.pivot === "number" ? elm.pivot.set(props.pivot) : elm.pivot.set(props.pivot.x, props.pivot.y)
     }
     if (props.scale) {
-	typeof props.scale === "number" ? elm.scale.set(props.scale) : elm.scale.set(props.scale.x, props.scale.y)
+        typeof props.scale === "number" ? elm.scale.set(props.scale) : elm.scale.set(props.scale.x, props.scale.y)
     }
 }
 
@@ -109,19 +109,19 @@ function applyProps(elm, props) {
  */
 export function createElm(vnode) {
     if (vnode === null) {
-	const placeholder = new Container();
-	placeholder.visible = false;
-	return placeholder;
+        const placeholder = new Container();
+        placeholder.visible = false;
+        return placeholder;
     }
 
     if (typeof vnode.type === "function") {
-	const renderedVnode = vnode.type(vnode.props, vnode.children);
-	if (renderedVnode !== null) {
-	    vnode.renderedVnode = renderedVnode;
-	    const elm = createElm(renderedVnode);
-	    vnode.elm = elm;
-	    return elm;
-	}
+        const renderedVnode = vnode.type(vnode.props, vnode.children);
+        if (renderedVnode !== null) {
+            vnode.renderedVnode = renderedVnode;
+            const elm = createElm(renderedVnode);
+            vnode.elm = elm;
+            return elm;
+        }
     }
 
     /** @type {Container} */
@@ -129,51 +129,51 @@ export function createElm(vnode) {
 
     switch (vnode.type) {
     case "container": {
-	const props = /** @type {ContainerProps} */ (vnode.props);
-	elm = new Container();
-	applyProps(elm, props);
-	for (const child of vnode.children) {
-	    elm.addChild(createElm(child));
-	}
+        const props = /** @type {ContainerProps} */ (vnode.props);
+        elm = new Container();
+        applyProps(elm, props);
+        for (const child of vnode.children) {
+            elm.addChild(createElm(child));
+        }
     } break;
     case "graphics": {
-	const props = /** @type {GraphicsProps} */ (vnode.props);
-	elm = new Graphics();
-	applyProps(elm, props);
-	if (props.draw) props.draw(/** @type {Graphics} */(elm));
+        const props = /** @type {GraphicsProps} */ (vnode.props);
+        elm = new Graphics();
+        applyProps(elm, props);
+        if (props.draw) props.draw(/** @type {Graphics} */(elm));
     } break;
     case "text": {
-	const props = /** @type {TextProps} */ (vnode.props);
-	elm = new Text({text: props.text, style: props.style});
-	applyProps(elm, props);
-	if (props.anchor) {
-	    if (typeof props.anchor === "number") {
-		/** @type {Text} */(elm).anchor.set(props.anchor)
-	    } else {
-		/** @type {Text} */(elm).anchor.set(props.anchor.x, props.anchor.y)
-	    }
-	}
+        const props = /** @type {TextProps} */ (vnode.props);
+        elm = new Text({text: props.text, style: props.style});
+        applyProps(elm, props);
+        if (props.anchor) {
+            if (typeof props.anchor === "number") {
+                /** @type {Text} */(elm).anchor.set(props.anchor)
+            } else {
+                /** @type {Text} */(elm).anchor.set(props.anchor.x, props.anchor.y)
+            }
+        }
     } break;
     case "sprite": {
-	const props = /** @type {SpriteProps} */ (vnode.props);
-	elm = new Sprite(Assets.get(props.texture))
-	applyProps(elm, props);
-	if (props.anchor) {
-	    if (typeof props.anchor === "number") {
-		/** @type {Sprite} */(elm).anchor.set(props.anchor)
-	    } else {
-		/** @type {Sprite} */(elm).anchor.set(props.anchor.x, props.anchor.y)
-	    }
-	}
-	if (props.tint) elm.tint = props.tint;
+        const props = /** @type {SpriteProps} */ (vnode.props);
+        elm = new Sprite(Assets.get(props.texture))
+        applyProps(elm, props);
+        if (props.anchor) {
+            if (typeof props.anchor === "number") {
+                /** @type {Sprite} */(elm).anchor.set(props.anchor)
+            } else {
+                /** @type {Sprite} */(elm).anchor.set(props.anchor.x, props.anchor.y)
+            }
+        }
+        if (props.tint) elm.tint = props.tint;
     } break;
     default:
-	throw new Error(`Type de VNode primitif inconnu: ${vnode.type}`);
+        throw new Error(`Type de VNode primitif inconnu: ${vnode.type}`);
     }
 
     vnode.elm = elm;
     if (vnode.props.hook?.mount) {
-	vnode.props.hook.mount(elm);
+        vnode.props.hook.mount(elm);
     }
 
     return elm;
@@ -193,14 +193,14 @@ function sameVnode(vnode1, vnode2) {
  */
 function invokeDestroyHook(vnode) {
     if (vnode.props.hook?.destroy) {
-	vnode.props.hook.destroy(/** @type {Container} */(vnode.elm));
+        vnode.props.hook.destroy(/** @type {Container} */(vnode.elm));
     }
     if (vnode.renderedVnode) {
-	invokeDestroyHook(vnode.renderedVnode);
+        invokeDestroyHook(vnode.renderedVnode);
     } else if (vnode.children) {
-	for (const child of vnode.children) {
-	    invokeDestroyHook(child);
-	}
+        for (const child of vnode.children) {
+            invokeDestroyHook(child);
+        }
     }
 }
 
@@ -211,10 +211,10 @@ function invokeDestroyHook(vnode) {
 function invokeRemoveHook(parentElm, vnode) {
     invokeDestroyHook(vnode);
     if (vnode.props.hook?.remove) {
-	const done = () => parentElm.removeChild(/** @type {Container} */(vnode.elm));
-	vnode.props.hook.remove(/** @type {Container} */(vnode.elm), done);
+        const done = () => parentElm.removeChild(/** @type {Container} */(vnode.elm));
+        vnode.props.hook.remove(/** @type {Container} */(vnode.elm), done);
     } else {
-	parentElm.removeChild(/** @type {Container} */(vnode.elm));
+        parentElm.removeChild(/** @type {Container} */(vnode.elm));
     }
 }
 
@@ -226,68 +226,68 @@ function patchVnode(oldVnode, newVnode) {
     const elm = newVnode.elm = oldVnode.elm;
 
     if (typeof newVnode.type === "function") {
-	const oldRendered = /** @type {VNode | null} */(oldVnode.renderedVnode);
-	const newRendered = newVnode.type(newVnode.props, newVnode.children);
-	newVnode.renderedVnode = newRendered;
-	patch(/** @type {Container} */(/** @type {Container} */(elm).parent), oldRendered, newRendered);
-	return;
+        const oldRendered = /** @type {VNode | null} */(oldVnode.renderedVnode);
+        const newRendered = newVnode.type(newVnode.props, newVnode.children);
+        newVnode.renderedVnode = newRendered;
+        patch(/** @type {Container} */(/** @type {Container} */(elm).parent), oldRendered, newRendered);
+        return;
     }
 
     if (newVnode.props.hook?.update) {
-	newVnode.props.hook.update(oldVnode, newVnode);
+        newVnode.props.hook.update(oldVnode, newVnode);
     }
 
     applyProps(/** @type {Container} */(elm), newVnode.props);
 
     switch (newVnode.type) {
     case "container":
-	updateChildren(/** @type {Container} */(elm), oldVnode.children, newVnode.children);
-	break;
+        updateChildren(/** @type {Container} */(elm), oldVnode.children, newVnode.children);
+        break;
     case "graphics": 
-	if (elm instanceof Graphics) {
-	    const oldProps = /** @type {GraphicsProps} */ (oldVnode.props);
-	    const newProps = /** @type {GraphicsProps} */ (newVnode.props);
-	    if (oldProps.draw !== newProps.draw) {
-		newProps.draw(/** @type {Graphics} */(elm));
-	    }
-	}
-	break;
+        if (elm instanceof Graphics) {
+            const oldProps = /** @type {GraphicsProps} */ (oldVnode.props);
+            const newProps = /** @type {GraphicsProps} */ (newVnode.props);
+            if (oldProps.draw !== newProps.draw) {
+                newProps.draw(/** @type {Graphics} */(elm));
+            }
+        }
+        break;
     case "text": 
-	if (elm instanceof Text) {
-	    const oldProps = /** @type {TextProps} */ (oldVnode.props);
-	    const newProps = /** @type {TextProps} */ (newVnode.props);
-	    if (oldProps.text !== newProps.text) elm.text = newProps.text;
-	    if (oldProps.style !== newProps.style) elm.style = /** @type {TextStyle} */(newProps.style);
-	    if (oldProps.anchor !== newProps.anchor) {
-		if (newProps.anchor) {
-		    if (typeof newProps.anchor === "number") {
-			elm.anchor.set(newProps.anchor)
-		    } else {
-			elm.anchor.set(newProps.anchor.x, newProps.anchor.y);
-		    }
-		}
-	    }
-	}
-	break;
+        if (elm instanceof Text) {
+            const oldProps = /** @type {TextProps} */ (oldVnode.props);
+            const newProps = /** @type {TextProps} */ (newVnode.props);
+            if (oldProps.text !== newProps.text) elm.text = newProps.text;
+            if (oldProps.style !== newProps.style) elm.style = /** @type {TextStyle} */(newProps.style);
+            if (oldProps.anchor !== newProps.anchor) {
+                if (newProps.anchor) {
+                    if (typeof newProps.anchor === "number") {
+                        elm.anchor.set(newProps.anchor)
+                    } else {
+                        elm.anchor.set(newProps.anchor.x, newProps.anchor.y);
+                    }
+                }
+            }
+        }
+        break;
     case "sprite":
-	if (elm instanceof Sprite) {
-	    const oldProps = /** @type {SpriteProps} */ (oldVnode.props);
-	    const newProps = /** @type {SpriteProps} */ (newVnode.props);
-	    if (oldProps.texture !== newProps.texture) elm.texture = Assets.get(newProps.texture);
-	    if (oldProps.anchor !== newProps.anchor) {
-		if (newProps.anchor) {
-		    if (typeof newProps.anchor === "number") {
-			elm.anchor.set(newProps.anchor)
-		    } else {
-			elm.anchor.set(newProps.anchor.x, newProps.anchor.y);
-		    }
-		}
-	    }
-	    if (oldProps.tint !== newProps.tint) elm.tint = /** @type {number} */(newProps.tint);
-	}
-	break;
+        if (elm instanceof Sprite) {
+            const oldProps = /** @type {SpriteProps} */ (oldVnode.props);
+            const newProps = /** @type {SpriteProps} */ (newVnode.props);
+            if (oldProps.texture !== newProps.texture) elm.texture = Assets.get(newProps.texture);
+            if (oldProps.anchor !== newProps.anchor) {
+                if (newProps.anchor) {
+                    if (typeof newProps.anchor === "number") {
+                        elm.anchor.set(newProps.anchor)
+                    } else {
+                        elm.anchor.set(newProps.anchor.x, newProps.anchor.y);
+                    }
+                }
+            }
+            if (oldProps.tint !== newProps.tint) elm.tint = /** @type {number} */(newProps.tint);
+        }
+        break;
     default:
-	throw new Error("Unreachable");
+        throw new Error("Unreachable");
     }
 }
 
@@ -299,25 +299,22 @@ function patchVnode(oldVnode, newVnode) {
  */
 export function patch(parentContainer, oldVnode, newVnode) {
     if (newVnode === null) {
-	if (oldVnode !== null) {
-	    invokeRemoveHook(parentContainer, oldVnode);
-	}
-	return null;
+        if (oldVnode !== null) {
+            invokeRemoveHook(parentContainer, oldVnode);
+        }
+        return null;
     }
     if (oldVnode === null) {
-	createElm(newVnode);
-	parentContainer.addChild(/** @type {Container} */(newVnode.elm));
+        createElm(newVnode);
+        parentContainer.addChild(/** @type {Container} */(newVnode.elm));
     } else {
-	if (sameVnode(oldVnode, newVnode)) {
-	    patchVnode(oldVnode, newVnode);
-	} else {
-	    // TODO
-	    //invokeDestroyHook(oldVnode);
-	    createElm(newVnode);
-	    parentContainer.addChild(/** @type {Container} */(newVnode.elm));
-	    //parentContainer.removeChild(/** @type {Container} */(oldVnode.elm));
-	    invokeRemoveHook(parentContainer, oldVnode);
-	}
+        if (sameVnode(oldVnode, newVnode)) {
+            patchVnode(oldVnode, newVnode);
+        } else {
+            createElm(newVnode);
+            parentContainer.addChild(/** @type {Container} */(newVnode.elm));
+            invokeRemoveHook(parentContainer, oldVnode);
+        }
     }
     return newVnode;
 }
@@ -332,8 +329,8 @@ function createKeyToOldIdx(children, beginIdx, endIdx) {
     /** @type {{ [key: string | number]: number }} */
     const map = {};
     for (let i = beginIdx; i <= endIdx; ++i) {
-	const key = children[i].props.key;
-	map[key] = i;
+        const key = children[i].props.key;
+        map[key] = i;
     }
     return map;
 }
@@ -355,59 +352,59 @@ function updateChildren(parentElm, oldCh, newCh) {
     let oldKeyToIdx = undefined;
 
     while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
-	if (oldStartVnode === null) {
-	    oldStartVnode = oldCh[++oldStartIdx];
-	} else if (oldEndVnode === null) {
-	    oldEndVnode = oldCh[--oldEndIdx];
-	} else if (newStartVnode === null) {
-	    newStartVnode = newCh[++newStartIdx];
-	} else if (newEndVnode === null) {
-	    newEndVnode = newCh[--newEndIdx];
-	} else if (sameVnode(oldStartVnode, newStartVnode)) {
-	    patchVnode(oldStartVnode, newStartVnode);
-	    oldStartVnode = oldCh[++oldStartIdx];
-	    newStartVnode = newCh[++newStartIdx];
-	} else if (sameVnode(oldEndVnode, newEndVnode)) {
-	    patchVnode(oldEndVnode, newEndVnode);
-	    oldEndVnode = oldCh[--oldEndIdx];
-	    newEndVnode = newCh[--newEndIdx];
-	} else if (sameVnode(oldStartVnode, newEndVnode)) {
-	    patchVnode(oldStartVnode, newEndVnode);
-	    parentElm.addChildAt(/** @type {Container} */(oldStartVnode.elm), parentElm.getChildIndex(/** @type {Container} */(oldEndVnode.elm)) + 1);
-	    oldStartVnode = oldCh[++oldStartIdx];
-	    newEndVnode = newCh[--newEndIdx];
-	} else if (sameVnode(oldEndVnode, newStartVnode)) {
-	    patchVnode(oldEndVnode, newStartVnode);
-	    parentElm.addChildAt(/** @type {Container} */(oldEndVnode.elm), parentElm.getChildIndex(/** @type {Container} */(oldStartVnode.elm)));
-	    oldEndVnode = oldCh[--oldEndIdx];
-	    newStartVnode = newCh[++newStartIdx];
-	} else {
-	    if (oldKeyToIdx === undefined) {
-		oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx);
-	    }
-	    const idxInOld = oldKeyToIdx[newStartVnode.props.key];
-	    if (idxInOld === undefined) {
-		parentElm.addChildAt(createElm(newStartVnode), parentElm.getChildIndex(/** @type {Container} */(oldStartVnode.elm)))
-	    } else {
-		const elmToMove = oldCh[idxInOld];
-		patchVnode(elmToMove, newStartVnode);
-		parentElm.addChildAt(/** @type {Container} */(elmToMove.elm), parentElm.getChildIndex(/** @type {Container} */(oldStartVnode.elm)));
-		oldCh[idxInOld] = undefined;
-	    }
-	    newStartVnode = newCh[++newStartIdx];
-	}
+        if (oldStartVnode === null) {
+            oldStartVnode = oldCh[++oldStartIdx];
+        } else if (oldEndVnode === null) {
+            oldEndVnode = oldCh[--oldEndIdx];
+        } else if (newStartVnode === null) {
+            newStartVnode = newCh[++newStartIdx];
+        } else if (newEndVnode === null) {
+            newEndVnode = newCh[--newEndIdx];
+        } else if (sameVnode(oldStartVnode, newStartVnode)) {
+            patchVnode(oldStartVnode, newStartVnode);
+            oldStartVnode = oldCh[++oldStartIdx];
+            newStartVnode = newCh[++newStartIdx];
+        } else if (sameVnode(oldEndVnode, newEndVnode)) {
+            patchVnode(oldEndVnode, newEndVnode);
+            oldEndVnode = oldCh[--oldEndIdx];
+            newEndVnode = newCh[--newEndIdx];
+        } else if (sameVnode(oldStartVnode, newEndVnode)) {
+            patchVnode(oldStartVnode, newEndVnode);
+            parentElm.addChildAt(/** @type {Container} */(oldStartVnode.elm), parentElm.getChildIndex(/** @type {Container} */(oldEndVnode.elm)) + 1);
+            oldStartVnode = oldCh[++oldStartIdx];
+            newEndVnode = newCh[--newEndIdx];
+        } else if (sameVnode(oldEndVnode, newStartVnode)) {
+            patchVnode(oldEndVnode, newStartVnode);
+            parentElm.addChildAt(/** @type {Container} */(oldEndVnode.elm), parentElm.getChildIndex(/** @type {Container} */(oldStartVnode.elm)));
+            oldEndVnode = oldCh[--oldEndIdx];
+            newStartVnode = newCh[++newStartIdx];
+        } else {
+            if (oldKeyToIdx === undefined) {
+                oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx);
+            }
+            const idxInOld = oldKeyToIdx[newStartVnode.props.key];
+            if (idxInOld === undefined) {
+                parentElm.addChildAt(createElm(newStartVnode), parentElm.getChildIndex(/** @type {Container} */(oldStartVnode.elm)))
+            } else {
+                const elmToMove = oldCh[idxInOld];
+                patchVnode(elmToMove, newStartVnode);
+                parentElm.addChildAt(/** @type {Container} */(elmToMove.elm), parentElm.getChildIndex(/** @type {Container} */(oldStartVnode.elm)));
+                oldCh[idxInOld] = undefined;
+            }
+            newStartVnode = newCh[++newStartIdx];
+        }
     }
 
     if (oldStartIdx > oldEndIdx) {
-	const refIdx = newCh[newEndIdx + 1] ? parentElm.getChildIndex(/** @type {Container} */(newCh[newEndIdx + 1].elm)) : parentElm.children.length;
-	for (let i = newStartIdx; i <= newEndIdx; ++i) {
-	    parentElm.addChildAt(createElm(newCh[i]), refIdx);
-	}
+        const refIdx = newCh[newEndIdx + 1] ? parentElm.getChildIndex(/** @type {Container} */(newCh[newEndIdx + 1].elm)) : parentElm.children.length;
+        for (let i = newStartIdx; i <= newEndIdx; ++i) {
+            parentElm.addChildAt(createElm(newCh[i]), refIdx);
+        }
     } else if (newStartIdx > newEndIdx) {
-	for (let i = oldStartIdx; i <= oldEndIdx; ++i) {
-	    if (oldCh[i]) {
-		invokeRemoveHook(parentElm, oldCh[i]);
-	    }
-	}
+        for (let i = oldStartIdx; i <= oldEndIdx; ++i) {
+            if (oldCh[i]) {
+                invokeRemoveHook(parentElm, oldCh[i]);
+            }
+        }
     }
 }

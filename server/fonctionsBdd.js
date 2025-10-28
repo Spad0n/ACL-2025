@@ -5,7 +5,9 @@ const sqlite3 = sqlite3pkg.verbose();
 
 function creerTableUtilisateur(dataBase) {
     const sql = `CREATE TABLE utilisateurs(id INTEGER PRIMARY KEY, email, password)`;
-    dataBase.run(sql) ;
+    dataBase.run(sql, (err) => {
+	setTimeout( () => console.log("La table : utilisateurs existe deja") );
+    }) ;
 }
 
 function creerBdd(chemin) {
@@ -25,17 +27,37 @@ function ajouterUtilisateur(dataBase, objetUtilisateur) {
     
     dataBase.run(sql, [objetUtilisateur.username, objetUtilisateur.password], (err) => {
 	if (err) {
-	    setTimeout( () => console.log("added to database") );
+	    setTimeout( () => console.log("not added to database") );
 	    return console.error(err.message) ;
 	}
     });
 
 }
 
-function initBdd(bdd) {
-    creerTableUtilisateur(bdd);
+function retournerContenuTableUtilisateur(dataBase) {
+
+    return new Promise( (res, rej) => {
+	const sql = `SELECT * FROM utilisateurs` ;
+	dataBase.all(sql,[] ,(err, rows) => {
+	    if(err) {
+		rej(err);
+	    }
+	    res(rows); 
+	}) ;
+    }) ;
 }
 
-const bdd = creerBdd("server/bdd.db") ;
+function initBdd(dataBase) {
+    try {
+	creerTableUtilisateur(dataBase);
+    }
+    catch (err) {
+	setTimeout( () => console.log(err) );
+    }
+}
 
-export { bdd , initBdd , ajouterUtilisateur } ;
+// ici bdd.db le chemin depend de l'endroit ou la commande node a ete excute.
+const bdd = creerBdd("bdd.db") ;
+initBdd(bdd);
+
+export { bdd , initBdd , ajouterUtilisateur, retournerContenuTableUtilisateur } ;

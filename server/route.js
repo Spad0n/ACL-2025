@@ -1,6 +1,6 @@
 import { createHash } from "crypto"; 
 import { createJWT } from "./outils/jwt.js";
-import { bdd, ajouterUtilisateur } from "./fonctionsBdd.js";
+import { bdd, ajouterUtilisateur, retournerContenuTableUtilisateur } from "./fonctionsBdd.js";
 
 const forum = createDefaultForum();
 
@@ -39,18 +39,32 @@ export function createAccount(req, res) {
 
   else {
 
-    const user = {
+      const user = {
         id: getNewId(),
         username,
         password: createHash("sha256").update(password).digest("hex"),
-    };
+      };
 
       ajouterUtilisateur(bdd,user);
-    forum.users.push(user);
-    console.log(forum.users);
-    const token = createJWT(user);
-    res.cookie("accessToken", token, { httpOnly: true });
-    res.redirect("/login");
+      
+      forum.users.push(user);
+      // console.log(forum.users);
+      const token = createJWT(user);
+
+      // On affiche le contenu de la table pour voir si elle a bien ete peuple
+      retournerContenuTableUtilisateur(bdd)
+      
+	  .then( (value) => {
+	      console.log("Affichage contenu BBD table : UTILISATEURS");
+
+	      value.forEach( (row) => {
+		  console.log(row);
+	      })
+	  })
+	  .catch( (err) => { console.error(err); } );
+      
+      res.cookie("accessToken", token, { httpOnly: true });
+      res.redirect("/login");
   }
 }
 

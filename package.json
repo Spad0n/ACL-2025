@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node server/index.js",
+    "start": "./creationFichierBDD.sh && node server/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "npm --prefix client install && npm --prefix client run build"
   },
@@ -25,6 +25,7 @@
     "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "sqlite3": "^5.1.7"
   }
 }

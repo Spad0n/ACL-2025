@@ -107,7 +107,7 @@ function applyProps(elm, props) {
  * @param {VNode} vnode 
  * @returns {Container}
  */
-function createElm(vnode) {
+export function createElm(vnode) {
     if (vnode === null) {
 	const placeholder = new Container();
 	placeholder.visible = false;

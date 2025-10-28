@@ -1,5 +1,6 @@
 import { createHash } from "crypto"; 
 import { createJWT } from "./outils/jwt.js";
+import { bdd, ajouterUtilisateur } from "./fonctionsBdd.js";
 
 const forum = createDefaultForum();
 
@@ -43,7 +44,8 @@ export function createAccount(req, res) {
         username,
         password: createHash("sha256").update(password).digest("hex"),
     };
-    
+
+      ajouterUtilisateur(bdd,user);
     forum.users.push(user);
     console.log(forum.users);
     const token = createJWT(user);

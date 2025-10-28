@@ -58,49 +58,51 @@ app.get("/register", routes.getAccountCreationPage);
 
 app.post("/account/new", routes.createAccount);
 
-
-
 app.post("/logUser", routes.login);
 
+// TODO: à modifier pour la base de donnée
+// NOTE: peut etre recevoir uniquement l'id et recuperer le reste depuis la base de donnée
 app.get('/dialog/event-form', (req, res) => {
-    const {action, date, id, title, description, color} = req.query;
+    const { action, date, id, title, description, color, start, end } = req.query;
+
     const model = {
-	action: action, // add ou edit
-	date: date,
-	event: {
-	    id: id || null,
-	    title: title || '',
-	    description: description || '',
-	    color: color ? "#" + ('000000' + parseInt(color).toString(16)).slice(-6) : "#ff0000",
-	}
+        action: action, // 'add' ou 'edit'
+        date: date, 
+        event: {
+            id: id || null,
+            title: title || '',
+            description: description || '',
+            start: start || null,
+            end: end || null,
+	    color: color ? parseInt(color, 10) : 0xff0000
+        }
     };
-    res.render('dialog', model)
+    res.render('dialog', model);
 });
 
+// TODO: à modifier pour la base de donnée
 app.post('/events', (req, res) => {
-    const { id, date, title, description, color } = req.body;
+    const { id, title, description, color, start, end } = req.body;
 
-    const parsedDate = new Date(date);
+    const startDate = new Date(start);
+    const endDate = new Date(end);
 
     const savedEvent = {
         // Si l'ID existe, on le garde (édition), sinon on en génère un nouveau (ajout)
         id: id || `evt_${Date.now()}`, 
         title: title,
         description: description,
-        // On convertit la couleur hex (#RRGGBB) en nombre (0xRRGGBB) pour PixiJS
         color: parseInt(color.substring(1), 16),
-        day: parsedDate.getDate(),
-        month: parsedDate.getMonth(),
-        year: parsedDate.getFullYear()
+        start: startDate.toISOString(),
+        end: endDate.toISOString()
     };
 
     console.log('Événement sauvegardé côté serveur:', savedEvent);
 
-    // 3. On envoie l'événement au client via l'en-tête HX-Trigger
-    // La clé est le nom de l'événement ('eventSaved'), la valeur est la donnée.
+    // On envoie l'événement complet (avec start/end) au client via l'en-tête HX-Trigger
     res.set('HX-Trigger', JSON.stringify({ 'eventSaved': savedEvent }));
 
-    // 4. On renvoie une réponse vide pour que htmx vide le #dialog-container (grâce à innerHTML)
+    // On renvoie une réponse vide pour que htmx vide le #dialog-container
     res.send('');
 });
 

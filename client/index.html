@@ -17,6 +17,21 @@
              dialog.showModal();
          }
      });
+
+     document.body.addEventListener("eventSaved", (evt) => {
+         const serverData = evt.detail;
+         const formattedEvent = {
+             ...serverData,
+             startDate: new Date(serverData.startDate),
+             endDate: new Date(serverData.endDate),
+             color: parseInt(serverData.color.substring(1), 16),
+         };
+
+         const appEvent = new CustomEvent('dispatchApp', {
+             detail: { type: 'SAVE_EVENT', event: formattedEvent }
+         });
+         document.body.dispatchEvent(appEvent);
+     });
     </script>
   </body>
 </html>

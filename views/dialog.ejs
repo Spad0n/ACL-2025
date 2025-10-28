@@ -1,3 +1,15 @@
+<%
+  const formatForInput = (isoString) => {
+    if (!isoString) return "";
+    // new Date(isoString) gère à la fois une date ISO complète et la date simple passée pour un nouvel event
+    return new Date(isoString).toISOString().slice(0, 16);
+  };
+
+  // Helper pour convertir un nombre en chaîne hexadécimale #RRGGBB
+  const formatColorForInput = (colorNumber) => {
+    return "#" + (colorNumber || 0xff0000).toString(16).padStart(6, "0");
+  };
+%>
 <dialog>
   <form hx-post="/events" hx-target="#dialog-container" hx-swap="innerHTML">
     <h3><%= action === "add" ? "Ajouter un événement" : "Modifier l'événement" %></h3>
@@ -5,11 +17,21 @@
     <% if (action === "edit") { %>
       <input type="hidden" name="id" value="<%= event.id %>">
     <% } %>
-    <input type="hidden" name="date" value="<%= date %>">
 
     <div>
       <label for="title">Titre</label>
       <input type="text" id="title" name="title" value="<%= event.title || '' %>" required>
+    </div>
+
+    <div>
+      <label for="start">Début</label>
+      <!-- Pour un nouvel événement, event.start est null, on utilise 'date' -->
+      <input type="datetime-local" id="start" name="start" value="<%= formatForInput(event.start || date) %>" required>
+    </div>
+
+    <div>
+      <label for="end">Fin</label>
+      <input type="datetime-local" id="end" name="end" value="<%= formatForInput(event.end || '') %>" required>
     </div>
     
     <div>
@@ -19,7 +41,7 @@
 
     <div>
       <label for="color">Couleur</label>
-      <input type="color" id="color" name="color" value="<%= event.color || '#ff0000' %>">
+      <input type="color" id="color" name="color" value="<%= formatColorForInput(event.color) %>">
     </div>
     
     <footer>

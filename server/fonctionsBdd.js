@@ -1,10 +1,12 @@
 "use strict";
 
 import sqlite3pkg from "sqlite3" ;
+import { createHash } from "crypto";
+
 const sqlite3 = sqlite3pkg.verbose();
 
 function creerTableUtilisateur(dataBase) {
-    const sql = `CREATE TABLE utilisateurs(id INTEGER PRIMARY KEY, email, password)`;
+    const sql = `CREATE TABLE utilisateurs(id INTEGER PRIMARY KEY, username, password)`;
     dataBase.run(sql, (err) => {
 	setTimeout( () => console.log("La table : utilisateurs existe deja") );
     }) ;
@@ -22,8 +24,24 @@ function dropTable(dataBase, tableName) {
     dataBase.run("DROP TABLE utilisateurs");
 }
 
+function fetchUtilisateur(dataBase, username, password) {
+
+    return new Promise( (res, rej) => {
+	const sql       = `SELECT username, password FROM utilisateurs WHERE utilisateurs.username=? AND utilisateurs.password=?` ;
+
+	const mdpHashed = createHash("sha256").update(password).digest("hex");
+
+	dataBase.all(sql,[username,mdpHashed] ,(err, rows) => {
+	    if(err) {
+		rej(err);
+	    }
+	    res(rows); 
+	}) ;
+    }) ;
+}
+
 function ajouterUtilisateur(dataBase, objetUtilisateur) {
-    const sql = `INSERT INTO utilisateurs(email, password) VALUES (?,?)` ;
+    const sql = `INSERT INTO utilisateurs(username, password) VALUES (?,?)` ;
     
     dataBase.run(sql, [objetUtilisateur.username, objetUtilisateur.password], (err) => {
 	if (err) {
@@ -60,4 +78,4 @@ function initBdd(dataBase) {
 const bdd = creerBdd("bdd.db") ;
 initBdd(bdd);
 
-export { bdd , initBdd , ajouterUtilisateur, retournerContenuTableUtilisateur } ;
+export { bdd , initBdd , ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur } ;

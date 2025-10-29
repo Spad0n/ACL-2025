@@ -1,6 +1,6 @@
 import { createHash } from "crypto"; 
 import { createJWT } from "./outils/jwt.js";
-import { bdd, ajouterUtilisateur, retournerContenuTableUtilisateur } from "./fonctionsBdd.js";
+import { bdd, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur } from "./fonctionsBdd.js";
 
 const forum = createDefaultForum();
 
@@ -80,15 +80,21 @@ export function authenticate(req, res, next) {
 
 
 export function login(req, res) {
-  const { username, password } = req.body;
-  const user = forum.users.find((user) => user.username === username);
-  if (user && user.password == createHash("sha256").update(password).digest("hex")) {
-    const token = createJWT(user);
-    res.cookie("accessToken", token, { httpOnly: true });
-    res.redirect("/");
-  } else {
-    res.redirect("/login?message=Nom+d'utilisateur/mot+de+passe+invalide.") ;
-  }
+    const { username, password } = req.body;
+    const user = forum.users.find((user) => user.username === username);
+    fetchUtilisateur(bdd, username, password)
+	.then( (result) => {
+	    // Si on trouve l'utilisateur on crée un token et on redirige.
+	    if (result.length == 1) {
+		const token = createJWT(user);
+		res.cookie("accessToken", token, { httpOnly: true });
+		res.redirect("/");
+	    }
+	    else {
+		res.redirect("/login?message=Nom+d'utilisateur/mot+de+passe+invalide.") ;
+	    }
+	})
+	.catch( (err) => { console.error(err); } );
 }
 
 

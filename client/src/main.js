@@ -1,425 +1,259 @@
-import { eventListenersModule, init, h, classModule } from "snabbdom";
-
-const patch = init([
-    classModule,
-    eventListenersModule
-])
-
-const STORAGE_KEY = "app";
-
-/**
- * @typedef {import("snabbdom").VNode} VNode
- */
+import { Application, Container, TextStyle } from "pixi.js";
+import { initBackground } from "./background.js";
+import { h, patch } from "./ui/elm.js";
+import { uiButton, CalendarDay } from "./components.js";
+import { format, isSameDay, parseISO, startOfWeek } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import htmx from "htmx.org";
 
 /**
- * @typedef {object} Event
+ * @typedef {Object} CalendarEventData
  * @property {string} id
+ * @property {string} start - Date de debut au format ISO 8601
+ * @property {string} end - Date de fin au format ISO 8601
  * @property {string} title
  * @property {string} description
- * @property {string} startDate
- * @property {string} endDate
+ * @property {number} color - Couleur uniquement au format numérique (ex: 0xff0000)
+ * @property {number} [yOffset]
  */
 
 /**
- * @typedef {object} FormState
- * @property {string} title
- * @property {string} description
- * @property {string} startDate
- * @property {string} endDate
+ * @typedef {Object} AppModel
+ * @property {Date} currentWeekStart
+ * @property {CalendarEventData[]} events
+ * @property {Date | null} addingDate
  */
 
 /**
- * @typedef {object} Model
- * @property {'list' | 'form'} route
- * @property {Event[]} events
- * @property {FormState} form
+ * @typedef {Object} Msg
+ * @property {'PREV_WEEK' | 'NEXT_WEEK' | 'ADD_EVENT' | 'EDIT_EVENT' | 'DELETE_EVENT' | 'SAVE_EVENT' } type
+ * @property {Date} [date]
+ * @property {CalendarEventData} [event]
  */
 
-/**
- * @typedef {'NAVIGATE_TO_FORM' | 'CREATE_EVENT' | 'CANCEL_CREATION' | 'UPDATE_FORM_FIELD' | 'DELETE_EVENT'} Type
- */
+const MONTH_NAMES = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+const DAY_NAMES = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"]; // Pour l'affichage des jours de la semaine
+
+const headerStyle = new TextStyle({
+    fill: 0xffffff,
+    fontSize: 36,
+    fontWeight: 'bold',
+});
 
 /**
- * @returns {Model}
+ * @param {Date} date 
+ * @param {number} days
  */
-function initModel() {
-    return {
-	route: 'list',
-	events: [],
-	form: {
-	    title: "",
-	    description: "",
-	    startDate: "",
-	    endDate: "",
-	}
-    }
+function addDays(date, days) {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
 }
 
 /**
- * @returns {Model}
+ * @param {Application} app 
+ * @param {AppModel} model 
+ * @param {(msg: Msg) => void} dispatch 
  */
-function loadModel() {
-    const savedState = localStorage.getItem(STORAGE_KEY);
-    if (savedState) {
-	try {
-	    return JSON.parse(savedState)
-	} catch (e) {
-	    console.error("Impossible de lire l'état sauvegardé, on repart de zéro.", e);
-	    return initModel();
-	}
-    }
-    return initModel();
-}
+function view(app, model, dispatch) {
+    const weekDays = Array.from({length: 7}, (_, i) => addDays(model.currentWeekStart, i));
 
-/**
- * @param {{type: Type, payload?: any}} msg 
- * @param {Model} model 
- * @returns {Model}
- */
-function update(msg, model) {
-    switch (msg.type) {
-    case 'NAVIGATE_TO_FORM':
-	return { ...model, route: 'form' };
-    case 'UPDATE_FORM_FIELD':
-	return {
-	    ...model,
-	    form: {
-		...model.form,
-		[msg.payload.field]: msg.payload.value
-	    }
-	};
-    case 'CREATE_EVENT':
-	if (!model.form.title) {
-	    return model;
-	}
-	const newEvent = {
-	    id: Date.now().toString(),
-	    ...model.form
-	};
+    const calendarDays = weekDays.map((date, index) => {
+        const dayEvents = model.events.filter(event =>
+            isSameDay(parseISO(event.start), date)
+        );
 
-	return {
-	    ...model,
-	    route: 'list',
-	    events: [...model.events, newEvent],
-	    form: initModel().form
-	};
-    case 'CANCEL_CREATION':
-	return {
-	    ...model,
-	    route: 'list',
-	    form: initModel().form
-	};
-    case 'DELETE_EVENT':
-	return {
-	    ...model,
-	    route: 'list',
-	    events: [...model.events.filter((value, _index, _arr) => value.id !== msg.payload)]
-	}
-    default:
-	return model;
-    }
-}
+        const dayWidth = 170;
+        const startX = (app.screen.width - (7 * dayWidth)) / 2;
+        const xPos = startX + index * dayWidth;
+        const yPos = 130;
 
-/**
- * @param {Model} model
- * @param {(msg: {type: Type, payload?: any}) => void} dispatch
- * @returns {VNode}
- */
-function view(model, dispatch) {
-    switch (model.route) {
-    case 'form':
-	return viewForm(model, dispatch);
-    case 'list':
-    default:
-	return viewList(model, dispatch);
-    }
-}
-
-/**
- * @param {Model} model
- * @param {(msg: {type: Type, payload?: any}) => void} dispatch
- * @returns {VNode}
- */
-function viewList(model, dispatch) {
-    return h('div#conteneur', [
-	h('h1', 'Mes evenements'),
-	h('button#inscriptionBouton', {	on: { click: () => {
-	    fetch('/logout', { method: 'GET', credentials: "include" })
-				.then(() => window.location.href = '/login') // redirection vers la page login
-				.catch((error) => console.error('La déconnexion a échoué:', error));
-			}
-		}
-	}, 'Se déconnecter'),
-	h('button#inscriptionBouton', { on: { click: () => dispatch({ type: 'NAVIGATE_TO_FORM' }) } }, 'Créer un evenements'),
-	model.events.length === 0
-	    ? h('p', 'Aucun événement pour le moment.')
-	    : h('ul', model.events.map(event =>
-		    //h('li', `${event.title} ${event.description} (du ${event.startDate} au  ${event.endDate})`)
-		h('li', [
-		    `${event.title} ${event.description} (du ${event.startDate} au  ${event.endDate})`,
-		    h('button', { props: { type: 'button' }, on: {click: () => dispatch({type: 'DELETE_EVENT', payload: event.id}) }}, "Delete")
-		])
-	    ))
-    ]);
-}
-
-/**
- * @param {Model} model
- * @param {(msg: {type: Type, payload?: any}) => void} dispatch
- * @returns {VNode}
- */
-function viewForm(model, dispatch) {
-    /**
-     * @param {string} label 
-     * @param {string} type 
-     * @param {keyof FormState} field 
-     * @param {boolean} required 
-     * @returns {VNode}
-     */
-    function formInput(label, type, field, required) {
-    	return h('div.form-group', [
-    	    h('label', { props: { for: field } }, label),
-    	    h('input', {
-    		props: { id: field, type, required, value: model.form[field] },
-    		on: { input: (e) => {
-		    const target = /** @type {HTMLInputElement} */ (e.target);
-		    dispatch({ type: 'UPDATE_FORM_FIELD', payload: { field, value: target.value}})
-		}}
-    	    }),
-    	]);
-    }
-    //const formInput = (label, type, field, required) => 
-
-    return h('div#conteneur', [
-	h('h1', 'Crée un nouvel événement'),
-	h('form', { on: { submit: (e) => { e.preventDefault(); dispatch({type: 'CREATE_EVENT' }); }}}, [
-	    formInput("Titre de l'evenement", "text", "title", true),
-	    formInput("Description (optionnel)", "text", "description", false),
-	    formInput("Date de debut", "date", "startDate", true),
-	    formInput("Date de fin", "date", "endDate", true),
-	    h('div.buttons', [
-		h('button#inscriptionBouton', { props: { type: 'submit' } }, "Sauvegarder"),
-		h('button#connexionBouton', { props: { type: 'button' }, on: { click: () => dispatch({type: 'CANCEL_CREATION' }) } }, "Annuler"),
-	    ])
-	])
-    ]);
-}
-
-/* WEBGL */
-/**
- * @param {WebGL2RenderingContext} gl 
- * @param {GLenum} type 
- * @param {string} source 
- * @returns {WebGLShader | null}
- */
-function createShader(gl, type, source) {
-    const shader = /** @type {WebGLShader} */ (gl.createShader(type));
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-	console.error(gl.getShaderInfoLog(shader));
-	gl.deleteShader(shader);
-	return null;
-    }
-    return shader;
-}
-
-/**
- * @param {WebGL2RenderingContext} gl 
- * @param {string} vertexSource 
- * @param {string} fragmentSource 
- * @returns {WebGLProgram | null}
- */
-function createProgram(gl, vertexSource, fragmentSource) {
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
-    if (!vertexShader || !fragmentShader) return null;
-
-    const program = gl.createProgram();
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-	console.error(gl.getProgramInfoLog(program));
-	gl.deleteProgram(program);
-	return null;
-    }
-
-    gl.deleteShader(vertexShader);
-    gl.deleteShader(fragmentShader);
-    return program;
-}
-
-
-(async () => {
-    const container = /** @type {HTMLElement} */ (document.getElementById("app"));
-
-    let model = loadModel();
-    let vnode = view(model, dispatch);
-
-    patch(container, vnode);
-
-    /**
-     * @param {{type: Type, payload?: any}} msg 
-     */
-    function dispatch(msg) {
-	console.log('Action: ', msg);
-
-	model = update(msg, model);
-
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(model));
-
-	const newVNode = view(model, dispatch);
-
-	patch(vnode, newVNode);
-
-	vnode = newVNode;
-    }
-
-    /* WEBGL */
-    const backgroundCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("canvasBackground"));
-    if (backgroundCanvas === null) {
-	return;
-    }
-
-    Object.assign(backgroundCanvas.style, {
-	position: "fixed",
-	top: "0",
-	left: "0",
-	width: "100vw",
-	height: "100vh",
-	"z-index": "-1",
-	pointerEvents: "none",
+        return h("container", `day-container-${date.toISOString()}`, { x: xPos, y: yPos }, [
+            h(CalendarDay, `calendar-day-${date.toISOString()}`, {
+                dayNumber: date.getDate(),
+                //dayName: DAY_NAMES[date.getDay()],
+                dayName: format(date, 'eee', { locale: fr }),
+                events: dayEvents,
+                /** @param {CalendarEventData} event */
+                onEditEvent: (event) => dispatch({ type: 'EDIT_EVENT', event }),
+                /** @param {CalendarEventData} event */
+                onDeleteEvent: (event) => dispatch({ type: 'DELETE_EVENT', event }),
+                onAddEvent: () => dispatch({ type: 'ADD_EVENT', date: date }),
+            })
+        ]);
     });
 
-    const vertices = new Float32Array([
-	-1, -1, 0,  // bas gauche
-	 1, -1, 0,  // bas droite
-	-1,  1, 0,  // haut gauche
-	-1,  1, 0,  // haut gauche
-	 1, -1, 0,  // bas droite
-	 1,  1, 0,  // haut droite
+    const weekDisplayStart = weekDays[0];
+    const weekDisplayEnd = weekDays[6];
+
+    const headerText = `${format(weekDisplayStart, 'd MMMM yyyy', { locale: fr })} - ${format(weekDisplayEnd, 'd MMMM yyyy', { locale: fr })}`;
+
+    return h("container", "app-root", {}, [
+        h("container", "calendar-header", { x: app.screen.width / 2, y: 30, pivot: 0.5 }, [
+            uiButton({
+                key: "prev-week",
+                x: -200,
+                y: 30,
+                text: "<",
+                onClick: () => dispatch({ type: 'PREV_WEEK' }),
+                width: 50,
+            }),
+            h("text", "month-year", {
+                text: headerText,
+                style: headerStyle,
+                x: 0,
+                y: 0,
+                anchor: 0.5,
+            }),
+            uiButton({
+                key: "next-week",
+                x: 150,
+                y: 30,
+                text: ">",
+                onClick: () => dispatch({ type: 'NEXT_WEEK' }),
+                width: 50,
+            }),
+        ]),
+
+        h("container", "calendar-grid", {}, calendarDays),
     ]);
-
-    const gl = /** @type {WebGL2RenderingContext} */ (backgroundCanvas.getContext("webgl2"));
-    if (gl === null) {
-	console.error("WebGL2 pas supporté");
-	return;
-    }
-
-    function resizeCanvas() {
-	backgroundCanvas.width = window.innerWidth;
-	backgroundCanvas.height = window.innerHeight;
-	gl.viewport(0, 0, backgroundCanvas.width, backgroundCanvas.height);
-    }
-
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
-
-    const vao = gl.createVertexArray();
-    const vbo = gl.createBuffer();
-
-    const vertexSource = `#version 300 es
-precision mediump float;
-layout (location = 0) in vec3 vertexPosition;
-
-out vec2 vUv;
-
-void main() {
-    vUv = vertexPosition.xy * 0.5 + 0.5;
-    gl_Position = vec4(vertexPosition, 1.0);
 }
-`;
 
-    const fragmentSource = `#version 300 es
-precision mediump float;
+/**
+ * @param {Msg} msg 
+ * @param {AppModel} model 
+ * @returns {AppModel}
+ */
+function update(msg, model) {
+    let newModel = { ...model };
 
-in vec2 vUv;
-out vec4 finalColor;
+    switch (msg.type) {
+    case 'PREV_WEEK':
+        newModel.currentWeekStart = addDays(newModel.currentWeekStart, - 7);
+        break;
+    case 'NEXT_WEEK':
+        newModel.currentWeekStart = addDays(newModel.currentWeekStart, 7);
+        break;
+    case 'ADD_EVENT':
+        const addUrl = `/dialog/event-form?action=add&date=${msg.date?.toISOString()}`
+        triggerHtmxDialog(addUrl);
+        break;
+    case 'EDIT_EVENT':
+        const event = /** @type {CalendarEventData} */(msg.event);
+        // NOTE: Faire que le serveur va chercher les autres données via l'ID, c'est plus propre
+        const params = new URLSearchParams({
+            action: "edit",
+            id: event.id,
+            title: event.title,
+            description: event.description,
+            start: event.start,
+            end: event.end,
+            color: event.color.toString(),
+        });
+        const editUrl = `/dialog/event-form?${params.toString()}`;
+        triggerHtmxDialog(editUrl);
+        break;
+    case 'DELETE_EVENT':
+        newModel.events = newModel.events.filter(e => e.id !== msg.event?.id);
+        break;
+    case 'SAVE_EVENT':
+        const savedEvent = msg.event;
 
-uniform vec3 iResolution;
-uniform float iTime;
+        const eventIndex = newModel.events.findIndex(e => e.id === savedEvent?.id);
 
-#define PIXEL_SIZE_FAC 700.0
-#define SPIN_EASE 0.5
-#define colour_2 vec4(55./255., 48./255., 56./255., 1.0)
-#define colour_1 vec4(54./255., 0./255., 113./255., 1.0)
-#define colour_3 vec4(0.0,0.0,0.0,1.0)
-#define spin_amount 0.7
-#define contrast 1.5
-
-void main() {
-
-    vec2 fragCoord = vUv * iResolution.xy;
-
-    //Convert to UV coords (0 - 1) and floor for pixel effect
-    float pixel_size = length(iResolution.xy)/PIXEL_SIZE_FAC;
-    vec2 uv = (floor(fragCoord.xy*(1.0/pixel_size))*pixel_size - 0.5*iResolution.xy)/length(iResolution.xy) - vec2(0.0, 0.0);
-    float uv_len = length(uv);
-
-    //Adding in a center swirl, changes with iTime. Only applies meaningfully if the 'spin amount' is a non-zero number
-    float speed = (iTime*SPIN_EASE*0.1) + 302.2;
-    float new_pixel_angle = (atan(uv.y, uv.x)) + speed - SPIN_EASE*20.*(1.*spin_amount*uv_len + (1. - 1.*spin_amount));
-    vec2 mid = (iResolution.xy/length(iResolution.xy))/2.;
-    uv = (vec2((uv_len * cos(new_pixel_angle) + mid.x), (uv_len * sin(new_pixel_angle) + mid.y)) - mid);
-
-	//Now add the paint effect to the swirled UV
-    uv *= 30.;
-    speed = iTime*(1.);
-	vec2 uv2 = vec2(uv.x+uv.y);
-
-    for(int i=0; i < 5; i++) {
-		uv2 += uv + cos(length(uv));
-		uv  += 0.5*vec2(cos(5.1123314 + 0.353*uv2.y + speed*0.131121),sin(uv2.x - 0.113*speed));
-		uv  -= 1.0*cos(uv.x + uv.y) - 1.0*sin(uv.x*0.711 - uv.y);
-	}
-
-    //Make the paint amount range from 0 - 2
-    float contrast_mod = (0.25*contrast + 0.5*spin_amount + 1.2);
-	float paint_res =min(2., max(0.,length(uv)*(0.035)*contrast_mod));
-    float c1p = max(0.,1. - contrast_mod*abs(1.-paint_res));
-    float c2p = max(0.,1. - contrast_mod*abs(paint_res));
-    float c3p = 1. - min(1., c1p + c2p);
-
-    vec4 ret_col = (0.3/contrast)*colour_1 + (1. - 0.3/contrast)*(colour_1*c1p + colour_2*c2p + vec4(c3p*colour_3.rgb, c3p*colour_1.a)) + 0.3*max(c1p*5. - 4., 0.) + 0.4*max(c2p*5. - 4., 0.);
-
-    finalColor = ret_col;
+        if (eventIndex > -1) {
+            console.log("Mise à jour d'un evenement existant:", savedEvent);
+            newModel.events = newModel.events.map((e) =>
+                e.id === savedEvent.id ? savedEvent : e
+            );
+        } else {
+            console.log("Ajout d'un nouvel événement:", savedEvent);
+            newModel.events = [...newModel.events, savedEvent];
+        }
+        break;
+    default:
+        console.warn("Unknown message type:", msg.type);
+    }
+    return newModel;
 }
-`;
 
-    const program = createProgram(gl, vertexSource, fragmentSource);
-    if (!program) {
-	console.error("echec de compilation des shaders");
-	return;
+/**
+ * @param {string} url 
+ */
+function triggerHtmxDialog(url) {
+    const triggerElement = document.createElement('div');
+    triggerElement.setAttribute('hx-get', url);
+    triggerElement.setAttribute('hx-target', "#dialog-container");
+    triggerElement.setAttribute('hx-swap', "innerHTML");
+
+    try {
+        document.body.appendChild(triggerElement);
+        htmx.process(triggerElement);
+        htmx.trigger(triggerElement, "click");
+    } finally {
+        document.body.removeChild(triggerElement);
+    }
+}
+
+(async () => {
+    const canvas = /** @type {HTMLCanvasElement | null} */ (document.getElementById("canvasBackground"));
+    if (canvas === null) {
+        console.error("ERROR: could not find the canvas");
+        return;
     }
 
-    gl.bindVertexArray(vao);
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    Object.assign(canvas.style, {
+        position: "fixed",
+        top: "0",
+        left: "0",
+        width: "100vw",
+        height: "100vh",
+        "z-index": "-1",
+    });
 
-    gl.useProgram(program);
+    const app = new Application();
+    await app.init({
+        canvas: canvas,
+        backgroundColor: 0x360071,
+        resizeTo: window,
+    });
 
-    gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    initBackground(app);
 
-    const uniform = {
-	iResolution: gl.getUniformLocation(program, "iResolution"),
-	iTime: gl.getUniformLocation(program, "iTime")
-    };
+    const appContainer = new Container();
+    app.stage.addChild(appContainer);
 
-    function render(time) {
-	time *= 0.001;
-        gl.clearColor(0.2, 0.3, 0.3, 1.0)
-        gl.clear(gl.COLOR_BUFFER_BIT)
+    const today = new Date();
 
-	gl.uniform3f(uniform.iResolution, backgroundCanvas.width, backgroundCanvas.height, 1.0);
-	gl.uniform1f(uniform.iTime, time);
+    let model = /** @type {AppModel} */({
+        currentWeekStart: startOfWeek(today, { weekStartsOn: 1 }),
+        events: [],
+        addingDate: null,
+    });
 
-	gl.drawArrays(gl.TRIANGLES, 0, 6);
+    let scene = patch(appContainer, null, view(app, model, dispatch));
 
-	requestAnimationFrame(render);
+    function reRender() {
+        const newScene = view(app, model, dispatch);
+        scene = patch(appContainer, scene, newScene);
     }
 
-    render();
+    /**
+     * @param {Msg} msg 
+     */
+    function dispatch(msg) {
+        model = update(msg, model);
+        const newScene = view(app, model, dispatch);
+        scene = patch(appContainer, scene, newScene);
+    }
+
+    app.renderer.on("resize", () => {
+        reRender();
+    });
+
+    document.body.addEventListener('eventSaved', (evt) => {
+        const savedEvent = evt.detail;
+        dispatch({ type: 'SAVE_EVENT', event: savedEvent });
+    });
 })();
+

@@ -13,8 +13,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "pixi.js": "^8.14.0",
-    "snabbdom": "^3.6.3"
+    "@pixi/ui": "^2.2.7",
+    "date-fns": "^4.1.0",
+    "gsap": "^3.13.0",
+    "htmx.org": "^2.0.8",
+    "pixi.js": "^8.14.0"
   },
   "devDependencies": {
     "vite": "^7.1.9"

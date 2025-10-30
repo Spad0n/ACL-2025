@@ -2,6 +2,8 @@
 
 import sqlite3pkg from "sqlite3" ;
 import { createHash } from "crypto";
+import { parseISO, setHours, setMinutes } from 'date-fns';
+
 
 const sqlite3 = sqlite3pkg.verbose();
 
@@ -10,6 +12,13 @@ function creerTableUtilisateur(dataBase) {
     dataBase.run(sql, (err) => {
 	setTimeout( () => console.log("La table : utilisateurs existe deja") );
     }) ;
+}
+
+function creerTableEvenement(dataBase){
+	const sql = 'CREATE TABLE IF NOT EXISTS evenements(id INTEGER PRIMARY KEY, title TEXT NOT NULL, start DATETIME NOT NULL, end DATETIME NOT NULL, description TEXT, couleur TEXT)';
+	dataBase.run(sql, (err) => {
+		setTimeout( () => console.log("La table : evenement existe déjà"));
+	})
 }
 
 function creerBdd(chemin) {
@@ -23,6 +32,10 @@ function creerBdd(chemin) {
 function dropTable(dataBase, tableName) {
     dataBase.run("DROP TABLE utilisateurs");
 }
+function dropTableEvenement(dataBase){
+    dataBase.run("DROP TABLE IF EXISTS evenements");
+}
+
 
 function fetchUtilisateur(dataBase, username, password) {
 
@@ -40,6 +53,27 @@ function fetchUtilisateur(dataBase, username, password) {
     }) ;
 }
 
+function recupEvenement(dataBase){
+    return new Promise((res, rej) => {
+        const sql = 'SELECT * FROM evenements ORDER BY start';
+        dataBase.all(sql, [], (err, rows) => {
+            if(err) return rej(err);
+
+            const events = rows.map(r => ({
+                id: r.id.toString(),
+                title: r.title,
+                description: r.description || '', // Pas obligatoire
+                color: r.couleur ? parseInt(r.couleur.replace('#',''), 16) : 0xff0000,
+                start: new Date(r.start).toISOString(),
+                end: new Date(r.end).toISOString()
+            }));
+
+            res(events);
+        });
+    });
+}
+
+
 function ajouterUtilisateur(dataBase, objetUtilisateur) {
     const sql = `INSERT INTO utilisateurs(username, password) VALUES (?,?)` ;
     
@@ -51,6 +85,29 @@ function ajouterUtilisateur(dataBase, objetUtilisateur) {
     });
 
 }
+
+function ajouterEvenement(dataBase, objectEvenement, callback) {
+    const sql = 'INSERT INTO evenements(title, start, end, description, couleur) VALUES (?,?,?,?,?)';
+    dataBase.run(sql, [
+        objectEvenement.title,
+        objectEvenement.start,
+        objectEvenement.end,
+        objectEvenement.description,
+        objectEvenement.couleur
+    ], function(err) {
+        if (err) {
+            console.error("Erreur ajout événement:", err.message);
+            if (callback) callback(err);
+        } else {
+            console.log(`Event ajouté avec l'id ${this.lastID}`);
+            objectEvenement.id = this.lastID.toString(); 
+            if (callback) callback(null, this.lastID);
+        }
+    });
+}
+
+
+
 
 function retournerContenuTableUtilisateur(dataBase) {
 
@@ -65,9 +122,23 @@ function retournerContenuTableUtilisateur(dataBase) {
     }) ;
 }
 
+function retournerContenuTableEvenement(dataBase) {
+
+    return new Promise( (res, rej) => {
+	const sql = `SELECT * FROM evenements` ;
+	dataBase.all(sql,[] ,(err, rows) => {
+	    if(err) {
+		rej(err);
+	    }
+	    res(rows); 
+	}) ;
+    }) ;
+}
+
 function initBdd(dataBase) {
     try {
 	creerTableUtilisateur(dataBase);
+	creerTableEvenement(dataBase);
     }
     catch (err) {
 	setTimeout( () => console.log(err) );
@@ -78,4 +149,4 @@ function initBdd(dataBase) {
 const bdd = creerBdd("bdd.db") ;
 initBdd(bdd);
 
-export { bdd , initBdd , ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur } ;
+export { bdd , initBdd , ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, retournerContenuTableEvenement} ;

@@ -6,6 +6,7 @@ import { format, isSameDay, parseISO, startOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import htmx from "htmx.org";
 
+
 /**
  * @typedef {Object} CalendarEventData
  * @property {string} id
@@ -78,7 +79,6 @@ function view(app, model, dispatch) {
                 onEditEvent: (event) => dispatch({ type: 'EDIT_EVENT', event }),
                 /** @param {CalendarEventData} event */
                 onDeleteEvent: (event) => dispatch({ type: 'DELETE_EVENT', event }),
-                onAddEvent: () => dispatch({ type: 'ADD_EVENT', date: date }),
             })
         ]);
     });
@@ -113,6 +113,14 @@ function view(app, model, dispatch) {
                 onClick: () => dispatch({ type: 'NEXT_WEEK' }),
                 width: 50,
             }),
+            uiButton({
+                key: "add-event",
+                x: 20,
+                y: 200,
+                text: "+",
+                onClick: () => dispatch({ type: 'ADD_EVENT'}),
+                width: 100,
+            })
         ]),
 
         h("container", "calendar-grid", {}, calendarDays),
@@ -135,7 +143,7 @@ function update(msg, model) {
         newModel.currentWeekStart = addDays(newModel.currentWeekStart, 7);
         break;
     case 'ADD_EVENT':
-        const addUrl = `/dialog/event-form?action=add&date=${msg.date?.toISOString()}`
+        const addUrl = `/dialog/event-form?action=add`
         triggerHtmxDialog(addUrl);
         break;
     case 'EDIT_EVENT':
@@ -230,6 +238,13 @@ function triggerHtmxDialog(url) {
         events: [],
         addingDate: null,
     });
+
+    try {
+        const serverEvents = await fetch('/events').then(res => res.json());
+        model.events = serverEvents;
+    } catch (err) {
+        console.error("Erreur lors de la récupération des événements :", err);
+    }
 
     let scene = patch(appContainer, null, view(app, model, dispatch));
 

@@ -5,6 +5,8 @@ import * as routes from './route.js';
 import dotenv from 'dotenv';
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
+import { bdd, recupEvenement, ajouterEvenement,retournerContenuTableEvenement } from './fonctionsBdd.js';
+
 
 
 dotenv.config();
@@ -60,8 +62,18 @@ app.post("/account/new", routes.createAccount);
 
 app.post("/logUser", routes.login);
 
-// TODO: à modifier pour la base de donnée
-// NOTE: peut etre recevoir uniquement l'id et recuperer le reste depuis la base de donnée
+// Récupération de tous les événements depuis la BDD
+app.get('/events', async (_req, res) => {
+    try {
+        const events = await recupEvenement(bdd); 
+        res.json(events);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Affichage du dialogue de création/édition
 app.get('/dialog/event-form', (req, res) => {
     const { action, date, id, title, description, color, start, end } = req.query;
 
@@ -74,22 +86,19 @@ app.get('/dialog/event-form', (req, res) => {
             description: description || '',
             start: start || null,
             end: end || null,
-	    color: color ? parseInt(color, 10) : 0xff0000
+            couleur: color ? parseInt(color, 10) : 0xff0000
         }
     };
     res.render('dialog', model);
 });
 
-// TODO: à modifier pour la base de donnée
 app.post('/events', (req, res) => {
-    const { id, title, description, color, start, end } = req.body;
+    const { title, description, color, start, end } = req.body;
 
     const startDate = new Date(start);
     const endDate = new Date(end);
 
     const savedEvent = {
-        // Si l'ID existe, on le garde (édition), sinon on en génère un nouveau (ajout)
-        id: id || `evt_${Date.now()}`, 
         title: title,
         description: description,
         color: parseInt(color.substring(1), 16),
@@ -97,14 +106,20 @@ app.post('/events', (req, res) => {
         end: endDate.toISOString()
     };
 
-    console.log('Événement sauvegardé côté serveur:', savedEvent);
+    // On ajoute dans la base
+    ajouterEvenement(bdd, savedEvent, (err, lastID) => {
+        if (err) {
+            res.status(500).send('Erreur côté serveur');
+            return;
+        }
 
-    // On envoie l'événement complet (avec start/end) au client via l'en-tête HX-Trigger
-    res.set('HX-Trigger', JSON.stringify({ 'eventSaved': savedEvent }));
-
-    // On renvoie une réponse vide pour que htmx vide le #dialog-container
-    res.send('');
+        savedEvent.id = lastID.toString(); 
+        res.set('HX-Trigger', JSON.stringify({ eventSaved: savedEvent }));
+        res.send('');
+    });
 });
+
+
 
 app.listen(PORT, (_err) => {
     console.log(`Serveur lancé sur https://localhost:${PORT}`);

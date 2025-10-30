@@ -272,17 +272,6 @@ export function CalendarDay(props) {
             x: 10,
             y: 20,
         }),
-        uiButton({
-            key: `add-event-${dayNumber}`,
-            x: 110,
-            y: 5,
-            width: 40,
-            height: 20,
-            text: "+",
-            color: 0x6a0dad,
-            fontSize: 12,
-            onClick: onAddEvent,
-        }),
         ...eventsWithYOffset.map(event =>
             h(CalendarEvent, `event-${event.id}`, { event, onEdit: onEditEvent, onDelete: onDeleteEvent })
         )

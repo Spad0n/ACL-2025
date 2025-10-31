@@ -5,6 +5,7 @@ import { createHash } from "crypto";
 
 const sqlite3 = sqlite3pkg.verbose();
 
+// Permet de créer la table UTILISATEURS dans le fichier bdd.db
 function creerTableUtilisateur(dataBase) {
     const sql = `CREATE TABLE utilisateurs(id INTEGER PRIMARY KEY, username, password)`;
     dataBase.run(sql, (err) => {
@@ -12,6 +13,7 @@ function creerTableUtilisateur(dataBase) {
     }) ;
 }
 
+// Ouvre une connexion avec la BDD
 function creerBdd(chemin) {
     return new sqlite3.Database(chemin, sqlite3.OPEN_READWRITE, (err) => {
 	if (err) {
@@ -20,14 +22,16 @@ function creerBdd(chemin) {
     });
 }
 
+// Permet de supprimer une table
 function dropTable(dataBase, tableName) {
-    dataBase.run("DROP TABLE utilisateurs");
+    dataBase.run(`DROP TABLE ${tableName}`);
 }
 
+// Permet d'aller chercher un utilisateur dans la BDD
 function fetchUtilisateur(dataBase, username, password) {
 
     return new Promise( (res, rej) => {
-	const sql       = `SELECT username, password FROM utilisateurs WHERE utilisateurs.username=? AND utilisateurs.password=?` ;
+	const sql       = `SELECT id, username, password FROM utilisateurs WHERE utilisateurs.username=? AND utilisateurs.password=?` ;
 
 	const mdpHashed = createHash("sha256").update(password).digest("hex");
 
@@ -40,6 +44,7 @@ function fetchUtilisateur(dataBase, username, password) {
     }) ;
 }
 
+// Permet d'ajouter un utilisateur dans la BDD
 function ajouterUtilisateur(dataBase, objetUtilisateur) {
     const sql = `INSERT INTO utilisateurs(username, password) VALUES (?,?)` ;
     
@@ -52,6 +57,7 @@ function ajouterUtilisateur(dataBase, objetUtilisateur) {
 
 }
 
+// Permet de récupérer le contenu d'une table
 function retournerContenuTableUtilisateur(dataBase) {
 
     return new Promise( (res, rej) => {
@@ -65,6 +71,7 @@ function retournerContenuTableUtilisateur(dataBase) {
     }) ;
 }
 
+// Permet d'initialiser la BDD en créant la table utilisateur
 function initBdd(dataBase) {
     try {
 	creerTableUtilisateur(dataBase);

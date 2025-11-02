@@ -106,7 +106,38 @@ function ajouterEvenement(dataBase, objectEvenement, callback) {
     });
 }
 
+function modifierEvenement(dataBase, objectEvenement, callback) {
+    const sql = 'UPDATE evenements SET title = ?, start = ?, end = ?, description = ?, couleur = ? WHERE id = ?';
+    dataBase.run(sql, [
+        objectEvenement.title,
+        objectEvenement.start,
+        objectEvenement.end,
+        objectEvenement.description,
+        objectEvenement.couleur,
+        objectEvenement.id
+    ], function(err) {
+        if (err) {
+            console.error("Erreur modification événement:", err.message);
+            if (callback) callback(err);
+        } else {
+            console.log(`Event modifié avec l'id ${objectEvenement.id}`);
+            if (callback) callback(null);
+        }
+    });
+}
 
+function supprimerEvenement(dataBase, eventId, callback) {
+    const sql = 'DELETE FROM evenements WHERE id = ?';
+    dataBase.run(sql, [eventId], function(err) {
+        if (err) {
+            console.error("Erreur suppression événement:", err.message);
+            if (callback) callback(err);
+        } else {
+            console.log(`Event supprimé avec l'id ${eventId}`);
+            if (callback) callback(null);
+        }
+    });
+}
 
 
 function retournerContenuTableUtilisateur(dataBase) {
@@ -149,4 +180,4 @@ function initBdd(dataBase) {
 const bdd = creerBdd("bdd.db") ;
 initBdd(bdd);
 
-export { bdd , initBdd , ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, retournerContenuTableEvenement} ;
+export { bdd , initBdd , ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement} ;

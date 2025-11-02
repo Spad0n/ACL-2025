@@ -10,6 +10,26 @@
     return "#" + (colorNumber || 0xff0000).toString(16).padStart(6, "0");
   };
 %>
+
+<%
+    if (action === "delete") {
+%>
+    <dialog>
+        <form hx-post="/events/delete" hx-target="#dialog-container" hx-swap="innerHTML">
+            <h3>Supprimer l'événement</h3>
+            <input type="hidden" name="id" value="<%= event.id %>">
+            <p>Êtes-vous sûr de vouloir supprimer l'événement "<%= event.title %>" ?</p>
+            <footer>
+            <button type="button" onclick="this.closest('dialog').close()" id="connexionBouton">Annuler</button>
+            <button type="submit" id="inscriptionBouton">Supprimer</button>
+            </footer>
+        </form>
+    </dialog>
+<%
+    }
+%>
+
+
 <dialog>
   <form hx-post="/events" hx-target="#dialog-container" hx-swap="innerHTML">
     <h3><%= action === "add" ? "Ajouter un événement" : "Modifier l'événement" %></h3>
@@ -45,8 +65,8 @@
     </div>
     
     <footer>
-      <button type="button" onclick="this.closest('dialog').close()">Annuler</button>
-      <button type="submit">Enregistrer</button>
+      <button type="button" onclick="this.closest('dialog').close()" id="connexionBouton">Annuler</button>
+      <button type="submit" id="inscriptionBouton">Enregistrer</button>
     </footer>
   </form>
 </dialog>

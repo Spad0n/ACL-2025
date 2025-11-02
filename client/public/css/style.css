@@ -12,6 +12,37 @@ body {
     transform: translate(-50%, -50%);
 }
 
+
+dialog {
+    border: none;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 20vw;
+}
+
+dialog form{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+dialog form div{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+dialog::backdrop {
+    background: rgba(0, 0, 0, 0.3);  /* léger voile sombre */
+    backdrop-filter: blur(2px);       /* le flou */
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+
 #connexionBouton, #inscriptionBouton {
     margin: 5px;
     padding: 10px 20px;

@@ -5,7 +5,13 @@ import * as routes from './route.js';
 import dotenv from 'dotenv';
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
-import { bdd, recupEvenement, ajouterEvenement,retournerContenuTableEvenement } from './fonctionsBdd.js';
+import {
+    bdd,
+    recupEvenement,
+    ajouterEvenement,
+    retournerContenuTableEvenement,
+    modifierEvenement, supprimerEvenement
+} from './fonctionsBdd.js';
 
 
 
@@ -93,7 +99,9 @@ app.get('/dialog/event-form', (req, res) => {
 });
 
 app.post('/events', (req, res) => {
-    const { title, description, color, start, end } = req.body;
+    const { id, title, description, color, start, end } = req.body;
+
+    console.log(id)
 
     const startDate = new Date(start);
     const endDate = new Date(end);
@@ -106,17 +114,47 @@ app.post('/events', (req, res) => {
         end: endDate.toISOString()
     };
 
+
+
     // On ajoute dans la base
-    ajouterEvenement(bdd, savedEvent, (err, lastID) => {
+    if (!id) {
+        ajouterEvenement(bdd, savedEvent, (err, lastID) => {
+            if (err) {
+                res.status(500).send('Erreur côté serveur');
+                return;
+            }
+
+            savedEvent.id = lastID.toString();
+            res.set('HX-Trigger', JSON.stringify({eventSaved: savedEvent}));
+            res.send('');
+        });
+    }
+    else {
+        modifierEvenement(bdd, { id, ...savedEvent }, (err) => {
+            if (err) {
+                res.status(500).send('Erreur côté serveur');
+                return;
+            }
+
+            savedEvent.id = id;
+            res.set('HX-Trigger', JSON.stringify({eventSaved: savedEvent}));
+            res.send('');
+        });
+    }
+});
+
+app.post('/events/delete', (req, res) => {
+    const { id } = req.body;
+    supprimerEvenement(bdd, id, (err) => {
         if (err) {
             res.status(500).send('Erreur côté serveur');
             return;
         }
 
-        savedEvent.id = lastID.toString(); 
-        res.set('HX-Trigger', JSON.stringify({ eventSaved: savedEvent }));
+        res.set('HX-Trigger', JSON.stringify({eventDeleted: id}));
         res.send('');
-    });
+    }
+    );
 });
 
 

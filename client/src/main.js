@@ -163,6 +163,14 @@ function update(msg, model) {
         break;
     case 'DELETE_EVENT':
         newModel.events = newModel.events.filter(e => e.id !== msg.event?.id);
+        const eventSupp = /** @type {CalendarEventData} */(msg.event);
+        const paramsSupp = new URLSearchParams({
+            action: "delete",
+            id: eventSupp.id,
+            title: eventSupp.title,
+        });
+        const suppUrl = `/dialog/event-form?${paramsSupp.toString()}`;
+        triggerHtmxDialog(suppUrl);
         break;
     case 'SAVE_EVENT':
         const savedEvent = msg.event;

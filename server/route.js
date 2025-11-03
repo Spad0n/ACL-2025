@@ -28,7 +28,9 @@ export function createAccount(req, res) {
 		    password: createHash("sha256").update(password).digest("hex"),
 		};
 
-		ajouterUtilisateur(bdd,user);
+		ajouterUtilisateur(bdd,user)
+		    .then( val => console.log(val))
+		    .catch( err => console.error(err));
 		
 		const token = createJWT(user);
 		

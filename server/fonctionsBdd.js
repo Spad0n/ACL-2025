@@ -21,6 +21,13 @@ function creerTableEvenement(dataBase){
 	})
 }
 
+function creerTableAgenda(dataBase) {
+    const sql = `CREATE TABLE agendas(id INTEGER PRIMARY KEY, nom TEXT NOT NULL, id_utilisateur INTEGER, id_evenement INTERGER, FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id), FOREIGN KEY (id_evenement) REFERENCES evenements(id))`;
+    dataBase.run(sql, (err) => {
+	setTimeout( () => console.log("La table : agendas existe deja") );
+    }) ;
+}
+
 function creerBdd(chemin) {
     return new sqlite3.Database(chemin, sqlite3.OPEN_READWRITE, (err) => {
 	if (err) {
@@ -170,6 +177,7 @@ function initBdd(dataBase) {
     try {
 	creerTableUtilisateur(dataBase);
 	creerTableEvenement(dataBase);
+    creerTableAgenda(dataBase);
     }
     catch (err) {
 	setTimeout( () => console.log(err) );

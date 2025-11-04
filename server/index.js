@@ -14,13 +14,12 @@ import {
 } from './fonctionsBdd.js';
 
 
-
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 6969;
+const PORT = process.env.PORT || 3000;
 
 app.use(cookieParser());
 app.use(routes.authenticate);
@@ -158,7 +157,6 @@ app.post('/events/delete', (req, res) => {
 });
 
 
-
 app.listen(PORT, (_err) => {
-    console.log(`Serveur lancé sur https://localhost:${PORT}`);
+    console.log(`Serveur lancé sur http://localhost:${PORT}`);
 });

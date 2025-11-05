@@ -20,7 +20,7 @@ function creerTableUtilisateur(dataBase) {
 
 function creerTableEvenement(dataBase){
     return new Promise( (res,rej) => {
-        const sql = 'CREATE TABLE IF NOT EXISTS evenements(id INTEGER PRIMARY KEY, title TEXT NOT NULL, start DATETIME NOT NULL, end DATETIME NOT NULL, description TEXT, couleur TEXT)';
+        const sql = 'CREATE TABLE IF NOT EXISTS evenements(id INTEGER PRIMARY KEY, title TEXT NOT NULL, start DATETIME NOT NULL, end DATETIME NOT NULL, description TEXT, couleur INTEGER)';
         dataBase.run(sql, (err) => {
             rej(new Error("Erreur lors de la création de la table evenements"));
         });
@@ -77,7 +77,7 @@ function recupEvenement(dataBase){
                 id: r.id.toString(),
                 title: r.title,
                 description: r.description || '', // Pas obligatoire
-                color: r.couleur ? parseInt(r.couleur.replace('#',''), 16) : 0xff0000,
+                color: r.couleur ? r.couleur : 0xff0000,
                 start: new Date(r.start).toISOString(),
                 end: new Date(r.end).toISOString()
             }));
@@ -108,7 +108,7 @@ function ajouterEvenement(dataBase, objectEvenement, callback) {
         objectEvenement.start,
         objectEvenement.end,
         objectEvenement.description,
-        objectEvenement.couleur
+        objectEvenement.color
     ], function(err) {
         if (err) {
             console.error("Erreur ajout événement:", err.message);
@@ -128,7 +128,7 @@ function modifierEvenement(dataBase, objectEvenement, callback) {
         objectEvenement.start,
         objectEvenement.end,
         objectEvenement.description,
-        objectEvenement.couleur,
+        objectEvenement.color,
         objectEvenement.id
     ], function(err) {
         if (err) {

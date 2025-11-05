@@ -24,7 +24,7 @@
              ...serverData,
              startDate: new Date(serverData.startDate),
              endDate: new Date(serverData.endDate),
-             color: parseInt(serverData.color.substring(1), 16),
+             color: parseInt(serverData.color, 16),
          };
 
          const appEvent = new CustomEvent('dispatchApp', {

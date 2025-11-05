@@ -82,9 +82,10 @@ app.get('/events', async (_req, res) => {
 app.get('/dialog/event-form', (req, res) => {
     const { action, date, id, title, description, color, start, end } = req.query;
 
+    console.log(req.query);
+
     const model = {
         action: action, // 'add' ou 'edit'
-        date: date, 
         event: {
             id: id || null,
             title: title || '',

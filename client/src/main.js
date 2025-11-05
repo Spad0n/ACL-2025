@@ -25,9 +25,10 @@ import htmx from "htmx.org";
 
 /**
  * @typedef {Object} Msg
- * @property { 'PREV_WEEK' | 'NEXT_WEEK' | 'ADD_EVENT' | 'EDIT_EVENT' | 'DELETE_EVENT' | 'SAVE_EVENT' } type
+ * @property { 'PREV_WEEK' | 'NEXT_WEEK' | 'ADD_EVENT' | 'EDIT_EVENT' | 'DELETE_EVENT' | 'SAVE_EVENT' | 'EVENT_DELETED' } type
  * @property {Date} [date]
  * @property {CalendarEventData} [event]
+ * @property {number} [id]
  */
 
 const headerStyle = new TextStyle({
@@ -101,7 +102,7 @@ function view(app, model, dispatch) {
                 width: 50,
             })
         ]),
-        CalendarWeek(app.screen.width, eventsForWeek, weekDays),
+        CalendarWeek(app.screen.width, eventsForWeek, weekDays, dispatch),
 
         uiButton({
             key: "new_event",
@@ -170,6 +171,10 @@ function update(msg, model) {
         });
         const suppUrl = `/dialog/event-form?${paramsSupp.toString()}`;
         triggerHtmxDialog(suppUrl);
+        break;
+    case 'EVENT_DELETED':
+        console.log("Suppression avec l'evenement avec l'ID:", msg.id);
+        newModel.events = newModel.events.filter(e => e.id !== msg.id);
         break;
     case 'SAVE_EVENT':
         const savedEvent = msg.event;
@@ -268,11 +273,6 @@ function triggerHtmxDialog(url) {
 
     let scene = patch(appContainer, null, view(app, model, dispatch));
 
-    function reRender() {
-        const newScene = view(app, model, dispatch);
-        scene = patch(appContainer, scene, newScene);
-    }
-
     /**
      * @param {Msg} msg 
      */
@@ -283,12 +283,21 @@ function triggerHtmxDialog(url) {
     }
 
     app.renderer.on("resize", () => {
-        reRender();
+        const newScene = view(app, model, dispatch);
+        scene = patch(appContainer, scene, newScene);
     });
 
     document.body.addEventListener('eventSaved', (evt) => {
         const savedEvent = evt.detail;
         dispatch({ type: 'SAVE_EVENT', event: savedEvent });
+    });
+
+    document.body.addEventListener('eventDeleted', (evt) => {
+        const deletedEvent = evt.detail;
+        console.log("deletedEvent:", deletedEvent);
+        if (deletedEvent) {
+            dispatch({ type: 'EVENT_DELETED', id: deletedEvent.value });
+        }
     });
 })();
 

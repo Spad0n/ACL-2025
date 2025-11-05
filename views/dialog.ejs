@@ -66,6 +66,16 @@
     
     <footer>
       <button type="button" onclick="this.closest('dialog').close()" id="connexionBouton">Annuler</button>
+      <% if (action === "edit") { %>
+        <button
+            type="button"
+            id="inscriptionBouton"
+            hx-get="/dialog/event-form?action=delete&id=<%= event.id %>&title=<%= event.title %>"
+            hx-target="#dialog-container"
+            hx-swap="innerHTML">
+          Supprimer
+        </button>
+      <% } %>
       <button type="submit" id="inscriptionBouton">Enregistrer</button>
     </footer>
   </form>

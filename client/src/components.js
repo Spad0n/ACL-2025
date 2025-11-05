@@ -677,9 +677,10 @@ export function OldCalendarWeek(screenWidth, events, weekDays) {
  * @param {number} screenWidth
  * @param {CalendarEventData[]} events
  * @param {Date[]} weekDays
+ * @param {(msg: import("./main.js").Msg) => void} dispatch
  * @returns {VNode}
  */
-export function CalendarWeek(screenWidth, events, weekDays) {
+export function CalendarWeek(screenWidth, events, weekDays, dispatch) {
 
     const Posx = screenWidth / 2 - 500;
     const Posy = 120;
@@ -853,6 +854,12 @@ export function CalendarWeek(screenWidth, events, weekDays) {
         eventTitle.y = eventGraphics.y + 5;
         
         segmentContainer.addChild(eventGraphics, eventTitle);
+
+        const buttonInstance = new Button(segmentContainer);
+        buttonInstance.onPress.connect(() => {
+            dispatch({ type: 'EDIT_EVENT', event: segment.event })
+        });
+
         return segmentContainer;
     }
 

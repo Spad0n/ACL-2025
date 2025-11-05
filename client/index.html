@@ -32,6 +32,14 @@
          });
          document.body.dispatchEvent(appEvent);
      });
+
+     document.body.addEventListener("eventDeleted", (evt) => {
+         const serverData = evt.detail;
+         const appEvent = new CustomEvent('dispatchApp', {
+             detail: { type: 'EVENT_DELETED', event: serverData.value }
+         });
+         document.body.dispatchEvent(appEvent);
+     });
     </script>
   </body>
 </html>

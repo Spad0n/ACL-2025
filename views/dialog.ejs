@@ -31,7 +31,7 @@
 
 
 <dialog>
-  <form hx-post="/events" hx-target="#dialog-container" hx-swap="innerHTML">
+  <form id="event-form" hx-post="/events" hx-target="#dialog-container" hx-swap="innerHTML">
     <h3><%= action === "add" ? "Ajouter un événement" : "Modifier l'événement" %></h3>
     
     <% if (action === "edit") { %>
@@ -79,4 +79,30 @@
       <button type="submit" id="inscriptionBouton">Enregistrer</button>
     </footer>
   </form>
+  <script>
+   (() => {
+       const form = document.getElementById("event-form");
+       const startInput = document.getElementById("start");
+       const endInput = document.getElementById("end");
+
+       form.addEventListener('submit', (event) => {
+           const startDate = startInput.value;
+           const endDate = endInput.value;
+
+           if (startDate && endDate && endDate < startDate) {
+               event.preventDefault();
+
+               const invalidDate = new Date(endDate);
+               const formattedDate = invalidDate.toLocaleString('fr-FR', { 
+                   dateStyle: 'medium', 
+                   timeStyle: 'short' 
+               });
+
+               alert(`La date de fin ne peut pas être antérieure à la date de début.\nDate de fin invalide : ${formattedDate}.`);
+               startInput.value = '';
+               endInput.value = '';
+           }
+       });
+   })();
+  </script>
 </dialog>

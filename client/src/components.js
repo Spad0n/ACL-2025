@@ -100,7 +100,6 @@ export function uiButton(props) {
 		const newProps = /** @type {BaseVNodeProps & ButtonProps} */ (newVnode.props);
 		const elm = /** @type {Container & { _internalState: {buttonInstance: Button, buttonBackground: Graphics, buttonText: Text} }} */(newVnode.elm);
 
-		// On récupère les objets stockés
 		const { buttonInstance, buttonBackground, buttonText } = elm._internalState;
 
 		if (!buttonInstance) return;
@@ -502,28 +501,22 @@ export function OldCalendarWeek(screenWidth, events, weekDays) {
         const eventStart = parseISO(event.start);
         const eventEnd = parseISO(event.end);
         
-        // On utilise une date "curseur" que l'on va avancer jour par jour
         let loopDate = startOfDay(eventStart);
 
         while (loopDate < eventEnd) {
             const dayOffset = getEventDayOffset(loopDate);
-            // On ne dessine que les segments visibles dans la semaine actuelle
             if (dayOffset < 0 || dayOffset >= 7) {
                 loopDate = addDays(loopDate, 1);
                 continue;
             }
             
-            // Début du segment : l'heure de début de l'événement OU minuit
             const segmentStart = isSameDay(loopDate, eventStart) ? eventStart : startOfDay(loopDate);
             
-            // Fin du segment : l'heure de fin de l'événement OU la fin de la journée
             const segmentEnd = isSameDay(loopDate, eventEnd) ? eventEnd : endOfDay(loopDate);
 
-            // Calcul de la position et de la hauteur du segment
             const startMinutes = segmentStart.getHours() * 60 + segmentStart.getMinutes();
             const startY = (startMinutes / 60) * hourHeight;
             
-            // On s'assure que la durée est positive
             const durationMs = Math.max(0, segmentEnd.getTime() - segmentStart.getTime());
             const durationMinutes = durationMs / (1000 * 60);
             const eventHeight = (durationMinutes / 60) * hourHeight;
@@ -543,7 +536,6 @@ export function OldCalendarWeek(screenWidth, events, weekDays) {
             eventGraphics.x = eventX;
             eventGraphics.y = startY;
             
-            // On n'affiche le titre que sur le premier segment de l'événement
             const eventTitleText = isSameDay(loopDate, eventStart) ? event.title : "";
             const eventTitle = new Text({
                 text: eventTitleText,
@@ -555,7 +547,6 @@ export function OldCalendarWeek(screenWidth, events, weekDays) {
             segmentContainer.addChild(eventGraphics, eventTitle);
             segments.push(segmentContainer);
             
-            // On passe au jour suivant
             loopDate = addDays(loopDate, 1);
         }
         
@@ -570,7 +561,6 @@ export function OldCalendarWeek(screenWidth, events, weekDays) {
         hook: {
             /** @param {Container & { _eventContainer: Container, _dayLabels: Text[] }} elm */
             mount: (elm) => {
-                // ... (toute la partie 'mount' du header et du scrollBox reste identique)
                 const headerContainer = new Container();
                 const headerBackground = new Graphics().rect(0, 0, 1000, headerHeight).fill(0xe0e0e0);
                 headerContainer.addChild(headerBackground);
@@ -610,7 +600,6 @@ export function OldCalendarWeek(screenWidth, events, weekDays) {
                     container.addChild(hourLabel);
                 }
 
-                // --- MODIFICATION DE LA LOGIQUE D'AFFICHAGE ---
                 const eventContainer = new Container();
                 for (const event of events) {
                     const segments = createEventSegments(event);
@@ -635,7 +624,6 @@ export function OldCalendarWeek(screenWidth, events, weekDays) {
                 const oldProps = /** @type {BaseVNodeProps & {events: CalendarEventData[], weekDays: Date[]}} */ (oldVnode.props);
                 const newProps = /** @type {BaseVNodeProps & {events: CalendarEventData[], weekDays: Date[]}} */ (newVnode.props);
 
-                // ... (la mise à jour des labels de jour reste identique)
                 const dayNames = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
                 if (oldProps.weekDays[0].getTime() !== newProps.weekDays[0].getTime()) {
                     for (let d = 0; d < 7; d++) {
@@ -647,9 +635,8 @@ export function OldCalendarWeek(screenWidth, events, weekDays) {
                     }
                 }
 
-                // --- MODIFICATION DE LA LOGIQUE DE MISE À JOUR ---
                 const eventContainer = elm._eventContainer;
-                eventContainer.removeChildren(); // On vide avant de tout redessiner
+                eventContainer.removeChildren();
                 for (const event of newProps.events) {
                     const segments = createEventSegments(event);
                     for (const segment of segments) {
@@ -901,6 +888,27 @@ export function CalendarWeek(screenWidth, events, weekDays, dispatch) {
                 scrollBox.y = headerHeight;
                 
                 const container = new Container();
+
+                const gridLines = new Graphics();
+                gridLines.y += 8;
+
+                const gridWidth = 7 * dayWidth;
+                const gridHeight = 24 * hourHeight;
+
+                for (let h = 0; h <= 24; h++) {
+                    const y = h * hourHeight;
+                    gridLines.moveTo(startX, y).lineTo(startX + gridWidth, y);
+                }
+
+                for (let d = 0; d <= 7; d++) {
+                    const x = startX + d * dayWidth;
+                    gridLines.moveTo(x, 0).lineTo(x, gridHeight);
+                }
+
+                gridLines.stroke({width: 1, color: 0xcccccc}); // Ligne fine, grise et légèrement transparente
+                container.addChild(gridLines);
+                // grid line
+
                 for (let h = 0; h <= 24; h++) {
                     container.addChild(new Text({ text: `${h}:00`, style: hourStyle, x: 10, y: h * hourHeight }));
                 }

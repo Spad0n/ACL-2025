@@ -1,11 +1,10 @@
 import { Application, Container, TextStyle } from "pixi.js";
 import { initBackground } from "./background.js";
 import { h, patch } from "./ui/elm.js";
-import { uiButton, CalendarDay } from "./components.js";
-import { format, isSameDay, parseISO, startOfWeek } from 'date-fns';
+import { uiButton, CalendarWeek } from "./components.js";
+import { endOfDay, format, isSameDay, parseISO, startOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import htmx from "htmx.org";
-
 
 /**
  * @typedef {Object} CalendarEventData
@@ -22,18 +21,14 @@ import htmx from "htmx.org";
  * @typedef {Object} AppModel
  * @property {Date} currentWeekStart
  * @property {CalendarEventData[]} events
- * @property {Date | null} addingDate
  */
 
 /**
  * @typedef {Object} Msg
- * @property {'PREV_WEEK' | 'NEXT_WEEK' | 'ADD_EVENT' | 'EDIT_EVENT' | 'DELETE_EVENT' | 'SAVE_EVENT' } type
+ * @property { 'PREV_WEEK' | 'NEXT_WEEK' | 'ADD_EVENT' | 'EDIT_EVENT' | 'DELETE_EVENT' | 'SAVE_EVENT' } type
  * @property {Date} [date]
  * @property {CalendarEventData} [event]
  */
-
-const MONTH_NAMES = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-const DAY_NAMES = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"]; // Pour l'affichage des jours de la semaine
 
 const headerStyle = new TextStyle({
     fill: 0xffffff,
@@ -59,28 +54,20 @@ function addDays(date, days) {
 function view(app, model, dispatch) {
     const weekDays = Array.from({length: 7}, (_, i) => addDays(model.currentWeekStart, i));
 
-    const calendarDays = weekDays.map((date, index) => {
-        const dayEvents = model.events.filter(event =>
-            isSameDay(parseISO(event.start), date)
-        );
+    //const eventsForWeek = weekDays.flatMap(date => {
+    //    return model.events.filter(event => {
+    //        const eventStartDate = parseISO(event.start);
+    //        const eventEndDate = parseISO(event.end);
+    //        return isSameDay(eventStartDate, date) || isSameDay(eventEndDate, date) || (eventStartDate < date && eventEndDate > date);
+    //    });
+    //})
+    const weekStart = model.currentWeekStart;
+    const weekEnd = endOfDay(addDays(weekStart, 6));
 
-        const dayWidth = 170;
-        const startX = (app.screen.width - (7 * dayWidth)) / 2;
-        const xPos = startX + index * dayWidth;
-        const yPos = 130;
-
-        return h("container", `day-container-${date.toISOString()}`, { x: xPos, y: yPos }, [
-            h(CalendarDay, `calendar-day-${date.toISOString()}`, {
-                dayNumber: date.getDate(),
-                //dayName: DAY_NAMES[date.getDay()],
-                dayName: format(date, 'eee', { locale: fr }),
-                events: dayEvents,
-                /** @param {CalendarEventData} event */
-                onEditEvent: (event) => dispatch({ type: 'EDIT_EVENT', event }),
-                /** @param {CalendarEventData} event */
-                onDeleteEvent: (event) => dispatch({ type: 'DELETE_EVENT', event }),
-            })
-        ]);
+    const eventsForWeek = model.events.filter(event => {
+        const eventStart = parseISO(event.start);
+        const eventEnd = parseISO(event.end);
+        return eventStart < weekEnd && eventEnd > weekStart;
     });
 
     const weekDisplayStart = weekDays[0];
@@ -112,18 +99,30 @@ function view(app, model, dispatch) {
                 text: ">",
                 onClick: () => dispatch({ type: 'NEXT_WEEK' }),
                 width: 50,
-            }),
-            uiButton({
-                key: "add-event",
-                x: 20,
-                y: 200,
-                text: "+",
-                onClick: () => dispatch({ type: 'ADD_EVENT'}),
-                width: 100,
             })
         ]),
+        CalendarWeek(app.screen.width, eventsForWeek, weekDays),
 
-        h("container", "calendar-grid", {}, calendarDays),
+        uiButton({
+            key: "new_event",
+            x: 10,
+            y: 150,
+            text: "new event",
+            onClick: () => dispatch({ type: "ADD_EVENT" }),
+            width: 100,
+        }),
+        uiButton({
+            key: "deconnexion",
+            x: app.screen.width - 140,
+            y: 10,
+            text: "deconnexion",
+            onClick: () => {
+                fetch('/logout', { method: 'GET', credentials: "include"})
+                    .then(() => window.location.href = '/login')
+                    .catch((error) => console.error('La déconnexion a échoué:', error));
+            },
+            width: 130
+        })
     ]);
 }
 
@@ -187,6 +186,20 @@ function update(msg, model) {
             newModel.events = [...newModel.events, savedEvent];
         }
         break;
+    //case 'PREV_MONTH':
+    //    const d = newModel.dateSelected;
+    //    newModel.dateSelected = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+    //    break;
+    //case 'NEXT_MONTH':
+    //    const ds = newModel.dateSelected;
+    //    newModel.dateSelected = new Date(ds.getFullYear(), ds.getMonth() + 1, 1);
+    //    break;
+    //case 'SELECT_DATE':
+    //    if (msg.date) {
+    //        newModel.dateSelected = msg.date;
+    //        newModel.currentWeekStart = startOfWeek(msg.date, { weekStartsOn: 1 });
+    //    }
+    //    break;
     default:
         console.warn("Unknown message type:", msg.type);
     }
@@ -244,7 +257,6 @@ function triggerHtmxDialog(url) {
     let model = /** @type {AppModel} */({
         currentWeekStart: startOfWeek(today, { weekStartsOn: 1 }),
         events: [],
-        addingDate: null,
     });
 
     try {

@@ -46,7 +46,7 @@
     <div>
       <label for="start">Début</label>
       <!-- Pour un nouvel événement, event.start est null, on utilise 'date' -->
-      <input type="datetime-local" id="start" name="start" value="<%= formatForInput(event.start || date) %>" required>
+      <input type="datetime-local" id="start" name="start" value="<%= formatForInput(event.start || '') %>" required>
     </div>
 
     <div>

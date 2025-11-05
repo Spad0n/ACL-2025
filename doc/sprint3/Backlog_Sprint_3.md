@@ -19,6 +19,7 @@
 ### Permettre la répétition d’événements — *Abarca Elliot*
 **Tâches :**
 - Implémenter des **règles de récurrence** pour les dates du calendrier.
+- Restructuration du code
 
 ---
 

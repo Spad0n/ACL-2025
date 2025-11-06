@@ -40,3 +40,8 @@
 **Tâches :**
 - Implémentation de la recherche
 - Filtrer par nom et date
+
+## Fonctionnalités du sprint 2 à revoir :
+
+Persistance des événements -> synchroniser l’heure des événements.
+-> Récupérer couleur événement..

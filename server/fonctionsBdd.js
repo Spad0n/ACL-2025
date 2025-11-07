@@ -28,6 +28,16 @@ function creerTableEvenement(dataBase){
     });
 }
 
+function creerTableAgenda(dataBase) {
+    return new Promise( (res,rej) => {
+        const sql = `CREATE TABLE agendas(id INTEGER PRIMARY KEY, nom TEXT NOT NULL, id_utilisateur INTEGER, id_evenement INTERGER, FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id), FOREIGN KEY (id_evenement) REFERENCES evenements(id))`;
+        dataBase.run(sql, (err) => {
+            rej(new Error("Erreur lors de la création de la table agendas"));
+        });
+        res("Table agendas OK");
+    }) ;
+}
+
 // Ouvre une connexion avec la BDD
 async function creerBdd(chemin) {
     return new Promise ( (res, rej) => {
@@ -190,6 +200,10 @@ async function initBdd(dataBase) {
     await creerTableEvenement(dataBase)
         .then( res => console.log(res) )
 	    .catch( err => console.error(err) );
+
+    await creerTableAgenda(dataBase)
+        .then( res => console.log(res) )
+        .catch( err => console.error(err) );
 }
 
 // ici bdd.db le chemin depend de l'endroit où la commande node a été excuté

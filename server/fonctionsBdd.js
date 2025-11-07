@@ -3,6 +3,7 @@
 import sqlite3pkg from "sqlite3" ;
 import { createHash } from "crypto";
 import { parseISO, setHours, setMinutes } from 'date-fns';
+import dataBase from "node:test";
 
 
 const sqlite3 = sqlite3pkg.verbose();
@@ -152,6 +153,34 @@ function supprimerEvenement(dataBase, eventId, callback) {
             if (callback) callback(null);
         }
     });
+}
+
+// Rechercher un événement par nom
+function filtrerEvenementNom(dataBase, eventId, callback) {
+    const sql = 'SELECT id, title FROM evenements WHERE title LIKE ?';
+    dataBase.run(sql, [`%${eventId}%`], function(err) {
+        if (err) {
+            console.error("Erreur recherche événement:", err.message);
+            if (callback) callback(err);
+        } else {
+            console.log(`Event trouvé avec l'id ${eventId}`);
+            if (callback) callback(null);
+        }
+    })
+}
+
+// Rechercher un événement par date
+function filtrerEvenementDates(dataBase, startDate, endDate, callback) {
+    const sql = 'SELECT id, title, start, end FROM evenements WHERE start >= ? AND end <= ?';
+    dataBase.run(sql, [startDate, endDate], function(err) {
+        if (err) {
+            console.error("Erreur recherche événement par date:", err.message);
+            if (callback) callback(err);
+        } else {
+            console.log(`Events trouvés entre ${startDate} et ${endDate}`);
+            if (callback) callback(null);
+        }
+    })
 }
 
 // Permet de récupérer le contenu d'une table

@@ -80,8 +80,7 @@ app.get('/events', async (_req, res) => {
 
 // Affichage du dialogue de création/édition
 app.get('/dialog/event-form', (req, res) => {
-    const { action, date, id, title, description, color, start, end } = req.query;
-
+    const { action, id, title, description, color, start, end } = req.query;
     console.log(req.query);
 
     const model = {
@@ -100,8 +99,6 @@ app.get('/dialog/event-form', (req, res) => {
 
 app.post('/events', (req, res) => {
     const { id, title, description, color, start, end } = req.body;
-
-    console.log(id)
 
     const startDate = new Date(start);
     const endDate = new Date(end);
@@ -156,6 +153,12 @@ app.post('/events/delete', (req, res) => {
     }
     );
 });
+
+app.get('events/search', async (req, res) => {
+    const query = req.query.q;
+    res.render('dialog-search', { query });
+});
+
 
 
 app.listen(PORT, (_err) => {

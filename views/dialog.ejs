@@ -1,11 +1,13 @@
 <%
-  const formatForInput = (isoString) => {
+const formatForInput = (isoString) => {
     if (!isoString) return "";
-    // new Date(isoString) gère à la fois une date ISO complète et la date simple passée pour un nouvel event
-    return new Date(isoString).toISOString().slice(0, 16);
-  };
+    const date = new Date(isoString);
+    const tzOffset = date.getTimezoneOffset() * 60000; // en ms
+    return new Date(date - tzOffset).toISOString().slice(0, 16); // format YYYY-MM-DDTHH:mm, adapté à <input type="datetime-local">
+};
 
-  // Helper pour convertir un nombre en chaîne hexadécimale #RRGGBB
+
+// Helper pour convertir un nombre en chaîne hexadécimale #RRGGBB
   const formatColorForInput = (colorNumber) => {
     return "#" + (colorNumber || 0xff0000).toString(16).padStart(6, "0");
   };
@@ -61,7 +63,7 @@
 
     <div>
       <label for="color">Couleur</label>
-      <input type="color" id="color" name="color" value="<%= formatColorForInput(event.color) %>">
+      <input type="color" id="color" name="color" value="<%= formatColorForInput(event.couleur) %>">
     </div>
     
     <footer>

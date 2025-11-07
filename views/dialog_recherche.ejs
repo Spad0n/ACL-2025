@@ -1,0 +1,15 @@
+<dialog>
+    <form id="search-form" hx-post="/search" hx-target="#dialog-container" hx-swap="innerHTML">
+        <h3>Recherche</h3>
+
+        <div>
+        <label for="query">Requête</label>
+        <input type="text" id="query" name="query" value="<%= query || '' %>" required>
+        </div>
+
+        <footer>
+        <button type="button" onclick="this.closest('dialog').close()" id="connexionBouton">Annuler</button>
+        <button type="submit" id="inscriptionBouton">Rechercher</button>
+        </footer>
+    </form>
+</dialog>

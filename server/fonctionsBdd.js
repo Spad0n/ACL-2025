@@ -77,6 +77,21 @@ function fetchUtilisateur(dataBase, username, password) {
     }) ;
 }
 
+function creerAgendaDefautUtilisateur(dataBase, username) {
+    return new Promise( (res,rej) => {
+	const sql = `INSERT INTO agendas(nom,nom_utilisateur) VALUES (?,?)`;
+
+	const nameDef = username+"Defaut";
+
+	dataBase.run(sql, [nameDef, username], (err) => {
+            if (err) {
+		rej(err.message);
+            }
+        });
+        res("Création agenda par défaut OK");
+    });
+}
+
 function recupEvenement(dataBase){
     return new Promise((res, rej) => {
         const sql = 'SELECT * FROM evenements ORDER BY start';
@@ -104,7 +119,7 @@ function ajouterUtilisateur(dataBase, objetUtilisateur) {
         
         dataBase.run(sql, [objetUtilisateur.username, objetUtilisateur.password], (err) => {
             if (err) {
-            rej(err.message);
+		rej(err.message);
             }
         });
         res("Création utilisateur OK");
@@ -246,4 +261,4 @@ await creerBdd("bdd.db")
 
 initBdd(bdd);
 
-export { bdd , initBdd ,ajouterAgenda, supprimerAgenda, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement} ;
+export { bdd , initBdd ,ajouterAgenda, supprimerAgenda, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement, creerAgendaDefautUtilisateur } ;

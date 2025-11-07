@@ -1,6 +1,6 @@
 import { createHash } from "crypto"; 
 import { createJWT } from "./outils/jwt.js";
-import { bdd, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur } from "./fonctionsBdd.js";
+import { bdd, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, creerAgendaDefautUtilisateur } from "./fonctionsBdd.js";
 
 export function getAccountCreationPage(req, res) {
 
@@ -31,6 +31,11 @@ export function createAccount(req, res) {
 		ajouterUtilisateur(bdd,user)
 		    .then( val => console.log(val))
 		    .catch( err => console.error(err));
+
+		// on associe l'agenda par défaut
+		creerAgendaDefautUtilisateur(bdd,username)
+		    .then( val => console.log(val) )
+		    .catch( err => console.error(err) );
 		
 		const token = createJWT(user);
 		

@@ -20,7 +20,7 @@ function creerTableUtilisateur(dataBase) {
 
 function creerTableEvenement(dataBase){
     return new Promise( (res,rej) => {
-        const sql = 'CREATE TABLE IF NOT EXISTS evenements(id INTEGER PRIMARY KEY, title TEXT NOT NULL, start DATETIME NOT NULL, end DATETIME NOT NULL, description TEXT, couleur INTEGER)';
+        const sql = 'CREATE TABLE IF NOT EXISTS evenements(id INTEGER PRIMARY KEY, id_agenda INTEGER, title TEXT NOT NULL, start DATETIME NOT NULL, end DATETIME NOT NULL, description TEXT, couleur INTEGER, FOREIGN KEY (id_agenda) REFERENCES agendas(id))';
         dataBase.run(sql, (err) => {
             rej(new Error("Erreur lors de la création de la table evenements"));
         });
@@ -30,7 +30,7 @@ function creerTableEvenement(dataBase){
 
 function creerTableAgenda(dataBase) {
     return new Promise( (res,rej) => {
-        const sql = `CREATE TABLE agendas(id INTEGER PRIMARY KEY, nom TEXT NOT NULL, id_utilisateur INTEGER, id_evenement INTERGER, FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id), FOREIGN KEY (id_evenement) REFERENCES evenements(id))`;
+        const sql = `CREATE TABLE agendas(id INTEGER PRIMARY KEY, nom TEXT NOT NULL, nom_utilisateur TEXT, FOREIGN KEY (nom_utilisateur) REFERENCES utilisateurs(username))`;
         dataBase.run(sql, (err) => {
             rej(new Error("Erreur lors de la création de la table agendas"));
         });
@@ -111,6 +111,22 @@ function ajouterUtilisateur(dataBase, objetUtilisateur) {
     });
 }
 
+function ajouterAgenda(dataBase, objetAgenda) {
+    return new Promise( (res,rej) => {
+        const sql = `INSERT INTO agendas(nom, id_utilisateur, id_evenement) VALUES (?,?,?)`;
+        dataBase.run(sql, [
+            objetAgenda.nom,
+            objetAgenda.id_utilisateur,
+            objetAgenda.id_evenement
+        ], (err) => {
+            if (err) {
+                rej(err.message);
+            }
+        });
+        res("Création agenda OK");
+    });
+}
+
 function ajouterEvenement(dataBase, objectEvenement, callback) {
     const sql = 'INSERT INTO evenements(title, start, end, description, couleur) VALUES (?,?,?,?,?)';
     dataBase.run(sql, [
@@ -159,6 +175,19 @@ function supprimerEvenement(dataBase, eventId, callback) {
             if (callback) callback(err);
         } else {
             console.log(`Event supprimé avec l'id ${eventId}`);
+            if (callback) callback(null);
+        }
+    });
+}
+
+function supprimerAgenda(dataBase, agendaId, callback) {
+    const sql = 'DELETE FROM agendas WHERE id = ?';
+    dataBase.run(sql, [agendaId], function(err) {
+        if (err) {
+            console.error("Erreur suppression agenda:", err.message);
+            if (callback) callback(err);
+        } else {
+            console.log(`Agenda supprimé avec l'id ${agendaId}`);
             if (callback) callback(null);
         }
     });
@@ -217,4 +246,4 @@ await creerBdd("bdd.db")
 
 initBdd(bdd);
 
-export { bdd , initBdd , ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement} ;
+export { bdd , initBdd ,ajouterAgenda, supprimerAgenda, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement} ;

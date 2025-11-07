@@ -10,7 +10,7 @@ import {
     recupEvenement,
     ajouterEvenement,
     retournerContenuTableEvenement,
-    modifierEvenement, supprimerEvenement
+    modifierEvenement, supprimerEvenement, filtrerEvenementNom
 } from './fonctionsBdd.js';
 
 
@@ -154,10 +154,22 @@ app.post('/events/delete', (req, res) => {
     );
 });
 
-app.get('events/search', async (req, res) => {
-    const query = req.query.q;
-    res.render('dialog-search', { query });
+app.get('/events/search', async (_req, res) => {
+    const query = _req.query.q || '';
+    res.render('dialog_recherche', { query });
 });
+
+app.post('/events/searchres', async (req, res) => {
+    console.log(req.body.query);
+    try {
+        const events = await filtrerEvenementNom(bdd, req.body.query);
+        res.json(events);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 
 

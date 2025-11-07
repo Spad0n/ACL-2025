@@ -156,31 +156,25 @@ function supprimerEvenement(dataBase, eventId, callback) {
 }
 
 // Rechercher un événement par nom
-function filtrerEvenementNom(dataBase, eventId, callback) {
-    const sql = 'SELECT id, title FROM evenements WHERE title LIKE ?';
-    dataBase.run(sql, [`%${eventId}%`], function(err) {
-        if (err) {
-            console.error("Erreur recherche événement:", err.message);
-            if (callback) callback(err);
-        } else {
-            console.log(`Event trouvé avec l'id ${eventId}`);
-            if (callback) callback(null);
-        }
-    })
+function filtrerEvenementNom(dataBase, nomEvenement) {
+    return new Promise((res, rej) => {
+        const sql = 'SELECT id, title, start  FROM evenements where title like ? ORDER BY start';
+        dataBase.all(sql, [`%${nomEvenement}%`], (err, rows) => {
+            if(err) return rej(err);
+
+            const events = rows.map(r => ({
+                id: r.id.toString(),
+                title: r.title,
+                start: new Date(r.start).toISOString(),
+            }));
+            res(events);
+        });
+    });
 }
 
 // Rechercher un événement par date
 function filtrerEvenementDates(dataBase, startDate, endDate, callback) {
-    const sql = 'SELECT id, title, start, end FROM evenements WHERE start >= ? AND end <= ?';
-    dataBase.run(sql, [startDate, endDate], function(err) {
-        if (err) {
-            console.error("Erreur recherche événement par date:", err.message);
-            if (callback) callback(err);
-        } else {
-            console.log(`Events trouvés entre ${startDate} et ${endDate}`);
-            if (callback) callback(null);
-        }
-    })
+
 }
 
 // Permet de récupérer le contenu d'une table
@@ -232,4 +226,4 @@ await creerBdd("bdd.db")
 
 initBdd(bdd);
 
-export { bdd , initBdd , ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement} ;
+export { bdd , initBdd , ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement, filtrerEvenementNom, filtrerEvenementDates} ;

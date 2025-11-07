@@ -64,6 +64,7 @@ export function login(req, res) {
 	    if (result.length == 1) {
 		const user  = result[0] ;
 		const token = createJWT(user);
+		
 		res.cookie("accessToken", token, { httpOnly: true });
 		res.redirect("/");
 	    }
@@ -72,4 +73,6 @@ export function login(req, res) {
 	    }
 	})
 	.catch( (err) => { console.error(err); } );
+
+
 }

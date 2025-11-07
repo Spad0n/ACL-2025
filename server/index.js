@@ -12,6 +12,7 @@ import {
     retournerContenuTableEvenement,
     modifierEvenement, supprimerEvenement
 } from './fonctionsBdd.js';
+import { tr } from 'date-fns/locale';
 
 
 dotenv.config();
@@ -114,20 +115,24 @@ app.post('/events', (req, res) => {
         end: endDate.toISOString()
     };
 
-
-
     // On ajoute dans la base
     if (!id) {
-        ajouterEvenement(bdd, savedEvent, (err, lastID) => {
-            if (err) {
-                res.status(500).send('Erreur côté serveur');
-                return;
-            }
-
+        const tokkensSigne = req.cookies.accessToken;
+        try{    
+            const tokkenSansSigne = jwt.verify(tokkensSigne, process.env.SECRET);
+            ajouterEvenement(bdd,tokkenSansSigne.username, savedEvent, (err, lastID) => {
+                if (err) {
+                    res.status(500).send('Erreur côté serveur');
+                    return;
+                }
             savedEvent.id = lastID.toString();
             res.set('HX-Trigger', JSON.stringify({eventSaved: savedEvent}));
             res.send('');
-        });
+            });
+        }
+        catch(err){
+            console.error(err);
+        }
     }
     else {
         modifierEvenement(bdd, { id, ...savedEvent }, (err) => {

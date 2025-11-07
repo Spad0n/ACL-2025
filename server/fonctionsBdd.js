@@ -142,14 +142,20 @@ function ajouterAgenda(dataBase, objetAgenda) {
     });
 }
 
-function ajouterEvenement(dataBase, objectEvenement, callback) {
-    const sql = 'INSERT INTO evenements(title, start, end, description, couleur) VALUES (?,?,?,?,?)';
+function ajouterEvenement(dataBase, token,objectEvenement, callback) {
+    recupAgendaID(dataBase, token).then(id => {
+        if(id.length == 1) {
+            const objtmp = id[0];
+            console.log("id agenda:",  +objtmp["id"]);
+            const kk = +objtmp["id"];
+                const sql = 'INSERT INTO evenements(title, start, end, description, couleur, id_agenda) VALUES (?,?,?,?,?,?)';
     dataBase.run(sql, [
         objectEvenement.title,
         objectEvenement.start,
         objectEvenement.end,
         objectEvenement.description,
-        objectEvenement.color
+        objectEvenement.color,
+        kk
     ], function(err) {
         if (err) {
             console.error("Erreur ajout événement:", err.message);
@@ -159,6 +165,10 @@ function ajouterEvenement(dataBase, objectEvenement, callback) {
             objectEvenement.id = this.lastID.toString(); 
             if (callback) callback(null, this.lastID);
         }
+    });
+        }
+    }).catch(err => {
+        console.error(err);
     });
 }
 
@@ -206,6 +216,21 @@ function supprimerAgenda(dataBase, agendaId, callback) {
             if (callback) callback(null);
         }
     });
+}
+
+
+function recupAgendaID(dataBase, username) {
+
+    return new Promise( (res, rej) => {
+        const sql       = `SELECT id FROM agendas WHERE agendas.nom_utilisateur=?` ;
+
+        dataBase.all(sql,[username] ,(err, rows) => {
+            if(err) {
+                rej(err);
+            }
+            res(rows); 
+        }) ;
+    }) ;
 }
 
 // Permet de récupérer le contenu d'une table

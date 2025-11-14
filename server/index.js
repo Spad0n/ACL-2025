@@ -154,22 +154,22 @@ app.post('/events/delete', (req, res) => {
     );
 });
 
-app.get('/events/search', async (_req, res) => {
-    const query = _req.query.q || '';
-    res.render('dialog_recherche', { query });
-});
+app.get('/events/search-events', async (req, res) => {
+    const searchQuery = req.query.q;
 
-app.post('/events/searchres', async (req, res) => {
-    console.log(req.body.query);
+    if (!searchQuery) {
+        return res.json([]);
+    }
+
     try {
-        const events = await filtrerEvenementNom(bdd, req.body.query);
+        const events = await filtrerEvenementNom(bdd, searchQuery);
         res.json(events);
+
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: err.message });
+        console.error("Erreur lors de la recherche d'événements :", err);
+        res.status(500).json({ error: "Erreur serveur" });
     }
 });
-
 
 
 

@@ -42,6 +42,10 @@ textarea {
     min-height: 100px;
 }
 
+a {
+    text-decoration: none;
+    cursor: pointer;
+}
 
 #connexionBouton, #inscriptionBouton {
     margin: 5px;

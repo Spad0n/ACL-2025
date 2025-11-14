@@ -10,6 +10,98 @@
   <button id="search">Search</button>
     <canvas id="canvasBackground"></canvas>
     <div id="dialog-container"></div>
+  <dialog id="search-dialog">
+      <form id="event-form">
+          <h3>Recherche</h3>
+          <div>
+              <label for="query">Termes de recherche</label>
+              <input type="text" id="query" name="query" required autocomplete="off">
+          </div>
+          <div id="search-results"></div>
+          <footer>
+              <button id="connexionBouton" type="button" onclick="this.closest('dialog').close()">Annuler</button>
+          </footer>
+      </form>
+
+      <script>
+          function delayStg(func, delay) {
+              let timeoutId;
+              return function(...args) {
+                  clearTimeout(timeoutId);
+                  timeoutId = setTimeout(() => {
+                      func.apply(this, args);
+                  }, delay);
+              };
+          }
+
+          const dialog = document.getElementById('search-dialog');
+
+          const queryInput = dialog.querySelector('#query');
+          const resultsContainer = dialog.querySelector('#search-results');
+
+          const performSearch = async (query) => {
+              if (query.length < 2) {
+                  resultsContainer.innerHTML = '';
+                  return;
+              }
+              try {
+                  const response = await fetch(`/events/search-events?q=${encodeURIComponent(query)}`);
+                  if (!response.ok) throw new Error('Erreur serveur');
+
+                  const events = await response.json();
+                  displayResults(events);
+              } catch (error) {
+                  console.error('Erreur:', error);
+                  resultsContainer.innerHTML = '<p>Erreur lors de la recherche.</p>';
+              }
+          };
+
+          const delayedSearch = delayStg(performSearch, 300);
+          queryInput.addEventListener('input', (e) => {
+              delayedSearch(e.target.value);
+          });
+
+          resultsContainer.addEventListener('click', (e) => {
+              const clickedLi = e.target.closest('li[data-start-date]');
+
+              if (clickedLi) {
+                  const startDateISO = clickedLi.dataset.startDate;
+
+                  const event = new CustomEvent('dateSelectedFromSearch', {
+                      detail: { startDate: startDateISO },
+                      bubbles: true,
+                      composed: true
+                  });
+
+                  document.body.dispatchEvent(event);
+
+                  dialog.close();
+              }
+          });
+
+
+          function displayResults(events) {
+              if (events.length === 0) {
+                  resultsContainer.innerHTML = '<p>Aucun événement trouvé.</p>';
+                  return;
+              }
+
+              const resultsHtml = events.map(event => {
+                  const eventDate = new Date(event.start).toLocaleDateString('fr-FR', {
+                      day: 'numeric', month: 'long', year: 'numeric'
+                  });
+
+                  return `<li data-start-date="${event.start}"><a>
+                        <strong>${event.title}</strong> (${eventDate})
+                    </a></li>`;
+
+              }).join('');
+
+              resultsContainer.innerHTML = `<ul>${resultsHtml}</ul>`;
+          }
+
+      </script>
+  </dialog>
     <script type="module" src="/src/main.js"></script>
     <script>
      document.body.addEventListener('htmx:afterSwap', function (event) {
@@ -40,6 +132,16 @@
              detail: { type: 'EVENT_DELETED', event: serverData.value }
          });
          document.body.dispatchEvent(appEvent);
+     });
+
+     document.addEventListener('DOMContentLoaded', () => {
+         const searchButton = document.getElementById('search');
+         const searchDialog = document.getElementById('search-dialog');
+         if (searchButton && searchDialog) {
+             searchButton.addEventListener('click', () => {
+                 searchDialog.showModal();
+             });
+         }
      });
     </script>
   </body>

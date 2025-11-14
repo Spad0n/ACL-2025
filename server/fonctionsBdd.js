@@ -3,6 +3,8 @@
 import sqlite3pkg from "sqlite3" ;
 import { createHash } from "crypto";
 import { parseISO, setHours, setMinutes } from 'date-fns';
+import { error } from "console";
+import { th } from "date-fns/locale/th";
 
 
 const sqlite3 = sqlite3pkg.verbose();
@@ -30,12 +32,22 @@ function creerTableEvenement(dataBase){
 
 function creerTableAgenda(dataBase) {
     return new Promise( (res,rej) => {
-        const sql = `CREATE TABLE agendas(id INTEGER PRIMARY KEY, nom TEXT NOT NULL, nom_utilisateur TEXT, FOREIGN KEY (nom_utilisateur) REFERENCES utilisateurs(username))`;
+        const sql = `CREATE TABLE agendas(id INTEGER PRIMARY KEY, nom TEXT NOT NULL, id_utilisateur INTEGER, FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id))`;
         dataBase.run(sql, (err) => {
             rej(new Error("Erreur lors de la création de la table agendas"));
         });
         res("Table agendas OK");
     }) ;
+}
+
+function creerTableAgendasPartages(dataBase){
+    return new Promise( (res, rej) => {
+        const sql = ' CREATE TABLE IF NOT EXISTS agendaspartage(id INTEGER PRIMARY KEY, id_agenda INTEGER NOT NULL, id_user1 INTEGER, id_user2 INTEGER, FOREIGN KEY (id_agenda) REFERENCES agendas(id), FOREIGN KEY (id_user1) REFERENCES utilisateurs(id), FOREIGN KEY (id_user2) REFERENCES utilisateurs(id))';
+        dataBase.run(sql, (err) => {
+            rej(new Error("Erreur lors de la création de la table agendaspartages"));
+        });
+        res("Table agendaspartages OK");
+    })
 }
 
 // Ouvre une connexion avec la BDD
@@ -77,13 +89,13 @@ function fetchUtilisateur(dataBase, username, password) {
     }) ;
 }
 
-function creerAgendaDefautUtilisateur(dataBase, username) {
+function creerAgendaDefautUtilisateur(dataBase, id) {
     return new Promise( (res,rej) => {
-	const sql = `INSERT INTO agendas(nom,nom_utilisateur) VALUES (?,?)`;
+	const sql = `INSERT INTO agendas(nom,id_utilisateur) VALUES (?,?)`;
 
-	const nameDef = username+"Defaut";
+	const nameDef = id+"Defaut";
 
-	dataBase.run(sql, [nameDef, username], (err) => {
+	dataBase.run(sql, [nameDef, id], (err) => {
             if (err) {
 		rej(err.message);
             }
@@ -117,12 +129,12 @@ function ajouterUtilisateur(dataBase, objetUtilisateur) {
     return new Promise( (res,rej) => {
         const sql = `INSERT INTO utilisateurs(username, password) VALUES (?,?)` ;
         
-        dataBase.run(sql, [objetUtilisateur.username, objetUtilisateur.password], (err) => {
+        dataBase.run(sql, [objetUtilisateur.username, objetUtilisateur.password], function(err) {
             if (err) {
-		rej(err.message);
+		        rej(err.message);
             }
+            res(this.lastID);
         });
-        res("Création utilisateur OK");
     });
 }
 
@@ -142,20 +154,44 @@ function ajouterAgenda(dataBase, objetAgenda) {
     });
 }
 
-function ajouterEvenement(dataBase, token,objectEvenement, callback) {
-    recupAgendaID(dataBase, token).then(id => {
-        if(id.length == 1) {
-            const objtmp = id[0];
-            console.log("id agenda:",  +objtmp["id"]);
-            const kk = +objtmp["id"];
-                const sql = 'INSERT INTO evenements(title, start, end, description, couleur, id_agenda) VALUES (?,?,?,?,?,?)';
+function ajouterAgendasPartages(dataBase, id_agenda, id_user1, id_user2){
+    return new Promise( (res, rej) => {
+        const sql = 'INSERT INTO agendaspartage(id_agenda , id_user1, id_user2) VALUES (?,?,?)'
+        dataBase.run(sql, [
+            id_agenda,
+            id_user1,
+            id_user2
+        ], (err) => {
+            if(err) {
+                rej(err.message);
+            }
+        });
+        res("Création agendaspartages OK");
+    })
+}
+
+async function ajouterEvenement(dataBase, token,objectEvenement, callback) {
+   try{
+    const id_utilisateurRows = await recupUtilisateurID(dataBase, token);
+    if(id_utilisateurRows.length === 0){
+        throw new Error("   utilisateur introuvable");
+    }
+    const id_utilisateur = id_utilisateurRows[0].id
+
+    const agendas = await recupAgendaID(dataBase, id_utilisateur);
+    if( agendas.length === 0){
+        throw new Error(" Agendas introuvable");
+    }
+    const id_agendas = agendas[0].id;
+   
+    const sql = 'INSERT INTO evenements(title, start, end, description, couleur, id_agenda) VALUES (?,?,?,?,?,?)';
     dataBase.run(sql, [
         objectEvenement.title,
         objectEvenement.start,
         objectEvenement.end,
         objectEvenement.description,
         objectEvenement.color,
-        kk
+        id_agendas
     ], function(err) {
         if (err) {
             console.error("Erreur ajout événement:", err.message);
@@ -166,10 +202,9 @@ function ajouterEvenement(dataBase, token,objectEvenement, callback) {
             if (callback) callback(null, this.lastID);
         }
     });
-        }
-    }).catch(err => {
+    }catch(err) {
         console.error(err);
-    });
+    };
 }
 
 function modifierEvenement(dataBase, objectEvenement, callback) {
@@ -219,18 +254,43 @@ function supprimerAgenda(dataBase, agendaId, callback) {
 }
 
 
-function recupAgendaID(dataBase, username) {
+function recupAgendaID(dataBase, id) {
 
     return new Promise( (res, rej) => {
-        const sql       = `SELECT id FROM agendas WHERE agendas.nom_utilisateur=?` ;
+        const sql       = `SELECT id FROM agendas WHERE agendas.id_utilisateur=?` ;
 
-        dataBase.all(sql,[username] ,(err, rows) => {
+        dataBase.all(sql,[id] ,(err, rows) => {
             if(err) {
                 rej(err);
             }
             res(rows); 
         }) ;
     }) ;
+}
+
+function recupAgendaUtilisateurConnecte(dataBase, id){
+    return new Promise( (res, rej) => {
+        const sql = 'SELECT * from agendas WHERE agendas.id_utilisateur=?';
+
+        dataBase.all(sql, [id], (err, rows) =>{
+            if(err){
+                rej(err);
+            }
+            res(rows);
+        });
+    });
+}
+
+function recupUtilisateurID(dataBase, username){
+    return new Promise( (res, rej) => {
+        const sql = 'SELECT id from utilisateurs WHERE utilisateurs.username=?';
+        dataBase.all(sql, [username] ,(err, rows) => {
+            if(err){
+                rej(err);
+            }
+            res(rows);
+        });
+    });
 }
 
 // Permet de récupérer le contenu d'une table
@@ -273,6 +333,10 @@ async function initBdd(dataBase) {
     await creerTableAgenda(dataBase)
         .then( res => console.log(res) )
         .catch( err => console.error(err) );
+    
+    await creerTableAgendasPartages(dataBase)
+        .then( res => console.log(res) )
+        .catch( err => console.error(err) );
 }
 
 // ici bdd.db le chemin depend de l'endroit où la commande node a été excuté
@@ -286,4 +350,4 @@ await creerBdd("bdd.db")
 
 initBdd(bdd);
 
-export { bdd , initBdd ,ajouterAgenda, supprimerAgenda, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement, creerAgendaDefautUtilisateur } ;
+export { bdd , initBdd ,ajouterAgenda,ajouterAgendasPartages,  supprimerAgenda, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement, creerAgendaDefautUtilisateur, recupUtilisateurID, recupAgendaUtilisateurConnecte } ;

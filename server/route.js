@@ -1,6 +1,6 @@
 import { createHash } from "crypto"; 
 import { createJWT } from "./outils/jwt.js";
-import { bdd, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, creerAgendaDefautUtilisateur } from "./fonctionsBdd.js";
+import { bdd, ajouterUtilisateur, recupUtilisateurID, retournerContenuTableUtilisateur, fetchUtilisateur, creerAgendaDefautUtilisateur } from "./fonctionsBdd.js";
 
 export function getAccountCreationPage(req, res) {
 
@@ -17,33 +17,24 @@ export function createAccount(req, res) {
 	.then( (result) => {
 	    // Si on trouve l'utilisateur on indique que le compte existe déjà
 	    if (result.length == 1) {
-
-		res.redirect("/register?message=ce+nom+existe+deja") ;
+			res.redirect("/register?message=ce+nom+existe+deja") ;
 	    }
 	    // Sinon on crée le compte
 	    else {
-		
-		const user = {
-		    username,
-		    password: createHash("sha256").update(password).digest("hex"),
-		};
-
-		ajouterUtilisateur(bdd,user)
-		    .then( val => console.log(val))
-		    .catch( err => console.error(err));
-
-		// on associe l'agenda par défaut
-		creerAgendaDefautUtilisateur(bdd,username)
-		    .then( val => console.log(val) )
-		    .catch( err => console.error(err) );
-		
-		const token = createJWT(user);
-		
-		res.cookie("accessToken", token, { httpOnly: true });
-		res.redirect("/login");
-	    }
+			const user = {
+				username,
+				password: createHash("sha256").update(password).digest("hex"),
+			};
+			return ajouterUtilisateur(bdd,user)
+				.then(id_utilisateur => creerAgendaDefautUtilisateur(bdd, id_utilisateur))
+				.then(() => {
+					const token = createJWT(user);
+					res.cookie("accessToken", token, { httpOnly: true });
+					res.redirect("/login");
+				});
+		}
 	})
-	.catch( (err) => { console.error(err); } );
+	.catch(err => console.error(err));
 }
 
 export function authenticate(req, res, next) {

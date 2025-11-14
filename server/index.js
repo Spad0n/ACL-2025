@@ -10,7 +10,10 @@ import {
     recupEvenement,
     ajouterEvenement,
     retournerContenuTableEvenement,
-    modifierEvenement, supprimerEvenement
+    modifierEvenement, supprimerEvenement,
+    recupAgendaUtilisateurConnecte, 
+    recupUtilisateurID, 
+    ajouterAgendasPartages
 } from './fonctionsBdd.js';
 import { tr } from 'date-fns/locale';
 
@@ -160,6 +163,82 @@ app.post('/events/delete', (req, res) => {
         res.send('');
     }
     );
+});
+
+app.get("/agendas", async(req, res) => {
+    try{
+        const tokkensSigne = req.cookies.accessToken;
+        const tokkenSansSigne = jwt.verify(tokkensSigne, process.env.SECRET);
+        const username = tokkenSansSigne.username;
+        
+        if(!username){
+            return res.status(401).json({error: "Aucin Utilisateur n'est connecté "});
+        }
+
+        const id_utilisateurRows = await recupUtilisateurID(bdd, username);
+        if(id_utilisateurRows.length === 0){
+            return res.status(404).json({error: "Utilisateur introuvable"});
+        }
+
+        const id_utilisateur = id_utilisateurRows[0].id;
+        const agendas = await recupAgendaUtilisateurConnecte(bdd, id_utilisateur);
+        res.json(agendas);
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).json({ error: err.message});
+    }
+});
+
+app.post("/agendas/partage", async (req, res) => {
+    const tokenSigne = req.cookies.accessToken;
+
+    let token;
+    try {
+        token = jwt.verify(tokenSigne, process.env.SECRET);
+    } catch (err) {
+        return res.status(401).json({ error: "Token invalide" });
+    }
+
+    const username = token.username;
+    const { id_agenda, username: usernameAquiPartage } = req.body;
+
+    try {
+        const id_utilisateurRows = await recupUtilisateurID(bdd, username);
+
+        if (id_utilisateurRows.length === 0) {
+            return res.status(404).json({ error: "Utilisateur introuvable" });
+        }
+
+        const id_utilisateur = id_utilisateurRows[0].id;
+
+        const agendas = await recupAgendaUtilisateurConnecte(bdd, id_utilisateur);
+
+        if (!agendas.find(a => a.id.toString() === id_agenda)) {
+            return res.status(403).json({ error: "Agenda pas accessible" });
+        }
+
+        const idUsuarioPartage = await recupUtilisateurID(bdd, usernameAquiPartage);
+
+        if (idUsuarioPartage.length === 0) {
+            return res.status(404).json({ error: "Utilisateur à partager introuvable" });
+        }
+
+        const id_utilisateurAquiPartage = idUsuarioPartage[0].id;
+
+        await ajouterAgendasPartages(
+            bdd,
+            id_agenda,
+            id_utilisateur,
+            id_utilisateurAquiPartage
+        );
+
+        return res.json({ success: true });
+
+    } catch (err) {
+        console.error("Erreur serveur :", err);
+        return res.status(500).json({ error: err.message });
+    }
 });
 
 

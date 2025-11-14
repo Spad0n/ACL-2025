@@ -100,13 +100,40 @@ function view(app, model, dispatch) {
                 text: ">",
                 onClick: () => dispatch({ type: 'NEXT_WEEK' }),
                 width: 50,
+            }),
+            uiButton({
+    key: "share_agenda",
+    x: 10 + 360,
+    y: 150,
+    text: "Partager agenda",
+    onClick: () => {
+        const id_agenda = prompt("Entrez l'ID de l'agenda à partager :");
+        const username = prompt("Entrez le nom de l'utilisateur avec qui partager :");
+
+        if (id_agenda && username) {
+            fetch('/agendas/partage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id_agenda, username })
             })
+            .then(res => {
+                if (res.ok) alert("Agenda partagé !");
+                else res.json().then(data => alert("Erreur : " + data.error));
+            })
+            .catch(err => console.error(err));
+        }
+    },
+    width: 150,
+})
+
         ]),
         CalendarWeek(app.screen.width, eventsForWeek, weekDays, dispatch),
 
         uiButton({
             key: "new_event",
-            x: 10,
+            x: 10 + 250,
             y: 150,
             text: "new event",
             onClick: () => dispatch({ type: "ADD_EVENT" }),
@@ -210,6 +237,26 @@ function update(msg, model) {
     }
     return newModel;
 }
+
+async function chargerAgendasUtilisateur() {
+    const list = document.getElementById("agenda-list");
+
+    const agendas = await fetch("/agendas").then(r => r.json());
+
+    agendas.forEach(a => {
+        const li = document.createElement("li");
+        li.textContent = a.nom;
+
+        li.onclick = () => {
+            console.log("Agenda sélectionné :", a.id);
+        };
+
+        list.appendChild(li);
+    });
+}
+
+chargerAgendasUtilisateur();
+
 
 /**
  * @param {string} url 

@@ -241,6 +241,9 @@ app.post("/agendas/partage", async (req, res) => {
     }
 });
 
+app.get('/importer/agenda', (req,res) => {
+    res.render('importerAgenda');
+});
 
 app.listen(PORT, (_err) => {
     console.log(`Serveur lancé sur http://localhost:${PORT}`);

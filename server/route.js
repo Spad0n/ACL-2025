@@ -2,7 +2,6 @@ import { createHash } from "crypto";
 import { createJWT } from "./outils/jwt.js";
 import { bdd, ajouterUtilisateur, recupUtilisateurID, retournerContenuTableUtilisateur, fetchUtilisateur, creerAgendaDefautUtilisateur , recupAgendaUtilisateurConnecte, recupEvenementAgenda } from "./fonctionsBdd.js";
 import jwt from "jsonwebtoken";
-
 import {readFile, writeFile} from 'fs';
 
 export function getAccountCreationPage(req, res) {
@@ -95,18 +94,22 @@ function recupTokenClient(req,res) {
 }
 
 // +-------------------------------------------
-// | Recup. les events de l'agenda que l'utilisateur veut déporter
-// | ENVOIE : au front end tous les événements de l'agenda qu'il veut déporter
+// | -> permet de créer le snapshot que le client demande
 // --------------------------------------------
 export function callFrontEndDeporter(req, res) {
     setTimeout(() => console.log('SERVEUR log : callFrontEndDeporter'));
 
+    // On récupère le nom de l'agenda que l'utilisateur veut déporter
+    const { agenda } = req.body ;
+    console.log('SERVEUR log : agendaName :', agenda);
+
+    // On récupère le username de l'utilisateur qui a fait la requête
     const username = recupTokenClient(req,res);
+
     if (username !== -1 && username !== -2) {
 
 	recupUtilisateurID(bdd, username)
             .then( tabUsrId => { 
-                //console.log(tabUsrId); 
                 
                 // On récupère l'id de l'utilisateur connecté
                 // Par la suite on va récuperer ses agendas
@@ -116,24 +119,26 @@ export function callFrontEndDeporter(req, res) {
                     const objTmp = tabUsrId[0].id;
                     
                     // récupération des agendas
-                    // On les envoie au frontend
                     recupAgendaUtilisateurConnecte(bdd, objTmp)
-                        .then( fullfiled => { 
+                        .then( lesAgendas => { 
 			    
-			    for(const agd of fullfiled) {
+			    for(const agd of lesAgendas) {
+				
+				// On cherche les événements de l'agenda demandé
+				if(agd.nom == agenda) {
+				    recupEvenementAgenda(bdd, agd.id)
+					.then( evnt =>
+					    {
+						console.log('SERVEUR log : demande client : ', username);
+						// console.log('SERVEUR log : événements : ', evnt);
 
-				const agdId = agd.id ;
-				// console.log(agdId);
-
-				recupEvenementAgenda(bdd, agdId)
-				    .then( evnt =>
-					{
-					    // console.log(evnt);
-					    // On envoie tous les événemnts
-					    console.log('SERVEUR log : demande client : ', username);
-					    res.json(evnt);		
-					})
-				    .catch(err => console.error(err));
+						// On crée le fichier
+						snapShotCreation(evnt, agenda, agd.id)
+						    .then(success => res.json(success))
+						    .catch(error => console.error(error));
+					    })
+					.catch(err => console.error(err));
+				}
 			    }
 			})
 			.catch(err => console.error(err));
@@ -154,8 +159,7 @@ export function sendFrontEndAgendaUtilisateur(req, res) {
 
 	recupUtilisateurID(bdd, username)
             .then( tabUsrId => { 
-                // console.log(tabUsrId); 
-                
+                                
                 // On récupère l'id de l'utilisateur connecté
                 // Par la suite on va récuperer ses agendas
                 
@@ -166,10 +170,9 @@ export function sendFrontEndAgendaUtilisateur(req, res) {
                     // récupération des agendas
                     // On les envoie au frontend
                     recupAgendaUtilisateurConnecte(bdd, objTmp)
-                        .then( fullfiled => { 
-                            // fullfield est un objet de type tableau qui contient les agendas
-                            // console.log(fullfiled);
-                            res.render("importerDeporterAgenda", { data :  fullfiled });
+                        .then( lesAgendas => { 
+                            
+                            res.render("importerDeporterAgenda", { data :  lesAgendas });
                         })
                         .catch(err => { 
                             console.error(err);
@@ -183,20 +186,31 @@ export function sendFrontEndAgendaUtilisateur(req, res) {
 // +-----------------------------------
 // | Permet de créer le fichier snapshot
 // ------------------------------------
-export function snapShotCreation(req, res) {
+function snapShotCreation(evenements, nomAgenda, idAgenda) {
     setTimeout(() => console.log('SERVEUR log : snapShotCreation'));
 
-    // On récup les données aue le client a envoyé
-    const { snapShotName, obj } = req.body;
-    console.log(snapShotName, obj);
+    return new Promise( (resolve, reject) => {
 
-    // On écrit le fichier sur le disque
-    writeFile(snapShotName+".json",obj,err => {
-	if(err) {
-	    console.error(err);
+	// Propriété de l'objet : nom, id et des entiers (chaque entier correspond à l'id d'un événements)
+	const AGENDA = {};
+
+	AGENDA.nom = nomAgenda;
+	AGENDA.id  = idAgenda;
+	
+	for(const e of evenements) {
+	    AGENDA[e.id] = e ;
 	}
-    });
 
-    // petit message de debug pour le client
-    res.json({ success: true, message: "Snapshot créé !" });
+	// On le met au format JSON
+	const AGENDAJSON = JSON.stringify(AGENDA);
+	const newName    = nomAgenda + "-JSON" + ".json" ;
+	
+	writeFile(newName,AGENDAJSON,err => {
+	    if(err) {
+		reject(err) ;
+	    }
+	});
+	
+	resolve({ success: true, message: "Snapshot créé !" });
+    });
 }

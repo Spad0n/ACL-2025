@@ -124,6 +124,23 @@ function recupEvenement(dataBase){
     });
 }
 
+// +------
+// | Récupère les événements d'un agenda
+// +------
+function recupEvenementAgenda(dataBase, idAgenda) {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT * FROM evenements WHERE evenements.id_agenda = ?`;
+        dataBase.all(sql,[idAgenda], 
+            (err, rows) => {
+                if(err) {
+                    reject(err);
+                }
+                resolve(rows);
+            }
+        );
+    });
+}
+
 // Permet d'ajouter un utilisateur dans la BDD
 function ajouterUtilisateur(dataBase, objetUtilisateur) {
     return new Promise( (res,rej) => {
@@ -350,4 +367,4 @@ await creerBdd("bdd.db")
 
 initBdd(bdd);
 
-export { bdd , initBdd ,ajouterAgenda,ajouterAgendasPartages,  supprimerAgenda, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement, creerAgendaDefautUtilisateur, recupUtilisateurID, recupAgendaUtilisateurConnecte } ;
+export { bdd , initBdd ,ajouterAgenda,ajouterAgendasPartages,  supprimerAgenda, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement, creerAgendaDefautUtilisateur, recupUtilisateurID, recupAgendaUtilisateurConnecte, recupEvenementAgenda } ;

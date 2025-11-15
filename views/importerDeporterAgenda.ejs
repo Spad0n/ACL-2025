@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8">
+        <title> Importation/Déportation </title>
+    </head>
+
+    <body>
+        <!-- Import du module utile pour la création du fichier agenda -->
+        <script src="/js/importerDeporterAgenda.js"> </script>
+        <script>
+            // fonction qui permet d'ouvrir l'explorateur de fichier
+            // return : Promise
+            async function getFile() {
+                const [fileHandle] = await window.showOpenFilePicker();
+                const file = await fileHandle.getFile();
+                return file; 
+            }
+            
+            // Récupère les agendas de l'utilisateurs connecté afin qu'il puisse choisir celui à déporter
+            function selectAgendaDeporter() {
+                // DeporterAgenda est défini dans le script inclu. 
+                const da = new DeporterAgenda();
+
+                // chercher dans la bdd les agendas de l'utilisateur
+                da.creerFichierSnapshot('agendaDefaut.json') ;
+            }
+            
+            // on ajoute l'ecouteur sur le bouton quand le DOM est lodaed
+            document.addEventListener('DOMContentLoaded', () => {
+                 document.getElementById('fileButton1')
+                    .addEventListener('click', () => {
+                        console.log('importer');
+                        getFile()
+                            .then( file => console.log(file))
+                            .catch( err => console.error(err));
+                    });
+
+                 document.getElementById('fileButton2')
+                    .addEventListener('click', () => {
+                        console.log('déporter');
+                        selectAgendaDeporter();
+                    });
+                });            
+        </script>
+        <div>
+            Sur cette page, vous pouvez importer ou bien déporter un fichier agenda.
+            Ce fichier doit uniquement avoir été déporté/créé par notre page de déportation ici présente. 
+        </div> 
+        <div>
+            <button id="fileButton1" name="fileButton1"> Importer </button>
+        </div>
+        <div>
+            <button id="fileButton2" name="fileButton2"> Deporter </button>
+        </div>       
+        <div>
+            <label for='selectionAgendaDeporter'> Choisir un agenda à déporter </label>
+            <select id="selectionAgendaDeporter">
+                <% data.forEach(item => { %>
+                <option value="<%= item.id %>">
+                    <%= item.nom %>
+                </option>
+                <% }) %>
+            </select>
+        </div>
+    </body>
+</html>

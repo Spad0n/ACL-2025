@@ -242,67 +242,15 @@ app.post("/agendas/partage", async (req, res) => {
     }
 });
 
-app.get('/importerDeporter/agenda', (req,res) => {
-    // tout d'abord on regarde si le client est connecté 
-    try {
-        const tokkensSigne = req.cookies.accessToken;
-        const tokkenSansSigne = jwt.verify(tokkensSigne, process.env.SECRET);
-        const username = tokkenSansSigne.username;
-        
-        // si l'utilisateur n'est pas connecté, on le redirige pour qu'il se connecte
-        if(!username){
-            return res.redirect("/login");
-        }
-        
-        recupUtilisateurID(bdd, username)
-            .then( tabUsrId => { 
-                console.log(tabUsrId); 
-                
-                // On récupère l'id de l'utilisateur connecté
-                // Par la suite on va récuperer ses agendas
-                
-                if(tabUsrId.length > 0) {
-                    
-                    const objTmp = tabUsrId[0].id;
-                    
-                    // récupération des agendas
-                    // On les envoie au frontend
-                    recupAgendaUtilisateurConnecte(bdd, objTmp)
-                        .then( fullfiled => { 
-                            // fullfield est un objet de type tableau qui contient les agendas
-                            console.log(fullfiled);
-                            
-                            // <<<!!!>>> CETTE PARTIE DU CODE EST EXPERIMENTALE
-                            // Maintenant on récupère les événements des différents agendas
-                            const tabDesEvents = [];
-                            
-                            for(const agd of fullfiled) {
-                                const agdId = agd.id ;
-                                console.log(agdId);
-                                recupEvenementAgenda(bdd, agdId)
-                                    .then( evnt => {
-                                            console.log(evnt);
-                                            
-                                            // on ajoute les événemnts dans le tableau pour le frontend
-                                            for(const evtobj of evnt) {
-                                                tabDesEvents.push(evtobj); 
-                                            }
-                                    })
-                                    .catch(err => console.error(err));
-                            } 
 
-                            res.render("importerDeporterAgenda", { data :  fullfiled });
-                        })
-                        .catch(err => { 
-                            console.error(err);
-                        }); 
-                }
-            })
-            .catch(err => console.error(err) );
-    } catch(err) {
-        console.error(err); 
-    }
-});
+// +-------------------------------------------------------------------
+// | GESTION de la fonctionalité déporter/importer un agenda
+// --------------------------------------------------------------------
+app.get('/importerDeporter/agenda', routes.sendFrontEndAgendaUtilisateur);
+
+app.get('/importerDeporter/agendaDeporter', routes.callFrontEndDeporter);
+
+// | FIN |
 
 app.listen(PORT, (_err) => {
     console.log(`Serveur lancé sur http://localhost:${PORT}`);

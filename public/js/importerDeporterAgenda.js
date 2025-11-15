@@ -1,5 +1,4 @@
 "use strict";
-
 // +-------------------------
 // | Classe qui s'occupe de la logique pour déporter en snapshot un agenda
 // +-------------------------
@@ -11,17 +10,20 @@ class DeporterAgenda {
     
     }
 
-    // Cette fonction permet de créer le fichier snapshot qui va contenir l'agenda
-    creerFichierSnapshot(snapShotName) {
-	    setTimeout(() => console.log(snapShotName));
+    // Cette fonction permet de demander au serveur de créer le fichier snapshot qui va contenir l'agenda
+    creerFichierSnapshot(snapShotName, obj) {
+
     }
-    
-    creerObjetAgenda() {
-    
+
+    // Cette méthode traduit l'objet agenda en JSON
+    creerObjetAgendaJSON(obj) {
+	this.#objetAgenda = obj ;
+	const stringedObj = JSON.stringify(obj);
+	return stringedObj;
     }
 
     get objetAgenda() {
-	    return this.#objetAgenda ; 
+	return this.#objetAgenda ; 
     }
 }
 

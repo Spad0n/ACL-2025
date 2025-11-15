@@ -250,6 +250,8 @@ app.get('/importerDeporter/agenda', routes.sendFrontEndAgendaUtilisateur);
 
 app.get('/importerDeporter/agendaDeporter', routes.callFrontEndDeporter);
 
+app.post("/creer-snapshot", routes.snapShotCreation);
+
 // | FIN |
 
 app.listen(PORT, (_err) => {

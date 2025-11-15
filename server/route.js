@@ -1,7 +1,9 @@
 import { createHash } from "crypto"; 
 import { createJWT } from "./outils/jwt.js";
-import { bdd, ajouterUtilisateur, recupUtilisateurID, retournerContenuTableUtilisateur, fetchUtilisateur, creerAgendaDefautUtilisateur , recupAgendaUtilisateurConnecte } from "./fonctionsBdd.js";
+import { bdd, ajouterUtilisateur, recupUtilisateurID, retournerContenuTableUtilisateur, fetchUtilisateur, creerAgendaDefautUtilisateur , recupAgendaUtilisateurConnecte, recupEvenementAgenda } from "./fonctionsBdd.js";
 import jwt from "jsonwebtoken";
+
+import {readFile, writeFile} from 'fs';
 
 export function getAccountCreationPage(req, res) {
 
@@ -22,17 +24,17 @@ export function createAccount(req, res) {
 	    }
 	    // Sinon on crée le compte
 	    else {
-			const user = {
-				username,
-				password: createHash("sha256").update(password).digest("hex"),
-			};
-			return ajouterUtilisateur(bdd,user)
-				.then(id_utilisateur => creerAgendaDefautUtilisateur(bdd, id_utilisateur))
-				.then(() => {
-					const token = createJWT(user);
-					res.cookie("accessToken", token, { httpOnly: true });
-					res.redirect("/login");
-				});
+		const user = {
+		    username,
+		    password: createHash("sha256").update(password).digest("hex"),
+		};
+		return ajouterUtilisateur(bdd,user)
+		    .then(id_utilisateur => creerAgendaDefautUtilisateur(bdd, id_utilisateur))
+		    .then(() => {
+			const token = createJWT(user);
+			res.cookie("accessToken", token, { httpOnly: true });
+			res.redirect("/login");
+		    });
 		}
 	})
 	.catch(err => console.error(err));
@@ -72,7 +74,7 @@ export function login(req, res) {
 // | Recup. le token du client
 // | RETURN : username du client
 // -----------------------------
-function recupTokenClient(req) {
+function recupTokenClient(req,res) {
     try {
         const tokkensSigne    = req.cookies.accessToken;
         const tokkenSansSigne = jwt.verify(tokkensSigne, process.env.SECRET);
@@ -86,8 +88,9 @@ function recupTokenClient(req) {
 	}
     }
     catch(err) {
-	console.error('SERVER log/error : ',err);
-	return -2;
+	console.error('SERVER log/error : ',err.message);
+	// Si il y a une erreur, c'est surment que le token a expiré
+	res.redirect('/login');
     }
 }
 
@@ -98,12 +101,12 @@ function recupTokenClient(req) {
 export function callFrontEndDeporter(req, res) {
     setTimeout(() => console.log('SERVEUR log : callFrontEndDeporter'));
 
-    const username = recupTokenClient(req);
+    const username = recupTokenClient(req,res);
     if (username !== -1 && username !== -2) {
 
 	recupUtilisateurID(bdd, username)
             .then( tabUsrId => { 
-                console.log(tabUsrId); 
+                //console.log(tabUsrId); 
                 
                 // On récupère l'id de l'utilisateur connecté
                 // Par la suite on va récuperer ses agendas
@@ -116,32 +119,22 @@ export function callFrontEndDeporter(req, res) {
                     // On les envoie au frontend
                     recupAgendaUtilisateurConnecte(bdd, objTmp)
                         .then( fullfiled => { 
-    
-			    // <<<!!!>>> CETTE PARTIE DU CODE EST EXPERIMENTALE
-			    // Maintenant on récupère les événements des différents agendas
-			    const tabDesEvents = [];
 			    
 			    for(const agd of fullfiled) {
 
 				const agdId = agd.id ;
-				console.log(agdId);
+				// console.log(agdId);
 
 				recupEvenementAgenda(bdd, agdId)
-				    .then( evnt => {
-					console.log(evnt);
-					
-					// on ajoute les événemnts dans le tableau pour le frontend
-					for(const evtobj of evnt) {
-					    tabDesEvents.push(evtobj); 
-					}
-
-				    })
+				    .then( evnt =>
+					{
+					    // console.log(evnt);
+					    // On envoie tous les événemnts
+					    console.log('SERVEUR log : demande client : ', username);
+					    res.json(evnt);		
+					})
 				    .catch(err => console.error(err));
 			    }
-
-			    // On envoie tous les événemnts
-			    res.json(tabDesEvents);
-			    
 			})
 			.catch(err => console.error(err));
 		}
@@ -156,12 +149,12 @@ export function callFrontEndDeporter(req, res) {
 export function sendFrontEndAgendaUtilisateur(req, res) {
     setTimeout(() => console.log('SERVEUR log : sendFrontEndAgendaUtilisateur'));
 
-    const username = recupTokenClient(req);
+    const username = recupTokenClient(req,res);
     if (username !== -1 && username !== -2) {
 
 	recupUtilisateurID(bdd, username)
             .then( tabUsrId => { 
-                console.log(tabUsrId); 
+                // console.log(tabUsrId); 
                 
                 // On récupère l'id de l'utilisateur connecté
                 // Par la suite on va récuperer ses agendas
@@ -175,8 +168,7 @@ export function sendFrontEndAgendaUtilisateur(req, res) {
                     recupAgendaUtilisateurConnecte(bdd, objTmp)
                         .then( fullfiled => { 
                             // fullfield est un objet de type tableau qui contient les agendas
-                            console.log(fullfiled);
-                            
+                            // console.log(fullfiled);
                             res.render("importerDeporterAgenda", { data :  fullfiled });
                         })
                         .catch(err => { 
@@ -186,4 +178,25 @@ export function sendFrontEndAgendaUtilisateur(req, res) {
             })
             .catch(err => console.error(err) );
     }
+}
+
+// +-----------------------------------
+// | Permet de créer le fichier snapshot
+// ------------------------------------
+export function snapShotCreation(req, res) {
+    setTimeout(() => console.log('SERVEUR log : snapShotCreation'));
+
+    // On récup les données aue le client a envoyé
+    const { snapShotName, obj } = req.body;
+    console.log(snapShotName, obj);
+
+    // On écrit le fichier sur le disque
+    writeFile(snapShotName+".json",obj,err => {
+	if(err) {
+	    console.error(err);
+	}
+    });
+
+    // petit message de debug pour le client
+    res.json({ success: true, message: "Snapshot créé !" });
 }

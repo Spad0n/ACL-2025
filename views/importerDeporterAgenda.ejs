@@ -6,8 +6,6 @@
     </head>
 
     <body>
-        <!-- Import du module utile pour la création du fichier agenda -->
-        <script src="/js/importerDeporterAgenda.js"> </script>
         <script>
             // fonction qui permet d'ouvrir l'explorateur de fichier
             // return : Promise
@@ -18,17 +16,44 @@
             }
             
             // Récupère les agendas de l'utilisateurs connecté afin qu'il puisse choisir celui à déporter
-            function selectAgendaDeporter() {
-                // DeporterAgenda est défini dans le script inclu. 
-                const da = new DeporterAgenda();
+            function selectAgendaDeporter(agendaName) {
+		// appeler la méthode .json() pour récupérer !!!!!
+		fetch('/importerDeporter/agendaDeporter')
+		    .then( serverResponse => serverResponse.json())
+		    .then( evenements => {
 
-                // chercher dans la bdd les agendas de l'utilisateur
-                da.creerFichierSnapshot('agendaDefaut.json') ;
-            }
-            
+			// console.log('serverResponse : ', evenements);
+			// On crée l'agenda avec comme clé de chaque prop. l'id de l'event et la val. l'objet lui meme
+			const AGENDA = {};
+			for(const objRes of evenements) {
+			    AGENDA[objRes.id] = objRes ;
+			}
+
+			// On prépare les données à envoyé au serveur
+			const AGENDAJSON = JSON.stringify(AGENDA);
+			const data       = { snapShotName:agendaName, obj:AGENDAJSON };
+
+			// On va faire une requête POST au serveur + envoie des données
+			fetch("/creer-snapshot", {
+			    method: "POST",
+			    headers: {
+				"Content-Type": "application/json"
+			    },
+			    body: JSON.stringify(data)
+			})
+			    .then(res => res.json())
+			    .then(result => {
+				console.log("Réponse du serveur :", result);
+			    })
+			    .catch(err => console.error(err));
+		    })
+		    .catch(error => console.error(error.message));
+	    }
+	  
             // on ajoute l'ecouteur sur le bouton quand le DOM est lodaed
             document.addEventListener('DOMContentLoaded', () => {
-                 document.getElementById('fileButton1')
+
+		document.getElementById('fileButton1')
                     .addEventListener('click', () => {
                         console.log('importer');
                         getFile()
@@ -39,10 +64,19 @@
                  document.getElementById('fileButton2')
                     .addEventListener('click', () => {
                         console.log('déporter');
-                        selectAgendaDeporter();
+
+			// On récupère le nom de l'agenda dans le DOM
+			const select   = document.getElementById('selectionAgendaDeporter');
+			const txt      = select.options[select.selectedIndex].text;
+			const finalTxt = txt + "-Deporte";
+
+			// fonction défini au dessus
+                        selectAgendaDeporter(finalTxt);
                     });
-                });            
+            });
+          
         </script>
+	
         <div>
             Sur cette page, vous pouvez importer ou bien déporter un fichier agenda.
             Ce fichier doit uniquement avoir été déporté/créé par notre page de déportation ici présente. 

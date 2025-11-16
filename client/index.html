@@ -48,7 +48,34 @@
 
   <body>
 
-    <!-- 🌟 Colonne des agendas -->
+    <!-- Fenêtre de partage d'agenda -->
+<div id="share-dialog" style="
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    display: none;
+    z-index: 9999;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+">
+    <h3>Partager un agenda</h3>
+
+    <label>Agenda :</label><br>
+    <select id="share-agenda-select"></select><br><br>
+
+    <label>Utilisateur :</label><br>
+    <select id="share-user-select"></select><br><br>
+
+    <button id="share-confirm">Partager</button>
+    <button onclick="document.getElementById('share-dialog').style.display='none'">
+        Annuler
+    </button>
+</div>
+
+
+    <!-- Colonne des agendas -->
     <div id="sidebar">
       <h2>Mes agendas</h2>
       <ul id="agenda-list"></ul>
@@ -61,6 +88,8 @@
     <script type="module" src="/src/main.js"></script>
 
     <script>
+
+    
      document.body.addEventListener('htmx:afterSwap', function (event) {
          const dialog = event.detail.elt.querySelector('dialog');
          if (dialog) {

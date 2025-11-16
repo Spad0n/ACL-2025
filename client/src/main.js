@@ -102,31 +102,13 @@ function view(app, model, dispatch) {
                 width: 50,
             }),
             uiButton({
-    key: "share_agenda",
-    x: 10 + 360,
-    y: 150,
-    text: "Partager agenda",
-    onClick: () => {
-        const id_agenda = prompt("Entrez l'ID de l'agenda à partager :");
-        const username = prompt("Entrez le nom de l'utilisateur avec qui partager :");
-
-        if (id_agenda && username) {
-            fetch('/agendas/partage', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ id_agenda, username })
+                key: "share-agenda",
+                x: 10 + 550,
+                y: 150,
+                text: "Partager agenda",
+                onClick: () => fenetrePartage(),
+                width: 150,
             })
-            .then(res => {
-                if (res.ok) alert("Agenda partagé !");
-                else res.json().then(data => alert("Erreur : " + data.error));
-            })
-            .catch(err => console.error(err));
-        }
-    },
-    width: 150,
-})
 
         ]),
         CalendarWeek(app.screen.width, eventsForWeek, weekDays, dispatch),
@@ -256,6 +238,41 @@ async function chargerAgendasUtilisateur() {
 }
 
 chargerAgendasUtilisateur();
+
+// Ovrir une fenetre pour pouvoir partager avec les listes des agendas de 
+// l'utilisateurs connectés et des utilisateurs de la bdd
+async function fenetrePartage(params) {
+    const dialog = document.getElementById("share-dialog");
+    const agendaSelect = document.getElementById("share-agenda-select");
+    const utilisateurSelect = document.getElementById("share-user-select");
+
+    const agendasUtilisateurConnecte = await fetch("/agendas").then(r => r.json());
+    agendaSelect.innerHTML = agendasUtilisateurConnecte.map(a => `<option value="${a.id}">${a.nom}</option>`).join("");
+    
+    const utilisateurQuiRecoitPartage = await fetch("/recupUtilisateur").then(r => r.json());
+    utilisateurSelect.innerHTML = utilisateurQuiRecoitPartage.map(a => `<option value="${a.username}">${a.username}</option>`).join("");
+
+    dialog.style.display = "block";
+}
+
+document.getElementById("share-confirm").onclick = () => {
+    const id_agenda = document.getElementById("share-agenda-select").value;
+    const username = document.getElementById("share-user-select").value;
+
+    fetch('/agendas/partage', {
+        method: 'POST', 
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({id_agenda, username})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) alert("L'agenda a bien été partagé");
+        else alert("Erreur : " + data.error);
+    });
+
+    document.getElementById("share-dialog").style.display = "none";
+}
+
 
 
 /**

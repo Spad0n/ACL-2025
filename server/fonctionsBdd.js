@@ -42,7 +42,7 @@ function creerTableAgenda(dataBase) {
 
 function creerTableAgendasPartages(dataBase){
     return new Promise( (res, rej) => {
-        const sql = ' CREATE TABLE IF NOT EXISTS agendaspartage(id INTEGER PRIMARY KEY, id_agenda INTEGER NOT NULL, id_user1 INTEGER, id_user2 INTEGER, FOREIGN KEY (id_agenda) REFERENCES agendas(id), FOREIGN KEY (id_user1) REFERENCES utilisateurs(id), FOREIGN KEY (id_user2) REFERENCES utilisateurs(id))';
+        const sql = ' CREATE TABLE IF NOT EXISTS agendaspartage(id INTEGER PRIMARY KEY, id_agenda INTEGER NOT NULL, id_user1 INTEGER, id_user2 INTEGER, FOREIGN KEY (id_agenda) REFERENCES agendas(id), FOREIGN KEY (id_user1) REFERENCES utilisateurs(id), FOREIGN KEY (id_user2) REFERENCES utilisateurs(id), UNIQUE(id_agenda, id_user2))';
         dataBase.run(sql, (err) => {
             rej(new Error("Erreur lors de la création de la table agendaspartages"));
         });
@@ -172,19 +172,39 @@ function ajouterAgenda(dataBase, objetAgenda) {
 }
 
 function ajouterAgendasPartages(dataBase, id_agenda, id_user1, id_user2){
-    return new Promise( (res, rej) => {
-        const sql = 'INSERT INTO agendaspartage(id_agenda , id_user1, id_user2) VALUES (?,?,?)'
-        dataBase.run(sql, [
-            id_agenda,
-            id_user1,
-            id_user2
-        ], (err) => {
-            if(err) {
-                rej(err.message);
-            }
+    return new Promise(async (res, rej) => {
+        try{
+            const sqlCheckPartageExisteDeja = 'SELECT * FROM agendaspartage WHERE id_agenda = ? AND id_user2 = ?'
+
+            const partageExiste = await new Promise( (res, rej) =>{
+            dataBase.all(sqlCheckPartageExisteDeja, [id_agenda, id_user2], (err, rows)=>{
+                if(err){
+                    rej(err)
+                }
+                res(rows);
+            });
         });
-        res("Création agendaspartages OK");
-    })
+        
+        if(partageExiste.length != 0){
+            rej(new Error("Ce partage existe déjà"));
+        }
+
+                const sql = 'INSERT INTO agendaspartage(id_agenda , id_user1, id_user2) VALUES (?,?,?)'
+                dataBase.run(sql, [
+                    id_agenda,
+                    id_user1,
+                    id_user2
+                ], function(err) {
+                    if(err) {
+                        rej(err.message);
+                    }
+                });
+                res("L'agenda a bien été partagé !");
+
+        }catch (err) {
+            rej(err);
+        }
+    });
 }
 
 async function ajouterEvenement(dataBase, token,objectEvenement, callback) {
@@ -310,6 +330,18 @@ function recupUtilisateurID(dataBase, username){
     });
 }
 
+function recupUtilisateur(dataBase, username){
+    return new Promise( (res, rej) => {
+        const sql = 'SELECT id, username FROM utilisateurs WHERE username != ?';
+        dataBase.all(sql, [username], (err, rows) => {
+            if(err){
+                rej(err);
+            }
+            res(rows);
+        })
+    })
+}
+
 // Permet de récupérer le contenu d'une table
 function retournerContenuTableUtilisateur(dataBase) {
 
@@ -367,4 +399,4 @@ await creerBdd("bdd.db")
 
 initBdd(bdd);
 
-export { bdd , initBdd ,ajouterAgenda,ajouterAgendasPartages,  supprimerAgenda, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement, creerAgendaDefautUtilisateur, recupUtilisateurID, recupAgendaUtilisateurConnecte, recupEvenementAgenda } ;
+export { bdd , initBdd ,ajouterAgenda,ajouterAgendasPartages, recupUtilisateur,   supprimerAgenda, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement, creerAgendaDefautUtilisateur, recupUtilisateurID, recupAgendaUtilisateurConnecte, recupEvenementAgenda } ;

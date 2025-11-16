@@ -14,7 +14,8 @@ import {
     recupAgendaUtilisateurConnecte, 
     recupUtilisateurID, 
     ajouterAgendasPartages,
-    recupEvenementAgenda
+    recupEvenementAgenda, 
+    recupUtilisateur
 } from './fonctionsBdd.js';
 import { tr } from 'date-fns/locale';
 
@@ -237,10 +238,31 @@ app.post("/agendas/partage", async (req, res) => {
         return res.json({ success: true });
 
     } catch (err) {
+        if(err.message === "Ce partage existe déjà"){
+            return res.status(409).json({error: err.message});
+        }
+        
         console.error("Erreur serveur :", err);
         return res.status(500).json({ error: err.message });
     }
 });
+
+app.get('/recupUtilisateur', async (req, res) => {
+    try{
+        const tokenSigne = req.cookies.accessToken;
+        let token;
+        try {
+            token = jwt.verify(tokenSigne, process.env.SECRET);
+        } catch (err) {
+            return res.status(401).json({ error: "Token invalide" });
+        }
+        const username = token.username;
+        const utilisateur = await recupUtilisateur(bdd, username);
+        res.json(utilisateur);
+    } catch (err){
+        res.status(500).json({ error: err.message});
+    }
+} )
 
 
 // +-------------------------------------------------------------------
@@ -263,6 +285,6 @@ app.post('/importerDeporter/agendaDeporter', routes.callFrontEndDeporter);
 
 // | FIN |
 
-app.listen(PORT, (_err) => {
+app.listen(PORT, "0.0.0.0", (_err) => {
     console.log(`Serveur lancé sur http://localhost:${PORT}`);
 });

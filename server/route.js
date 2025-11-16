@@ -134,7 +134,9 @@ export function callFrontEndDeporter(req, res) {
 
 						// On crée le fichier
 						snapShotCreation(evnt, agenda, agd.id)
-						    .then(success => res.json(success))
+						    .then(success => {
+							res.json(success);
+						    })
 						    .catch(error => console.error(error));
 					    })
 					.catch(err => console.error(err));
@@ -203,7 +205,7 @@ function snapShotCreation(evenements, nomAgenda, idAgenda) {
 
 	// On le met au format JSON
 	const AGENDAJSON = JSON.stringify(AGENDA);
-	const newName    = nomAgenda + "-JSON" + ".json" ;
+	const newName    = "server/agendaJson/"+nomAgenda + "-JSON" + ".json" ;
 	
 	writeFile(newName,AGENDAJSON,err => {
 	    if(err) {

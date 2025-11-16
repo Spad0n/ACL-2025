@@ -248,9 +248,18 @@ app.post("/agendas/partage", async (req, res) => {
 // --------------------------------------------------------------------
 app.get('/importerDeporter/agenda', routes.sendFrontEndAgendaUtilisateur);
 
-app.get('/importerDeporter/agendaDeporter', routes.callFrontEndDeporter);
+app.get('/download/agenda/:agenda', (req, res) => {
+    const agendaUtilisateur = req.params.agenda ;
+    const chemin            = path.join(__dirname,'agendaJson',agendaUtilisateur);
+    
+    res.download(chemin, agendaUtilisateur, err => {
+	if(err) {
+	    console.error(err);
+	}
+    });
+});
 
-app.post("/creer-snapshot", routes.snapShotCreation);
+app.post('/importerDeporter/agendaDeporter', routes.callFrontEndDeporter);
 
 // | FIN |
 

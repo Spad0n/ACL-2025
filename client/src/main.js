@@ -3,7 +3,7 @@ import { initBackground } from "./background.js";
 import { h, patch } from "./ui/elm.js";
 import { uiButton, CalendarWeek } from "./components.js";
 import { endOfDay, format, isSameDay, parseISO, startOfWeek } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { ca, fr } from 'date-fns/locale';
 import htmx from "htmx.org";
 
 /**
@@ -365,3 +365,106 @@ function triggerHtmxDialog(url) {
     });
 })();
 
+async function chagerAgendas(){
+    try{
+        const rep = await fetch('/agendas');
+        if(!rep.ok){
+            throw new Error("Erreur lors de la recuperation des agendas");
+        }
+        const agendas = await rep.json();
+        const listeAgendas = document.getElementById('agenda-list');
+        listeAgendas.innerHTML = '';
+
+        agendas.forEach(agenda => {
+            const li = document.createElement('li');
+            const span = document.createElement('span');
+            span.textContent = agenda.nom;
+            span.className = 'agenda-nom';
+            span.dataset.id = agenda.id;
+
+            const boutonSup = document.createElement('button');
+            boutonSup.textContent = "X";
+            boutonSup.className = 'agenda-supprimer';
+            boutonSup.dataset.id = agenda.id;
+
+            li.appendChild(span);
+            li.appendChild(boutonSup);
+            listeAgendas.appendChild(li);
+        });
+    } catch (error) {
+        console.error("Erreur :", error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    chagerAgendas();
+
+    // ajouter un nouvel agenda
+    document.getElementById('new-agenda').addEventListener('click', async () => {
+        const nom = prompt("Entrez le nom du nouvel agenda :");
+        if(nom){
+            try{
+                const rep = await fetch('/agendas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ nom: nom }),
+                });
+
+                if(rep.ok){
+                    chagerAgendas();
+                }
+            } catch (error) {
+                console.error("Erreur lors de la création de l'agenda :", error);
+            }
+        }
+    });
+
+    document.getElementById('agenda-list').addEventListener('click', async (event) => {
+        // supprimer un agenda
+        if(event.target.classList.contains('agenda-supprimer')){
+            const id = event.target.dataset.id;
+            if(confirm("Voulez-vous vraiment supprimer cet agenda ?")){
+                try{
+                    const rep = await fetch(`/agendas/${id}`, {
+                        method: 'DELETE',
+                    });
+
+                    if(rep.ok){
+                        chagerAgendas();
+                    }
+                } catch (error) {
+                    console.error("Erreur lors de la suppression de l'agenda :", error);
+                }
+            }
+        }
+
+        // modifier le nom d'un agenda
+        if(event.target.classList.contains('agenda-nom')){
+            const span = event.target;
+            const id = span.dataset.id;
+            const nomActuel = span.textContent;
+
+            const nouveauNom = prompt("Entrez le nouveau nom de l'agenda :", nomActuel);
+
+            if(nouveauNom && nouveauNom !== nomActuel){
+                try{
+                    const rep = await fetch(`/agendas/${id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ nom: nouveauNom }),
+                    });
+
+                    if(rep.ok){
+                        chagerAgendas();
+                    }
+                } catch (error) {
+                    console.error("Erreur lors de la modification de l'agenda :", error);
+                }
+            }
+        }
+    }); 
+});

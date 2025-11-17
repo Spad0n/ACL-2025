@@ -5,6 +5,7 @@ import { createHash } from "crypto";
 import { parseISO, setHours, setMinutes } from 'date-fns';
 import { error } from "console";
 import { th } from "date-fns/locale/th";
+import { resolve } from "path";
 
 
 const sqlite3 = sqlite3pkg.verbose();
@@ -190,19 +191,16 @@ function ajouterUtilisateur(dataBase, objetUtilisateur) {
     });
 }
 
-function ajouterAgenda(dataBase, objetAgenda) {
+function ajouterAgenda(dataBase, nom, id_utilisateur) {
     return new Promise( (res,rej) => {
-        const sql = `INSERT INTO agendas(nom, id_utilisateur, id_evenement) VALUES (?,?,?)`;
-        dataBase.run(sql, [
-            objetAgenda.nom,
-            objetAgenda.id_utilisateur,
-            objetAgenda.id_evenement
-        ], (err) => {
+        const sql = `INSERT INTO agendas(nom, id_utilisateur) VALUES (?,?)`;
+        dataBase.run(sql, [nom, id_utilisateur], function(err) {
             if (err) {
                 rej(err.message);
+            } else {
+                res({ id: this.lastID, nom: nom, id_utilisateur: id_utilisateur });
             }
         });
-        res("Création agenda OK");
     });
 }
 
@@ -350,6 +348,21 @@ function supprimerAgenda(dataBase, agendaId, callback) {
     });
 }
 
+function renommerAgenda(dataBase, id, nom) {
+    return new Promise((resolve, reject) => {
+        const sql = 'UPDATE agendas SET nom = ? WHERE id = ?';
+        dataBase.run(sql, [nom, id], function(err) {
+            if (err) {
+                reject(err.message);
+            } else if (this.changes === 0) {
+                reject(new Error("Aucun agenda trouvé avec cet ID"));
+            } else {
+                resolve({ success : true});
+            }
+        });
+    });
+}
+
 
 function recupAgendaID(dataBase, id) {
 
@@ -477,9 +490,11 @@ initBdd(bdd);
 
 export { bdd ,
 	 initBdd ,
-	 ajouterAgenda,ajouterAgendasPartages,
+	 ajouterAgenda,
+     ajouterAgendasPartages,
 	 recupUtilisateur,
 	 supprimerAgenda,
+     renommerAgenda,
 	 ajouterUtilisateur,
 	 retournerContenuTableUtilisateur,
 	 fetchUtilisateur,

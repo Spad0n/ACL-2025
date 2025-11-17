@@ -15,7 +15,10 @@ import {
     recupUtilisateurID, 
     ajouterAgendasPartages,
     recupEvenementAgenda, 
-    recupUtilisateur
+    recupUtilisateur,
+    ajouterAgenda,
+    supprimerAgenda,
+    renommerAgenda
 } from './fonctionsBdd.js';
 import { tr } from 'date-fns/locale';
 
@@ -284,6 +287,93 @@ app.get('/download/agenda/:agenda', (req, res) => {
 app.post('/importerDeporter/agendaDeporter', routes.callFrontEndDeporter);
 
 app.post('/importerDeporter/agendaImporter', routes.importerAgendaUtilisateur);
+
+app.post("/agendas", async (req, res) => {
+    try{
+        const { nom } = req.body;
+        if(!nom){
+            return res.status(400).json({ error: "Nom de l'agenda requis" });
+        }
+
+        const tokenSigne = req.cookies.accessToken;
+        const tokkenSansSigne = jwt.verify(tokenSigne, process.env.SECRET);
+        const username = tokkenSansSigne.username;
+
+        const id_utilisateurRows = await recupUtilisateurID(bdd, username);
+        const id_utilisateur = id_utilisateurRows[0].id;
+
+        const nouvelAgenda = await ajouterAgenda(bdd, nom, id_utilisateur);
+
+        res.status(201).json(nouvelAgenda);
+    } catch (err){
+        console.error(err);
+        res.status(500).json({ error: err.message});
+    }
+});
+
+app.delete("/agendas/:id", async (req, res) => {
+    try{
+        const { id } = req.params;
+        const tokenSigne = req.cookies.accessToken;
+        const tokkenSansSigne = jwt.verify(tokenSigne, process.env.SECRET);
+        const username = tokkenSansSigne.username;
+
+        const id_utilisateurRows = await recupUtilisateurID(bdd, username);
+        const id_utilisateur = id_utilisateurRows[0].id;
+
+        const agendas = await recupAgendaUtilisateurConnecte(bdd, id_utilisateur);
+        const isOwner = agendas.some(a => a.id.toString() === id);
+
+        if(!isOwner){
+            return res.status(403).json({ error: "Suppression non autorisée" });
+        }
+
+        await new Promise((resolve, reject) => {
+            supprimerAgenda(bdd, id, (err) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
+            });
+        });
+
+        res.status(200).json({ success: true, message: "Agenda supprimé" });
+    } catch (err){
+        console.error(err);
+        res.status(500).json({ error: err.message});
+    }
+});
+
+app.patch("/agendas/:id", async (req, res) => {
+    try{
+        const { id } = req.params;
+        const { nom } = req.body;
+        if(!nom){
+            return res.status(400).json({ error: "Nouveau nom requis" });
+        }
+
+        const tokenSigne = req.cookies.accessToken;
+        const tokkenSansSigne = jwt.verify(tokenSigne, process.env.SECRET);
+        const username = tokkenSansSigne.username;
+
+        const id_utilisateurRows = await recupUtilisateurID(bdd, username);
+        const id_utilisateur = id_utilisateurRows[0].id;
+
+        const agendas = await recupAgendaUtilisateurConnecte(bdd, id_utilisateur);
+        const isOwner = agendas.some(a => a.id.toString() === id);
+
+        if(!isOwner){
+            return res.status(403).json({ error: "Suppression non autorisée" });
+        }
+
+        await renommerAgenda(bdd, id, nom);
+        res.status(200).json({ success: true, message: "Agenda renommé" });
+
+    } catch (err){
+        console.error(err);
+        res.status(500).json({ error: err.message});
+    }
+});
 
 // | FIN |
 

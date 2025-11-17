@@ -7,32 +7,102 @@
     <link rel="stylesheet" href="css/style.css">
 
     <style>
-      /* --- Colonne agenda --- */
-      #sidebar {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 250px;
-          height: 100vh;
-          background: #2b014d;
-          padding: 20px;
-          color: white;
-          z-index: 10;
-          overflow-y: auto;
-      }
+        /* --- Colonne agenda --- */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            background: #2b014d;
+            padding: 20px;
+            color: white;
+            z-index: 10;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
 
-      #sidebar h2 {
-          margin-top: 0;
-          margin-bottom: 20px;
-      }
+        .agenda-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #4a007a;
+            padding-bottom: 10px;
+        }
 
-      #agenda-list li {
-          margin-bottom: 10px;
-          padding: 10px;
-          background: #4a007a;
-          border-radius: 5px;
-          cursor: pointer;
-      }
+        .agenda-header h2 {
+            margin: 0;
+            padding: 0;
+            flex-grow: 1;
+        }
+
+        #new-agenda {
+            margin: 0;
+            padding: 0px 10px;
+            font-size: 25px;
+            font-weight: bold;
+            background: #6a00a1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            line-height: 1;
+            transition: background-color 1.0s;
+        }
+
+        #new-agenda:hover {
+            background: #7d00b3;
+        }
+
+        #agenda-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px;
+        }
+
+        #agenda-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #4a007a;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 1.0s;
+        }
+
+        #agenda-list li:hover {
+            background: #5e0c9a;
+        }
+
+        .agenda-nom {
+            flex-grow: 1;
+            padding-right: 10px;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .agenda-supprimer {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 5px;
+            margin: 0;
+            border-radius: 3px;
+            line-height: 1;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .agenda-supprimer:hover {
+            color: #ff4d4d;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
 
       /* Ajuster le canvas pour laisser la place à la colonne */
       #canvasBackground {
@@ -77,8 +147,11 @@
 
     <!-- Colonne des agendas -->
     <div id="sidebar">
-      <h2>Mes agendas</h2>
-      <ul id="agenda-list"></ul>
+        <div class="agenda-header">
+            <h2>Mes agendas</h2>
+            <button id="new-agenda">+</button>
+        </div>
+        <ul id="agenda-list"></ul>
     </div>
 
     <!-- Canvas Pixi -->

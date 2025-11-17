@@ -285,8 +285,24 @@ async function ajouterEvenement(dataBase, token,objectEvenement, callback) {
 // | Permet d'ajouter les événements à un agenda importé
 // --------------------------------------------------------------------------
 function ajouterEvenementsAgendaImporte(dataBase, idAgenda, objetEvenement) {
-
+    return new Promise( (resolve,reject) => {
+	const sql = 'INSERT INTO evenements(title, start, end, description, couleur, id_agenda) VALUES (?,?,?,?,?,?)';
+	dataBase.run(sql, [
+            objetEvenement.title,
+            objetEvenement.start,
+            objetEvenement.end,
+            objetEvenement.description,
+            objetEvenement.color,
+            idAgenda
+	], (err) => {
+	    if(err) {
+		reject(err);
+	    }
+	});
+	resolve('SERVEUR log : événements ajouté dans la BDD');
+    });
 }
+
 
 function modifierEvenement(dataBase, objectEvenement, callback) {
     const sql = 'UPDATE evenements SET title = ?, start = ?, end = ?, description = ?, couleur = ? WHERE id = ?';
@@ -347,6 +363,22 @@ function recupAgendaID(dataBase, id) {
             res(rows); 
         }) ;
     }) ;
+}
+
+// +-------------------------------------------------
+// | agendaNom : String
+// | Permet de récupérer l'id d'un agenda par son nom
+// --------------------------------------------------
+function recupAgendaIdByName(dataBase, agendaNom) {
+    return new Promise( (resolve, reject) => {
+	const sql = 'SELECT id FROM agendas WHERE agendas.nom = ?';
+	dataBase.all(sql, [agendaNom], (err,rows) => {
+	    if(err) {
+		reject(err);
+	    }
+	    resolve(rows);
+	});
+    });
 }
 
 function recupAgendaUtilisateurConnecte(dataBase, id){
@@ -443,4 +475,25 @@ await creerBdd("bdd.db")
 
 initBdd(bdd);
 
-export { bdd , initBdd ,ajouterAgenda,ajouterAgendasPartages, recupUtilisateur,   supprimerAgenda, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement, creerAgendaDefautUtilisateur, recupUtilisateurID, recupAgendaUtilisateurConnecte, recupEvenementAgenda, recupIdUtilisateur, creerAgendaImporter } ;
+export { bdd ,
+	 initBdd ,
+	 ajouterAgenda,ajouterAgendasPartages,
+	 recupUtilisateur,
+	 supprimerAgenda,
+	 ajouterUtilisateur,
+	 retournerContenuTableUtilisateur,
+	 fetchUtilisateur,
+	 recupEvenement,
+	 ajouterEvenement,
+	 supprimerEvenement,
+	 modifierEvenement,
+	 retournerContenuTableEvenement,
+	 creerAgendaDefautUtilisateur,
+	 recupUtilisateurID,
+	 recupAgendaUtilisateurConnecte,
+	 recupEvenementAgenda,
+	 recupIdUtilisateur,
+	 recupAgendaIdByName,
+	 creerAgendaImporter,
+	 ajouterEvenementsAgendaImporte
+       } ;

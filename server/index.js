@@ -283,6 +283,8 @@ app.get('/download/agenda/:agenda', (req, res) => {
 
 app.post('/importerDeporter/agendaDeporter', routes.callFrontEndDeporter);
 
+app.post('/importerDeporter/agendaImporter', routes.importerAgendaUtilisateur);
+
 // | FIN |
 
 app.listen(PORT, "0.0.0.0", (_err) => {

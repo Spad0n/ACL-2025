@@ -1,6 +1,17 @@
 import { createHash } from "crypto"; 
 import { createJWT } from "./outils/jwt.js";
-import { bdd, ajouterUtilisateur, recupUtilisateurID, retournerContenuTableUtilisateur, fetchUtilisateur, creerAgendaDefautUtilisateur , recupAgendaUtilisateurConnecte, recupEvenementAgenda } from "./fonctionsBdd.js";
+import { bdd,
+	 ajouterUtilisateur,
+	 recupUtilisateurID,
+	 retournerContenuTableUtilisateur,
+	 fetchUtilisateur,
+	 creerAgendaDefautUtilisateur,
+	 creerAgendaImporter,
+	 recupAgendaUtilisateurConnecte,
+	 recupEvenementAgenda,
+	 recupIdUtilisateur,
+	 
+       } from "./fonctionsBdd.js";
 import jwt from "jsonwebtoken";
 import {readFile, writeFile} from 'fs';
 
@@ -215,4 +226,55 @@ function snapShotCreation(evenements, nomAgenda, idAgenda) {
 	
 	resolve({ success: true, message: "Snapshot créé !" });
     });
+}
+
+// +----------------------------------
+// | Permet à l'utilisateur d'importer un agenda
+// -----------------------------------
+export function importerAgendaUtilisateur(req,res) {
+    console.log('SERVEUR log : importerAgendaUtilisateur');
+
+    // On récupère le nom de l'agenda que l'utilisateur veut déporter
+    const agenda = req.body ;
+    console.log('SERVEUR log : agenda importé :', agenda);
+
+    // On récupère le username de l'utilisateur qui a fait la requête
+    const username = recupTokenClient(req,res);
+
+    if (username !== -1 && username !== -2) {
+	console.log('SERVEUR log : le client : ', username, ' importe un agenda');
+
+	// On va créer un nouvel agenda
+	const newAgendaNom = agenda['nom'] + "-Import" ;
+
+	// On va récupérer l'id de l'utilisateur courant
+	recupIdUtilisateur(bdd, username)
+	    .then( idUtilisateur => {
+
+		// ici idUtilisateur est un tableau
+		if(idUtilisateur.length == 1) {
+
+		    // récupération de l'id
+		    const realId = idUtilisateur[0].id ;
+
+		    // création de l'agenda
+		    creerAgendaImporter(bdd, realId,newAgendaNom)
+			.then(value => console.log(value))
+			.catch(error => console.error(error));
+		}
+	    })
+	    .catch(error => console.error(error));
+	
+	// On va itérer sur les propiétés de l'objet agenda
+	// Avant il faut récupéré l'id de l'agenda créé
+	for (const [key, value] of Object.entries(agenda)) {
+
+	    // les clefs pour les evenements est un entier
+	    // on va regarder si on peut la convertir en entier
+	    if(Number.isInteger(Number(key))) {
+		// Alors on est sur un événements
+		// On va attacher les événements à l'agenda
+	    }
+	}
+    }
 }

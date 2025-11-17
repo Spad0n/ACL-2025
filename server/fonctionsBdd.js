@@ -89,6 +89,40 @@ function fetchUtilisateur(dataBase, username, password) {
     }) ;
 }
 
+// +--------------------------------------------
+// | username : String
+// | Renvoie l'id de l'utilisateur
+// ---------------------------------------------
+function recupIdUtilisateur(dataBase, username) {
+    return new Promise((resolve, reject) => {
+	const sql = `SELECT id FROM utilisateurs WHERE utilisateurs.username = ?`;
+	dataBase.all(sql, [username], (err,rows) => {
+	    if(err) {
+		reject(err);
+	    }
+	    resolve(rows);
+	});
+    });
+}
+
+// +-----------------------------------------------------
+// | idUtilisateur : Entier
+// | nomAgenda     : String
+// | Permet de créer l'agenda que l'utilisateur a importé
+// ------------------------------------------------------
+function creerAgendaImporter(dataBase, idUtilisateur, nomAgenda) {
+    return new Promise( (resolve, reject) => {
+	const sql = 'INSERT INTO agendas(nom,id_utilisateur) VALUES (?,?)';
+
+	dataBase.run(sql, [nomAgenda, idUtilisateur], err => {
+	    if(err) {
+		reject(err);
+	    }
+	});
+	resolve(`SERVEUR log : BDD agenda importé : ${nomAgenda}`);
+    });
+}
+
 function creerAgendaDefautUtilisateur(dataBase, id) {
     return new Promise( (res,rej) => {
 	const sql = `INSERT INTO agendas(nom,id_utilisateur) VALUES (?,?)`;
@@ -124,9 +158,10 @@ function recupEvenement(dataBase){
     });
 }
 
-// +------
+// +------------------------------------
+// | idAgenda : Entier
 // | Récupère les événements d'un agenda
-// +------
+// +------------------------------------
 function recupEvenementAgenda(dataBase, idAgenda) {
     return new Promise((resolve, reject) => {
         const sql = `SELECT * FROM evenements WHERE evenements.id_agenda = ?`;
@@ -242,6 +277,15 @@ async function ajouterEvenement(dataBase, token,objectEvenement, callback) {
     }catch(err) {
         console.error(err);
     };
+}
+
+// +-------------------------------------------------------------------------
+// | idAgenda       : Entier
+// | objetEvenement : Objet qui contient les infos d'un événement
+// | Permet d'ajouter les événements à un agenda importé
+// --------------------------------------------------------------------------
+function ajouterEvenementsAgendaImporte(dataBase, idAgenda, objetEvenement) {
+
 }
 
 function modifierEvenement(dataBase, objectEvenement, callback) {
@@ -399,4 +443,4 @@ await creerBdd("bdd.db")
 
 initBdd(bdd);
 
-export { bdd , initBdd ,ajouterAgenda,ajouterAgendasPartages, recupUtilisateur,   supprimerAgenda, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement, creerAgendaDefautUtilisateur, recupUtilisateurID, recupAgendaUtilisateurConnecte, recupEvenementAgenda } ;
+export { bdd , initBdd ,ajouterAgenda,ajouterAgendasPartages, recupUtilisateur,   supprimerAgenda, ajouterUtilisateur, retournerContenuTableUtilisateur, fetchUtilisateur, recupEvenement, ajouterEvenement, supprimerEvenement, modifierEvenement, retournerContenuTableEvenement, creerAgendaDefautUtilisateur, recupUtilisateurID, recupAgendaUtilisateurConnecte, recupEvenementAgenda, recupIdUtilisateur, creerAgendaImporter } ;

@@ -60,7 +60,6 @@
           }
 
           const dialog = document.getElementById('search-dialog');
-
           const queryInput = dialog.querySelector('#query');
           const resultsContainer = dialog.querySelector('#search-results');
 
@@ -90,15 +89,11 @@
               const clickedLi = e.target.closest('li[data-start-date]');
 
               if (clickedLi) {
-                  const startDateISO = clickedLi.dataset.startDate;
-
-                  const event = new CustomEvent('dateSelectedFromSearch', {
-                      detail: { startDate: startDateISO },
-                      bubbles: true,
-                      composed: true
+                  const startDate = clickedLi.getAttribute('data-start-date');
+                  const appEvent = new CustomEvent('dispatchApp', {
+                  detail: { type: 'SET_DATE', payload: startDate }
                   });
-
-                  document.body.dispatchEvent(event);
+                  document.body.dispatchEvent(appEvent);
 
                   dialog.close();
               }

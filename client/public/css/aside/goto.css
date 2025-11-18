@@ -7,12 +7,13 @@
 }
 
 .go-to-date-overlay {
-  position: absolute;
+  backdrop-filter: blur(2px);
+    position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: transparent;
+  background: rgba(0, 0, 0, 0.3);  /* léger voile sombre */
   z-index: 1040;
 }
 

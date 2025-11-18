@@ -263,29 +263,35 @@ export function importerAgendaUtilisateur(req,res) {
 		    console.log('SERVEUR log : ID du client : ', realId);
 		    // création de l'agenda
 		    creerAgendaImporter(bdd, realId,newAgendaNom)
-			.then(value => console.log(value))
-			.catch(error => console.error(error));
-		    // On va itérer sur les propiétés de l'objet agenda
-		    // Avant il faut récupéré l'id de l'agenda créé
-		    recupAgendaIdByName(bdd, newAgendaNom)
-			.then( idAgenda => {
-			    if(idAgenda.length == 1) {
-				const realIdAgenda = idAgenda[0].id;
-				for (const [key, value] of Object.entries(agenda)) {
-				    // les clefs pour les evenements est un entier
-				    // on va regarder si on peut la convertir en entier
-				    if(Number.isInteger(Number(key))) {
-					// Alors on est sur un événements
-					// On va attacher les événements à l'agenda
-					console.log('SERVEUR log : ajout des événements en cours !');
-					ajouterEvenementsAgendaImporte(bdd, realIdAgenda, value)
-					    .then( retour => console.log(retour))
-					    .catch(error => console.error(erreur));
+			.then( bddResponse => {
+			    console.log(bddResponse);
+			    // si il y a pas eu d'erreur on peut insérer en sécurité
+			    // On va itérer sur les propiétés de l'objet agenda
+			    // Avant il faut récupéré l'id de l'agenda créé
+			    recupAgendaIdByName(bdd, newAgendaNom, realId)
+				.then( idAgenda => {
+				    if(idAgenda.length == 1) {
+					const realIdAgenda = idAgenda[0].id;
+					for (const [key, value] of Object.entries(agenda)) {
+					    // les clefs pour les evenements est un entier
+					    // on va regarder si on peut la convertir en entier
+					    if(Number.isInteger(Number(key))) {
+						// Alors on est sur un événements
+						// On va attacher les événements à l'agenda
+						console.log('SERVEUR log : ajout des événements en cours !');
+						ajouterEvenementsAgendaImporte(bdd, realIdAgenda, value)
+						    .then( retour => console.log(retour))
+						    .catch(error => console.error(erreur));
+					    }
+					}
 				    }
-				}
-			    }
+				})
+				.catch(error => console.error(error));
 			})
-			.catch(error => console.error(error));
+			.catch(error => {
+			    console.error(error);
+			    // il faut informer le client qu'il a déjà cet agenda.
+			});
 		}
 	    })
 	    .catch(error => console.error(error));

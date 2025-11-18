@@ -288,6 +288,8 @@ app.post('/importerDeporter/agendaDeporter', routes.callFrontEndDeporter);
 
 app.post('/importerDeporter/agendaImporter', routes.importerAgendaUtilisateur);
 
+// Fin déporter/importer un agenda
+
 app.post("/agendas", async (req, res) => {
     try{
         const { nom } = req.body;
@@ -374,8 +376,6 @@ app.patch("/agendas/:id", async (req, res) => {
         res.status(500).json({ error: err.message});
     }
 });
-
-// | FIN |
 
 app.listen(PORT, "0.0.0.0", (_err) => {
     console.log(`Serveur lancé sur http://localhost:${PORT}`);

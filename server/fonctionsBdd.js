@@ -113,14 +113,26 @@ function recupIdUtilisateur(dataBase, username) {
 // ------------------------------------------------------
 function creerAgendaImporter(dataBase, idUtilisateur, nomAgenda) {
     return new Promise( (resolve, reject) => {
-	const sql = 'INSERT INTO agendas(nom,id_utilisateur) VALUES (?,?)';
 
-	dataBase.run(sql, [nomAgenda, idUtilisateur], err => {
-	    if(err) {
-		reject(err);
+	// avant de le créer on va vérifier qu'il n'existe pas déjá
+	const sqlVerif = 'SELECT 1 FROM agendas WHERE agendas.nom=? AND agendas.id_utilisateur=?';
+	dataBase.get(sqlVerif, [nomAgenda,idUtilisateur], (err,row) =>{
+	    // si il existe déjà alors on insère PAS !
+	    if(row) {
+		reject(`SERVEUR log : Agenda : ${nomAgenda} existe déjà pour ID utilisateur : ${idUtilisateur} -> agenda non ajouté à la BDD`);
+	    }
+	    else {
+		// il existe pas on le crée dans la BDD
+		const sql      = 'INSERT INTO agendas(nom,id_utilisateur) VALUES (?,?)';
+
+		dataBase.run(sql, [nomAgenda, idUtilisateur], (err) => {
+		    if(err) {
+			reject(err);
+		    }
+		    resolve(`SERVEUR log : BDD agenda importé : ${nomAgenda}`);
+		});
 	    }
 	});
-	resolve(`SERVEUR log : BDD agenda importé : ${nomAgenda}`);
     });
 }
 
@@ -379,13 +391,14 @@ function recupAgendaID(dataBase, id) {
 }
 
 // +-------------------------------------------------
-// | agendaNom : String
+// | agendaNom     : String
+// | idUtilisateur : Entier 
 // | Permet de récupérer l'id d'un agenda par son nom
 // --------------------------------------------------
-function recupAgendaIdByName(dataBase, agendaNom) {
+function recupAgendaIdByName(dataBase, agendaNom, idUtilisateur) {
     return new Promise( (resolve, reject) => {
-	const sql = 'SELECT id FROM agendas WHERE agendas.nom = ?';
-	dataBase.all(sql, [agendaNom], (err,rows) => {
+	const sql = 'SELECT id FROM agendas WHERE agendas.nom = ? AND agendas.id_utilisateur=?';
+	dataBase.all(sql, [agendaNom, idUtilisateur], (err,rows) => {
 	    if(err) {
 		reject(err);
 	    }

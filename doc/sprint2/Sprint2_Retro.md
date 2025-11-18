@@ -1,21 +1,20 @@
 # SPRINT 2 RETROSPECTIVE
 
-## Ce qui s’est bien passé
-- Toutes les fonctionnalités prévues ont été réalisées.
-- Meilleure gestion du temps et des consignes concernant la méthode **SCRUM**.
-- Meilleure répartition des tâches, réduisant les interdépendances entre membres.
-- Automatisation de la création de fichiers de configuration :
-  - Fichier pour la création de la **base de données**.
-  - Fichier **.env** généré automatiquement.
-- Travail plus autonome et efficace des différents membres de l’équipe.
+## Le sprint s’est assez bien passé mais des grosses améliorations sont à envisager :
+La communication est encore à améliorer pour permettre un avancement plus fluide des tâches.
+Quelques daily scrum en plus mais pas assez pour communiquer les implémentations que chacun à fait.
 
----
+## Ce qui s’est bien passé :
+Une meilleure gestion du temps et des consignes concernant la méthode SCRUM
+Meilleure gestion de la répartition des tâches pour avoir moins d’interdépendance entre les tâches
+Nous avons automatisé la création des fichiers de configuration tels qu'un fichier pour la création de la BDD ou encore du fichier .env.
+Meilleur travail en autonomie des différents membre de l’équipe
 
-## Points à améliorer
-- La **communication** reste à renforcer pour fluidifier l’avancement des tâches.
-- Quelques **daily scrum** supplémentaires ont eu lieu, mais pas encore assez pour bien partager les implémentations de chacun.
+## Ce qui est à revoir : 
+Rendre disponible le logiciel sur tout navigateur et autres systèmes d'exploitation.
+Les heures des événements (les synchroniser avec notre timezone)
+Garder la couleur d’un événement.
 
----
 
-## Pour la suite
-- Ajout de **style et d’améliorations visuelles** pour les prochains sprints.
+## Pour la suite :
+ajout de style pour les prochains sprints

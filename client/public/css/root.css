@@ -1,0 +1,351 @@
+@font-face {
+  font-family: "Google Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('../assets/gsr.woff2') format("woff2");
+}
+
+@font-face {
+  font-family: "Google Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url('../assets/gsm.woff2') format("woff2");
+}
+
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('../assets/reg.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url('../assets/rfive.woff2') format('woff2');
+}
+
+:root {
+  --primaryFont: "Roboto", sans-serif, roboto, -apple-system, ui-sans-serif, system-ui, blinkmacsystemfont, segoe ui, helvetica neue, arial, noto sans, sans-serif, monospace;
+  --secondaryFont: "Google Sans", sans-serif, georgia, sans-serif, -apple-system, ui-sans-serif, system-ui, blinkmacsystemfont, segoe ui, roboto, helvetica neue, arial, noto sans, sans-serif, monospace;
+  --year-dim: 260px;
+  --year-body: 240px;
+  --taskcolor0: #fff;
+  --primarylight1: #4c9cf8;
+  --primarylight2: #4BA0F4;
+  --offwhite3: #70757a;
+  --black000: #0c0e0e;
+  --black0: #141617;
+  --black1: #181a1b;
+  --black2: #1c1f21;
+  --black3: #131516;
+  --darkgrey000: #111314;
+  --darkgrey0: #1f2325;
+  --darkgrey1: #222527;
+  --darkgrey2: #1f2223;
+  --darkgrey3: #3c4043;
+  --darkgrey4: #1f2223;
+  --mediumgrey0: #26292b;
+  --mediumgrey1: #393d41;
+  --mediumgrey2: #484c50;
+  --mediumgrey3: #95a0a5;
+  --primary1: #1a6ee2;
+  --primary2: #125ab8;
+  --primary3: #122e5c;
+  --primary4: #0f2c4f;
+  --primary5: #1c1f21;
+  --taskcolor: #fcfbf9;
+  --taskcolor2: #C0BAB2;
+  --white1: #E8E6E3;
+  --white2: #C0BAB2;
+  --white3: #9C9E9F;
+  --white4: #BFC0C1;
+  --offwhite1: #9e9689;
+  --offwhite2: #c0bab2;
+  --error: #d93025;
+  --red1: #B01244;
+  --red2: #7b0d25;
+  --red3: #480816;
+  --green1: #2FAD76;
+  --bordergrey: 1px solid var(--mediumgrey1);
+  --borderdarkgrey: 1px solid var(--mediumgrey2);
+  --borderradius: 4px;
+  --scrollerThumbBackgroundHover: #3b4042;
+  /* --scrollerThumbBackground: rgb(43, 47, 49); */
+  /* --scrollerTrackBackground: var(--black1); */
+  /* --scrollerThumbBorder: 4px solid var(--black1); */
+  --scrollerThumbBorder: 4px solid rgb(48, 52, 54);
+  --scrollerThumbBackground: #454a4d;
+  --scrollerTrackBackground: #202324;
+  --overlay1: rgba(0, 0, 0, 0.2);
+  --overlay2: rgba(0, 0, 0, 0.5);
+  --box-shadow1:
+    rgba(0, 0, 0, 0.14) 0px 8px 10px 1px,
+    rgba(0, 0, 0, 0.12) 0px 3px 14px 2px,
+    rgba(0, 0, 0, 0.2) 0px 2px 4px -1px;
+  --box-shadow2:
+    rgba(83, 88, 95, 0.14) 0px 4px 5px 0px,
+    rgba(0, 0, 0, 0.2) 0px 1px 10px 0px,
+    rgba(83, 88, 95, 0.1) 0px 1px 2px -1px;
+  --box-shadow3:
+    rgba(0, 0, 0, 0.19) 0 10px 20px,
+    rgba(0, 0, 0, 0.23) 0 6px 6px;
+  --box-shadow4:
+    rgba(60, 64, 67, 0.3) 0px 1px 2px 0px,
+    rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+  --box-shadow5:
+    rgba(0, 0, 0, 0.14) 0px 8px 4px 0px,
+    rgba(0, 0, 0, 0.12) 0px 3px 6px 0px,
+    rgba(0, 0, 0, 0.2) 0px 2px 4px 0px;
+  --box-shadow6:
+    rgba(83, 88, 95, 0.14) 0px 1px 2px -1px,
+    rgba(0, 0, 0, 0.2) 0px 1px 10px 0px,
+    rgba(83, 88, 95, 0.1) 0px 4px 5px 0px;
+  --box-shadow7:
+    rgba(0, 0, 0, 0.2) 0px 3px 5px -1px, rgba(0, 0, 0, 0.14) 0px 6px 10px 0px, rgba(0, 0, 0, 0.12) 0px 1px 18px 0px;
+  --box-shadow2-hover:
+    rgba(60, 64, 67, 0.302) 0px 4px 4px 0px,
+    rgba(60, 64, 67, 0.149) 0px 8px 10px 4px;
+  --box-shadowbottom:
+    rgba(0, 0, 0, 0.1) 3px 4px 5px 0px,
+    rgba(0, 0, 0, 0.1) 3px 3px 6px 0px,
+    rgba(0, 0, 0, 0.2) 3px 3px 4px -1px;
+  --box-shadowinset1:
+    rgba(0, 0, 0, 0.2) inset 3px 4px 5px 0px,
+    rgba(0, 0, 0, 0.1) inset -1px -2px 3px 0px,
+    rgba(0, 0, 0, 0.1) inset 3px 3px 6px 0px,
+    rgba(0, 0, 0, 0.2) inset 3px 3px 4px -1px;
+  --box-shadow-sbfixed:
+    rgba(0, 0, 0, .3) 4px 6px 6px 0;
+  --tr-1: color, opacity, background-color;
+  /* --tr-1: color, opacity, background-color; */
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+  font-family: var(--primaryFont);
+  text-size-adjust: 100%;
+}
+
+.body {
+  font-family: var(--primaryFont);
+  font-weight: 400;
+  background-color: var(--black1);
+  color: var(--white1);
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+span,
+button,
+p,
+a,
+li,
+ul,
+div,
+input,
+textarea {
+  font-family: var(--primaryFont);
+}
+
+body[data-disable-transitions="true"] * {
+  animation: none !important;
+  transition: none !important;
+  transition-duration: none !important;
+  transition-property: none !important;
+  transition-timing-function: none !important;
+  will-change: none !important;
+
+}
+
+.disable-transitions * {
+  transition-duration: none !important;
+  transition-property: none !important;
+  transition-timing-function: none !important;
+}
+
+.light-mode {
+  --primary5: #e9eff6;
+  --black000: rgb(224, 229, 237);
+  --black0: #E8F0FE;
+  --black1: #fff;
+  --black2: #E8F0FE;
+  --black3: #D2E3FC;
+  --darkgrey000: #9AA0A6;
+  --darkgrey0: #a9b0b7;
+  --darkgrey1: #9da4aa;
+  --darkgrey2: #979ea5;
+  --darkgrey3: #f1f3f4;
+  --darkgrey4: #f1f3f4;
+  --mediumgrey0: rgb(219, 221, 224);
+  --mediumgrey1: #dadce0;
+  --mediumgrey2: #dadce0;
+  --mediumgrey3: #dadce0;
+  --taskcolor: #fff;
+  --taskcolor2: #e8f0fe;
+  --white1: #3c4043;
+  --white2: #3c4043;
+  --white3: #3c4043;
+  --white4: #3c4043;
+  --offwhite1: #7e848b;
+  --offwhite2: #3C4043;
+  --bordergrey: 1px solid #dadce0;
+  --borderdarkgrey: 1px solid #dadce0;
+  --primary3: #5693e8;
+  --primary4: #41638c;
+  --primarylight1: #2e7ae5;
+  --scrollerThumbBackground: #dadce0;
+  --scrollerThumbBorder: 4px solid #fff;
+  --scrollerThumbBackgroundHover: #bdc1c6;
+  --scrollerTrackBackground: #fff;
+  --box-shadow5:
+    rgba(51, 54, 55, 0.14) 0px 4px 4px 0px,
+    rgba(51, 54, 55, 0.12) 0px 3px 2px 0px,
+    rgba(51, 54, 55, 0.2) 0px 2px 3px 0px;
+}
+
+.contrast-mode {
+  --primary5: #0f2c4f;
+  --white1: #fff;
+  --white2: #fff;
+  --white3: #ccc;
+  --white4: #fff;
+  --taskcolor0: #fff;
+  --taskcolor: #fff;
+  --taskcolor2: #fff;
+  --offwhite1: #bec8d2;
+  --offwhite2: #ccc;
+  --black000: #0b0b0b;
+  --black0: #121415;
+  --black1: #000;
+  --black2: #121415;
+  --black3: #131516;
+  --darkgrey000: #111314;
+  --darkgrey0: #111415;
+  --darkgrey1: #2f3841;
+  --darkgrey2: #2f3841;
+  --darkgrey3: #191b1c;
+  --darkgrey4: #161a1d;
+  --mediumgrey0: #415763;
+  --mediumgrey1: #414e5a;
+  --mediumgrey2: #505b65;
+  --mediumgrey3: #95a0a5;
+  --bordergrey: 1px solid var(--mediumgrey1);
+  --scrollerThumbBackground: #5d6a73;
+  --scrollerThumbBorder: 4px solid var(--black1);
+  --scrollerThumbBackgroundHover: #505b65;
+  --scrollerTrackBackground: var(--black1);
+  --box-shadow1:
+    rgba(54, 147, 255, 0.1) 0 3px 3px 0,
+    rgba(0, 0, 0, 0.1) 0 6px 6px 0;
+  --box-shadow3:
+    rgba(54, 147, 255, 0.1) 0 2px 7px 0,
+    rgba(0, 0, 0, 0.23) 0 6px 6px 0;
+  --box-shadow-sbfixed:
+    rgba(59, 88, 108, .1) 4px 8px 12px 0;
+  --box-shadow5:
+    rgba(60, 64, 67, 0.4) 0px 1px 2px 0px,
+    rgba(60, 64, 67, 0.2) 0px 1px 3px 1px;
+}
+
+select,
+button {
+  background-color: var(--black1);
+  padding: none;
+  border: none;
+}
+
+.btn-root {
+  padding: 0.5rem 1rem;
+  border: var(--bordergrey);
+  border-radius: var(--borderradius);
+  color: var(--white1);
+}
+
+form > button {
+  padding: 0.6rem 1.4rem;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--primary1);
+  background-color: var(--black0);
+}
+
+input[type="search"],
+input[type="date"],
+input[type="time"],
+input[type="checkbox"] {
+  cursor: pointer;
+}
+
+select {
+  padding: 0.55rem 0;
+}
+
+input[type="text"]::placeholder,
+textarea::placeholder {
+  color: var(--white4);
+  font-weight: 400 !important;
+}
+
+input[type="text"],
+textarea,
+select {
+  font-family: var(--primaryFont) !important;
+}
+
+input[type="text"],
+textarea:focus {
+  outline: none;
+}
+
+textarea {
+  overflow: hidden;
+}
+
+svg {
+  user-select: none !important;
+  pointer-events: none !important;
+}
+
+::selection {
+  background-color: var(--primary1) !important;
+  color: var(--taskcolor0) !important;
+}
+
+::-webkit-scrollbar {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--scrollerTrackBackground);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollerThumbBackground);
+  border: 2px solid var(--scrollerTrackBackground);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}

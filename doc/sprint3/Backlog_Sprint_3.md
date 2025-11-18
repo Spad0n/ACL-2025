@@ -2,34 +2,46 @@
 
 ## Fonctionnalités
 
-### Consulter plusieurs agendas — *Cornette Rohan*
+### Création + Consulter plusieurs agendas : Cornette Rohan
+	
 **Tâches :**
-- Ajout d’une liste contenant tous les agendas de l’utilisateur.
-- Possibilité de cliquer sur un agenda pour l’afficher.
+- Création de plusieurs agendas
+- Possibilité de cliquer sur un agenda pour l’afficher
+- Ajout d’une liste contenant tous les agendas de l’utilisateur
 
----
 
-### Exportation et importation d’un agenda — *André Léo*
+### Exportation et importation d’un agenda : André Léo
+
 **Tâches :**
-- Ajouter une option sur l’interface du client pour **importer/exporter** un agenda.
-- Ajouter dans la base de données l’agenda importé pour assurer la **persistance**.
+- Ajouter une option sur l’interface du client importer/exporter
+- Gérer la logique d’importation et exportation
 
----
 
-### Permettre la répétition d’événements — *Abarca Elliot*
+### Permettre la répétition d’événements : Abarca Elliot
+
 **Tâches :**
-- Implémenter des **règles de récurrence** pour les dates du calendrier.
-- Restructuration du code
+- Travailler avec des règles de récurrence pour les dates du calendrier
+- Améliorer la navigation
+- Améliorer l’apparence du calendrier
 
----
 
-### L’utilisateur navigue plus facilement sur le site grâce à une interface optimisée — *Evrard Baptiste*
+### Partager un calendrier entre utilisateur amis: Evrard Baptiste
+
 **Tâches :**
-- Styliser l’interface du site pour la rendre **plus agréable et moderne**.
+- Permettre aux utilisateurs d’être amis.
+- Afficher sa liste d’amis.
+- Permettre aux amis d’avoir des agendas communs.
+- Afficher l’agenda commun.
+- Modifier l’agenda commun.
 
----
 
-### Rechercher des événements avec des mots-clés — *Letts Tristan*
+### Rechercher des événements avec des mots-clé : Letts Tristan 
+
 **Tâches :**
-- Ajouter un bouton de **recherche**.
-- **Filtrer** les événements à l’aide de la **distance de Levenshtein** pour la correspondance approximative.
+- Implémentation de la recherche
+- Filtrer par nom et date
+
+## Fonctionnalités du sprint 2 à revoir :
+
+Persistance des événements -> synchroniser l’heure des événements.
+-> Récupérer couleur événement..

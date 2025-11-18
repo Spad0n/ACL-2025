@@ -4,11 +4,36 @@
     <title></title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/style.css">
+    <link href="css/asideContainers.css" rel="stylesheet">
+    <link href="css/containers.css" rel="stylesheet">
+    <link href="css/dayview.css" rel="stylesheet">
+    <link href="css/header.css" rel="stylesheet">
+    <link href="css/listview.css" rel="stylesheet">
+    <link href="css/monthview.css" rel="stylesheet">
+    <link href="css/root.css" rel="stylesheet">
+    <link href="css/sbdatepicker.css" rel="stylesheet">
+    <link href="css/sidebar.css" rel="stylesheet">
+    <link href="css/weekview.css" rel="stylesheet">
+    <link href="css/yearview.css" rel="stylesheet">
+    <link href="css/aside/changeViewModule.css" rel="stylesheet">
+    <link href="css/aside/datepicker.css" rel="stylesheet">
+    <link href="css/aside/deleteCategoryPopup.css" rel="stylesheet">
+    <link href="css/aside/editCategoryForm.css" rel="stylesheet">
+    <link href="css/aside/entryOptions.css" rel="stylesheet">
+    <link href="css/aside/form.css" rel="stylesheet">
+    <link href="css/aside/goto.css" rel="stylesheet">
+    <link href="css/aside/info.css" rel="stylesheet">
+    <link href="css/aside/shortcuts.css" rel="stylesheet">
+    <link href="css/aside/sidebarSubMenu.css" rel="stylesheet">
+    <link href="css/aside/timepicker.css" rel="stylesheet">
+    <link href="css/aside/toast.css" rel="stylesheet">
+    <link href="css/aside/toggleForm.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
   </head>
   <body>
-  <button id="search">Search</button>
-    <canvas id="canvasBackground"></canvas>
+    <div id="app">
+      <p style="text-align: center; padding-top: 50px; font-family: sans-serif;">Loading Calendar...</p>
+    </div>
     <div id="dialog-container"></div>
   <dialog id="search-dialog">
       <form id="event-form">
@@ -111,17 +136,38 @@
          }
      });
 
+     document.body.addEventListener("categorySaved", (evt) => {
+         const serverData = evt.detail; // ex: { name: 'Nouveau Nom', color: '#ff0000', oldName: 'Ancien Nom' }
+         const appEvent = new CustomEvent('dispatchApp', {
+             detail: { type: 'SAVE_CATEGORY', payload: serverData }
+         });
+         document.body.dispatchEvent(appEvent);
+     });
+
+     document.body.addEventListener("categoryDeleted", (evt) => {
+         const categoryName = evt.detail; // Le détail est directement le nom
+         const appEvent = new CustomEvent('dispatchApp', {
+             detail: { type: 'CATEGORY_DELETED', payload: categoryName }
+         });
+         document.body.dispatchEvent(appEvent);
+     });
+
      document.body.addEventListener("eventSaved", (evt) => {
          const serverData = evt.detail;
-         const formattedEvent = {
-             ...serverData,
-             startDate: new Date(serverData.startDate),
-             endDate: new Date(serverData.endDate),
+         const cleanEvent = {
+             id: serverData.id,
+             title: serverData.title,
+             description: serverData.description,
+             start: serverData.start, // Chaîne de caractères ISO
+             end: serverData.end,     // Chaîne de caractères ISO
              color: parseInt(serverData.color, 16),
+             // Assurez-vous que le backend renvoie bien la catégorie !
+             category: serverData.category || 'Personnel' // Mettez une catégorie par défaut si besoin
          };
 
          const appEvent = new CustomEvent('dispatchApp', {
-             detail: { type: 'SAVE_EVENT', event: formattedEvent }
+             // On envoie l'objet propre, pas l'objet potentiellement contaminé
+             detail: { type: 'SAVE_EVENT', payload: cleanEvent }
          });
          document.body.dispatchEvent(appEvent);
      });

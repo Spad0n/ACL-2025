@@ -107,8 +107,12 @@ export default function headerView(model, dispatch) {
                         ])
                     ])
                 ]),
-                
                 h('div.h-col-3', [
+                    // --- Bouton Recherche ---
+                    h('button.h-search', {
+                        on: { click: () => document.getElementById('search-dialog').showModal() },
+                        attrs: { 'data-tooltip': 'Rechercher un événement', 'aria-label': 'Rechercher un événement' }
+                    }, [ /* ... SVG de recherche ... */ ]),
                     // --- Bouton "Aller à" (Go To) ---
                     h('button.h-search', {
                         on: { click: () => dispatch(Msg.OpenModal('goto')) },

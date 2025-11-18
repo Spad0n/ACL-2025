@@ -61,7 +61,7 @@ export const Msg = {
 
     /**
      * Ouvre une modale spécifique.
-     * @param {'form'|'goto'|'settings'|'entryOptions'|'deleteConfirmation'} name - Le nom de la modale à ouvrir.
+     * @param {'form'|'goto'|'settings'|'entryOptions'|'deleteConfirmation'|'recherche'} name - Le nom de la modale à ouvrir.
      * @param {Object} [payload] - Données initiales pour la modale (ex: { entryId: '...' }).
      * @returns {Message}
      */

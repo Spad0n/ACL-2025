@@ -173,6 +173,11 @@ export function triggerHtmxPost(url, data) {
             return;
         }
 
+        const categoryEntry = Object.entries(model.categories).find(([key, val]) => val.id == savedEventRaw.id_agenda);
+        if(!categoryEntry) return;
+
+        const [categoryName, categoryObj] = categoryEntry;
+
         // On réhydrate les dates et on retrouve la catégorie
         const savedEvent = {
             ...savedEventRaw,
@@ -180,9 +185,8 @@ export function triggerHtmxPost(url, data) {
             start: new Date(savedEventRaw.start),
             end: new Date(savedEventRaw.end),
             description: savedEventRaw.description || '',
-            category: Object.keys(model.categories).find(name => 
-                model.categories[name].id == savedEventRaw.id_agenda
-            ) || "Default"
+            category: categoryName,
+            color: categoryObj.color
         };
 
         console.log("Mise à jour du modèle avec :", savedEvent);

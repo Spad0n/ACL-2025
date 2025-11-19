@@ -1,4 +1,4 @@
-<dialog>
+<dialog id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
   <form id="share-form">
     <h2>Partager un agenda</h2>
 
@@ -16,7 +16,7 @@
     <div id="resultats-recherche" class="user-list"></div>
 
     <footer style="margin-top: 10px;">
-      <button type="button" class="btn btn-cancel" onclick="this.closest('dialog').close()">Annuler</button>
+      <button type="button" class="btn btn-cancel" onclick="document.getElementById('dialog-container').innerHTML = ''">Annuler</button>
       <button type="submit" id="confirmer-partage" disabled class="btn btn-primary">Partager</button>
     </footer>
 
@@ -71,7 +71,7 @@
         return;
     }
 
-    form.closest("dialog").close();
+    document.getElementById("dialog-container").innerHTML = "";
 };
 
     </script>

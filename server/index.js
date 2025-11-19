@@ -77,16 +77,37 @@ app.post("/account/new", routes.createAccount);
 
 app.post("/logUser", routes.login);
 
-// Récupération de tous les événements depuis la BDD
-app.get('/events', async (_req, res) => {
+
+app.get('/events', async (req, res) => {
+    const tokenSigne = req.cookies.accessToken;
+    let token;
     try {
-        const events = await recupEvenement(bdd); 
-        res.json(events);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: err.message });
+        token = jwt.verify(tokenSigne, process.env.SECRET);
+    } catch(err) {
+        return res.status(401).json({ error: "Token invalide" });
     }
+
+    const username = token.username;
+    const id_utilisateurRows = await recupUtilisateurID(bdd, username);
+    const id_utilisateur = id_utilisateurRows[0].id;
+
+    const sql = `SELECT e.* FROM evenements e
+                JOIN agendas a ON e.id_agenda = a.id
+                LEFT JOIN agendaspartage ap ON a.id = ap.id_agenda
+                WHERE a.id_utilisateur = ? OR ap.id_user2 = ?`;
+    const evenements = await new Promise((res, rej) => {
+        bdd.all(sql, [id_utilisateur, id_utilisateur], (err, rows) => {
+            if(err){ 
+                rej(err)
+            }
+            else{
+                res(rows);
+            }
+        });
+    });  
+    res.json(evenements);
 });
+
 
 // Affichage du dialogue de création/édition
 app.get('/dialog/event-form', async (req, res) => {

@@ -104,8 +104,8 @@ export default function settingsView(model, dispatch) {
                         h('div.sub-menu--item__actions', [
                             h('div.sm-download-json', [
                                 h('button.sm-json-btn.down-json', { on: { click: () => {
-                                    window.location.href = '/importerDeporter/agenda';
-                                } } }, 'Importer ou Deporter Agenda')
+                                    window.location.href = '/importerExporter/agenda';
+                                } } }, 'Importer ou Exporter Agenda')
                             ])
                         ])
                     ]),

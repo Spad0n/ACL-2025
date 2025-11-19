@@ -308,9 +308,9 @@ app.get('/dialog/partage', (req, res) => {
 
 
 // +-------------------------------------------------------------------
-// | GESTION de la fonctionalité déporter/importer un agenda
+// | GESTION de la fonctionalité exporter/importer un agenda
 // --------------------------------------------------------------------
-app.get('/importerDeporter/agenda', routes.sendFrontEndAgendaUtilisateur);
+app.get('/importerExporter/agenda', routes.sendFrontEndAgendaUtilisateur);
 
 app.get('/download/agenda/:agenda', (req, res) => {
     const agendaUtilisateur = req.params.agenda ;
@@ -323,11 +323,11 @@ app.get('/download/agenda/:agenda', (req, res) => {
     });
 });
 
-app.post('/importerDeporter/agendaDeporter', routes.callFrontEndDeporter);
+app.post('/importerExporter/agendaExporter', routes.callFrontEndDeporter);
 
-app.post('/importerDeporter/agendaImporter', routes.importerAgendaUtilisateur);
+app.post('/importerExporter/agendaImporter', routes.importerAgendaUtilisateur);
 
-// Fin déporter/importer un agenda
+// Fin exporter/importer un agenda
 
 app.post("/agendas", async (req, res) => {
     try{

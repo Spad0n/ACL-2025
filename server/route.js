@@ -188,7 +188,7 @@ export function sendFrontEndAgendaUtilisateur(req, res) {
                     recupAgendaUtilisateurConnecte(bdd, objTmp)
                         .then( lesAgendas => { 
                             
-                            res.render("importerDeporterAgenda", { data :  lesAgendas });
+                            res.render("importerExporterAgenda", { data :  lesAgendas });
                         })
                         .catch(err => { 
                             console.error(err);

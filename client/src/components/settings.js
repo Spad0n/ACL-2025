@@ -103,8 +103,9 @@ export default function settingsView(model, dispatch) {
                         h('div.sub-menu--item__description', 'Téléchargez une sauvegarde ou importez depuis un fichier. L\'importation écrasera toutes les données existantes.'),
                         h('div.sub-menu--item__actions', [
                             h('div.sm-download-json', [
-                                h('button.sm-json-btn.down-json', { on: { click: () => dispatch(Msg.ExportData()) } }, 'Télécharger .json'),
-                                h('button.sm-json-btn.upload-json', { on: { click: () => dispatch(Msg.ImportData()) } }, 'Importer .json')
+                                h('button.sm-json-btn.down-json', { on: { click: () => {
+                                    window.location.href = '/importerDeporter/agenda';
+                                } } }, 'Importer ou Deporter Agenda')
                             ])
                         ])
                     ]),

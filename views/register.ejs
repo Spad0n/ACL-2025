@@ -55,22 +55,23 @@
     </script>
 
 <div id="conteneur1" class="actif">
+    <h1>Bienvenue chez le<br>CROQUEMITAINE</h1>
    <form name="accountCreation" action="/account/new" method="POST">
-    <table>
-        <tbody>
-            <tr><td><label for="username">Entrez le nom d'utilisateur</label></td>
-            <td><input name="username" value="<%= locals.username ?? '' %>" /></td>
-            <td><label><%= locals.message ?? '' %></label></td></tr>
-            <tr><td><label for="password">Entrez le mot de passe</label></td>
-            <td><input type="password" name="password" value="" /></td>
-            <td><label id="passwordMessage"></label></td></tr>
-            <tr><td><label for="passwordRepeated">Confirmez le mot de passe</label></td>
-            <td><input type="password" id="passwordRepeated" value="" /></td>
-            <td><label id="passwordRepeatedMessage"></label></td></tr>
-        </tbody>
-    </table>
-    <div><input type="submit" /></div>
-   </form> 
+            <label for="username">Entrez le nom d'utilisateur</label>
+            <input id="username" name="username" value="<%= locals.username ?? '' %>" />
+            <label><%= locals.message ?? '' %></label>
+            <label for="password">Entrez le mot de passe</label>
+            <input id="password" type="password" name="password" value="" />
+            <label id="passwordMessage"></label>
+            <label for="passwordRepeated">Confirmez le mot de passe</label>
+            <input type="password" id="passwordRepeated" value="" />
+            <label id="passwordRepeatedMessage"></label>
+       <input id="connexionBouton" type="submit" value="Créer le compte" />
+   </form>
+    <div id="boutons">
+        <p>ou</p>
+        <button id="inscriptionBouton" onclick="window.location.href='/login';">Se connecter</button>
+    </div>
 </div>
 
 </body>

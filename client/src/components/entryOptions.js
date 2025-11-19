@@ -100,15 +100,15 @@ export default function entryOptionsView(model, dispatch) {
                     h('div.entry__options--header-icons', [
                         h('button.entry__options-icon.eoi__edit', {
                             on: { click: () => dispatch(Msg.OpenModal('form', { id: entry.id })) },
-                            attrs: { 'data-tooltip': 'Modifier (e)' }
+                            attrs: { 'data-tooltip': 'Modifier' }
                         }, editIcon),
-                        h('button.entry__options-icon.eoi__delete', {
-                            on: { click: () => dispatch(Msg.OpenModal('deleteConfirmation', { type: 'entry', id: entry.id })) },
-                            attrs: { 'data-tooltip': 'Supprimer' }
-                        }, deleteIcon),
+                        //h('button.entry__options-icon.eoi__delete', {
+                        //    on: { click: () => dispatch(Msg.OpenModal('deleteConfirmation', { type: 'entry', id: entry.id })) },
+                        //    attrs: { 'data-tooltip': 'Supprimer' }
+                        //}, deleteIcon),
                         h('button.entry__options-icon.eoi__close', {
                             on: { click: () => dispatch(Msg.CloseAllModals()) },
-                            attrs: { 'data-tooltip': 'Fermer (Esc)' }
+                            attrs: { 'data-tooltip': 'Fermer' }
                         }, closeIcon)
                     ])
                 ]),

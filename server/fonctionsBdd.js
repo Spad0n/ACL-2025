@@ -33,11 +33,18 @@ function creerTableEvenement(dataBase){
 
 function creerTableAgenda(dataBase) {
     return new Promise( (res,rej) => {
-        const sql = `CREATE TABLE agendas(id INTEGER PRIMARY KEY, nom TEXT NOT NULL, id_utilisateur INTEGER, FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id))`;
+        // Ajout de la colonne couleur (INTEGER)
+        const sql = `CREATE TABLE IF NOT EXISTS agendas(
+            id INTEGER PRIMARY KEY, 
+            nom TEXT NOT NULL, 
+            couleur INTEGER DEFAULT 4286964, 
+            id_utilisateur INTEGER, 
+            FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id)
+        )`;
         dataBase.run(sql, (err) => {
-            rej(new Error("Erreur lors de la création de la table agendas"));
+            if(err) rej(new Error("Erreur table agendas: " + err.message));
+            else res("Table agendas OK");
         });
-        res("Table agendas OK");
     }) ;
 }
 
@@ -142,14 +149,12 @@ function creerAgendaImporter(dataBase, idUtilisateur, nomAgenda) {
 
 function creerAgendaDefautUtilisateur(dataBase, id) {
     return new Promise( (res,rej) => {
-	const sql = `INSERT INTO agendas(nom,id_utilisateur) VALUES (?,?)`;
-
-	const nameDef = id+"Defaut";
-
-	dataBase.run(sql, [nameDef, id], (err) => {
-            if (err) {
-		rej(err.message);
-            }
+        const sql = `INSERT INTO agendas(nom, couleur, id_utilisateur) VALUES (?,?,?)`;
+        // CHANGEMENT ICI : "Personnel" devient "Default"
+        const nameDef = "Default"; 
+        const couleurDef = 0x4285F4; // Bleu Google Calendar par défaut
+        dataBase.run(sql, [nameDef, couleurDef, id], (err) => {
+            if (err) rej(err.message);
         });
         res("Création agenda par défaut OK");
     });
@@ -157,20 +162,26 @@ function creerAgendaDefautUtilisateur(dataBase, id) {
 
 function recupEvenement(dataBase){
     return new Promise((res, rej) => {
-        const sql = 'SELECT * FROM evenements ORDER BY start';
+        // Jointure pour récupérer la couleur de l'agenda au lieu de la couleur de l'event
+        const sql = `
+            SELECT e.*, a.couleur as agenda_couleur 
+            FROM evenements e 
+            LEFT JOIN agendas a ON e.id_agenda = a.id 
+            ORDER BY e.start
+        `;
         dataBase.all(sql, [], (err, rows) => {
             if(err) return rej(err);
 
             const events = rows.map(r => ({
                 id: r.id.toString(),
                 title: r.title,
-                description: r.description || '', // Pas obligatoire
-                color: r.couleur ? r.couleur : 0xff0000,
+                description: r.description || '',
+                // On utilise la couleur de l'agenda si dispo, sinon rouge par défaut
+                color: r.agenda_couleur ? r.agenda_couleur : 0xff0000, 
                 start: new Date(r.start).toISOString(),
                 end: new Date(r.end).toISOString(),
                 id_agenda: r.id_agenda
             }));
-
             res(events);
         });
     });
@@ -198,23 +209,21 @@ function recupEvenementAgenda(dataBase, idAgenda) {
 async function recupTousAgendas(bdd, id_utilisateur){
     const agendasUtilisateurConnecte = await recupAgendaUtilisateurConnecte(bdd, id_utilisateur);
 
-    const sqlagendaPartage = ' SELECT a.id, a.nom, u.username AS proprietaire FROM agendaspartage ap JOIN agendas a ON ap.id_agenda = a.id JOIN utilisateurs u ON a.id_utilisateur = u.id WHERE ap.id_user2 = ?';
+    const sqlagendaPartage = 'SELECT a.id, a.nom, a.couleur, u.username AS proprietaire FROM agendaspartage ap JOIN agendas a ON ap.id_agenda = a.id JOIN utilisateurs u ON a.id_utilisateur = u.id WHERE ap.id_user2 = ?';
     
     const agendasPartages = await new Promise((res, rej) => {
         bdd.all(sqlagendaPartage, [id_utilisateur], (err, rows) => {
-            if(err){
-                rej(err);
-            }
-            else{
-                res(rows);
-            }
+            if(err) rej(err);
+            else res(rows);
         });
     });
-    const agendaspartageNOM = agendasPartages.map(a => ({
+    const agendaspartageFormated = agendasPartages.map(a => ({
         id: a.id,
-        nom: `${a.nom} (partagé par ${a.proprietaire})`
+        nom: `${a.nom} (partagé par ${a.proprietaire})`,
+        couleur: a.couleur, // On garde la couleur originale
+        id_utilisateur: a.id_utilisateur
     }));
-    return [...agendasUtilisateurConnecte, ...agendaspartageNOM];
+    return [...agendasUtilisateurConnecte, ...agendaspartageFormated];
 }
 
 
@@ -233,14 +242,14 @@ function ajouterUtilisateur(dataBase, objetUtilisateur) {
     });
 }
 
-function ajouterAgenda(dataBase, nom, id_utilisateur) {
+function ajouterAgenda(dataBase, nom, couleur, id_utilisateur) {
     return new Promise( (res,rej) => {
-        const sql = `INSERT INTO agendas(nom, id_utilisateur) VALUES (?,?)`;
-        dataBase.run(sql, [nom, id_utilisateur], function(err) {
+        const sql = `INSERT INTO agendas(nom, couleur, id_utilisateur) VALUES (?,?,?)`;
+        dataBase.run(sql, [nom, couleur, id_utilisateur], function(err) {
             if (err) {
                 rej(err.message);
             } else {
-                res({ id: this.lastID, nom: nom, id_utilisateur: id_utilisateur });
+                res({ id: this.lastID, nom: nom, couleur: couleur, id_utilisateur: id_utilisateur });
             }
         });
     });
@@ -286,15 +295,16 @@ async function ajouterEvenement(dataBase, token,objectEvenement, callback) {
    try{
     const id_utilisateurRows = await recupUtilisateurID(dataBase, token);
     if(id_utilisateurRows.length === 0){
-        throw new Error("   utilisateur introuvable");
+        throw new Error("utilisateur introuvable");
     }
-    const id_utilisateur = id_utilisateurRows[0].id
 
-    const agendas = await recupAgendaID(dataBase, id_utilisateur);
-    if( agendas.length === 0){
-        throw new Error(" Agendas introuvable");
-    }
-    const id_agendas = agendas[0].id;
+    //const id_utilisateur = id_utilisateurRows[0].id
+
+    //const agendas = await recupAgendaID(dataBase, id_utilisateur);
+    //if( agendas.length === 0){
+    //    throw new Error(" Agendas introuvable");
+    //}
+    //const id_agendas = agendas[0].id;
    
     const sql = 'INSERT INTO evenements(title, start, end, description, couleur, id_agenda) VALUES (?,?,?,?,?,?)';
     dataBase.run(sql, [
@@ -303,7 +313,7 @@ async function ajouterEvenement(dataBase, token,objectEvenement, callback) {
         objectEvenement.end,
         objectEvenement.description,
         objectEvenement.color,
-        id_agendas
+        objectEvenement.id_agenda
     ], function(err) {
         if (err) {
             console.error("Erreur ajout événement:", err.message);
@@ -345,13 +355,14 @@ function ajouterEvenementsAgendaImporte(dataBase, idAgenda, objetEvenement) {
 
 
 function modifierEvenement(dataBase, objectEvenement, callback) {
-    const sql = 'UPDATE evenements SET title = ?, start = ?, end = ?, description = ?, couleur = ? WHERE id = ?';
+    const sql = 'UPDATE evenements SET title = ?, start = ?, end = ?, description = ?, couleur = ?, id_agenda = ? WHERE id = ?';
     dataBase.run(sql, [
         objectEvenement.title,
         objectEvenement.start,
         objectEvenement.end,
         objectEvenement.description,
         objectEvenement.color,
+        objectEvenement.id_agenda,
         objectEvenement.id
     ], function(err) {
         if (err) {
@@ -437,15 +448,13 @@ function recupAgendaIdByName(dataBase, agendaNom, idUtilisateur) {
     });
 }
 
+// 5. Modifier recupAgendaUtilisateurConnecte pour renvoyer la couleur
 function recupAgendaUtilisateurConnecte(dataBase, id){
     return new Promise( (res, rej) => {
         const sql = 'SELECT * from agendas WHERE agendas.id_utilisateur=?';
-
         dataBase.all(sql, [id], (err, rows) =>{
-            if(err){
-                rej(err);
-            }
-            res(rows);
+            if(err) rej(err);
+            else res(rows);
         });
     });
 }

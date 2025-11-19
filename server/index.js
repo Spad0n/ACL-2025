@@ -130,9 +130,7 @@ app.get('/dialog/event-form', async (req, res) => {
 
 
 app.post('/events', (req, res) => {
-    const { id, title, description, color, start, end } = req.body;
-
-    console.log(id)
+    const { id, title, description, color, start, end, id_agenda } = req.body;
 
     const startDate = new Date(start);
     const endDate = new Date(end);
@@ -142,7 +140,8 @@ app.post('/events', (req, res) => {
         description: description,
         color: parseInt(color.substring(1), 16),
         start: startDate.toISOString(),
-        end: endDate.toISOString()
+        end: endDate.toISOString(),
+        id_agenda: parseInt(id_agenda, 10)
     };
 
     // On ajoute dans la base
@@ -150,14 +149,14 @@ app.post('/events', (req, res) => {
         const tokkensSigne = req.cookies.accessToken;
         try{    
             const tokkenSansSigne = jwt.verify(tokkensSigne, process.env.SECRET);
-            ajouterEvenement(bdd,tokkenSansSigne.username, savedEvent, (err, lastID) => {
+            ajouterEvenement(bdd, tokkenSansSigne.username, savedEvent, (err, lastID) => {
                 if (err) {
                     res.status(500).send('Erreur côté serveur');
                     return;
                 }
-            savedEvent.id = lastID.toString();
-            res.set('HX-Trigger', JSON.stringify({eventSaved: savedEvent}));
-            res.send('');
+                savedEvent.id = lastID.toString();
+                res.set('HX-Trigger', JSON.stringify({eventSaved: savedEvent}));
+                res.send('');
             });
         }
         catch(err){
@@ -192,6 +191,25 @@ app.post('/events/delete', (req, res) => {
     );
 });
 
+app.get('/dialog/category-form', (req, res) => {
+    const { action, name, color } = req.query;
+
+    // Valeurs par défaut
+    const model = {
+        action: action || 'add', // 'add' ou 'edit'
+        category: {
+            // Si on édite, on pré-remplit, sinon vide
+            name: name || '',
+            // Si on édite, on prend la couleur, sinon bleu par défaut
+            // Note: Si 'color' arrive en int depuis le client, il faudra le gérer, 
+            // mais ici pour un 'add', c'est le défaut qui compte.
+            color: color || '#4285F4' 
+        }
+    };
+
+    res.render('category_form', model);
+});
+
 app.get("/agendas", async(req, res) =>{
     try{
         const tokenSigne = req.cookies.accessToken;
@@ -203,24 +221,27 @@ app.get("/agendas", async(req, res) =>{
         }
         const username = token.username;
         const id = await recupUtilisateurID(bdd, username);
-        if(id.length === 0){
+        if (id.length === 0) {
             return res.status(404).json({error: "Utilisateur introuvable"});
         }
         const id_utilisateur = id[0].id;
 
-        const sql = 'SELECT a.id, a.nom, a.id_utilisateur, CASE WHEN ap.id_user2 IS NOT NULL THEN 1 ELSE 0 END AS shared FROM agendas a LEFT JOIN agendaspartage ap ON a.id = ap.id_agenda AND ap.id_user2 = ? WHERE a.id_utilisateur = ? OR ap.id_user2 = ?';
+        const sql = `
+            SELECT a.id, a.nom, a.couleur, a.id_utilisateur, 
+            CASE WHEN ap.id_user2 IS NOT NULL THEN 1 ELSE 0 END AS shared 
+            FROM agendas a 
+            LEFT JOIN agendaspartage ap ON a.id = ap.id_agenda AND ap.id_user2 = ? 
+            WHERE a.id_utilisateur = ? OR ap.id_user2 = ?
+        `;
         const agendas = await new Promise((res, rej) => {
             bdd.all(sql, [id_utilisateur, id_utilisateur, id_utilisateur], (err, rows) => {
-                if(err){
-                    return rej(err);
-                }
-                else{
-                    res(rows.map(r => ({
-                        id: r.id,
-                        name: r.nom,
-                        shared: r.shared === 1
-                    })));
-                }
+                if(err) return rej(err);
+                res(rows.map(r => ({
+                    id: r.id,
+                    name: r.nom,
+                    color: r.couleur, // Renvoie la couleur (Int)
+                    shared: r.shared === 1
+                })));
             });
         });
         res.json(agendas);
@@ -331,9 +352,15 @@ app.post('/importerExporter/agendaImporter', routes.importerAgendaUtilisateur);
 
 app.post("/agendas", async (req, res) => {
     try{
-        const { nom } = req.body;
+        const { nom, color } = req.body; // On récupère aussi la couleur
         if(!nom){
             return res.status(400).json({ error: "Nom de l'agenda requis" });
+        }
+
+        // Gestion de la couleur (Hex -> Int)
+        let parsedColor = 0x4285F4; // Défaut
+        if (color) {
+            parsedColor = parseInt(color.replace('#', ''), 16);
         }
 
         const tokenSigne = req.cookies.accessToken;
@@ -343,7 +370,10 @@ app.post("/agendas", async (req, res) => {
         const id_utilisateurRows = await recupUtilisateurID(bdd, username);
         const id_utilisateur = id_utilisateurRows[0].id;
 
-        const nouvelAgenda = await ajouterAgenda(bdd, nom, id_utilisateur);
+        // On passe la couleur à la fonction BDD mise à jour
+        const nouvelAgenda = await ajouterAgenda(bdd, nom, parsedColor, id_utilisateur);
+
+        res.set('HX-Trigger', JSON.stringify({ agendaSaved: nouvelAgenda }));
 
         res.status(201).json(nouvelAgenda);
     } catch (err){
@@ -363,10 +393,16 @@ app.delete("/agendas/:id", async (req, res) => {
         const id_utilisateur = id_utilisateurRows[0].id;
 
         const agendas = await recupAgendaUtilisateurConnecte(bdd, id_utilisateur);
-        const isOwner = agendas.some(a => a.id.toString() === id);
+        
+        // On cherche l'agenda ciblé
+        const targetAgenda = agendas.find(a => a.id.toString() === id);
+        
+        if(!targetAgenda){
+            return res.status(404).json({ error: "Agenda introuvable ou non autorisé" });
+        }
 
-        if(!isOwner){
-            return res.status(403).json({ error: "Suppression non autorisée" });
+        if(targetAgenda.nom === 'Default') {
+            return res.status(403).json({ error: "L'agenda Default ne peut pas être supprimé." });
         }
 
         await new Promise((resolve, reject) => {
@@ -401,10 +437,15 @@ app.patch("/agendas/:id", async (req, res) => {
         const id_utilisateur = id_utilisateurRows[0].id;
 
         const agendas = await recupAgendaUtilisateurConnecte(bdd, id_utilisateur);
-        const isOwner = agendas.some(a => a.id.toString() === id);
+        const targetAgenda = agendas.find(a => a.id.toString() === id);
 
-        if(!isOwner){
-            return res.status(403).json({ error: "Suppression non autorisée" });
+        if(!targetAgenda){
+            return res.status(403).json({ error: "Modification non autorisée" });
+        }
+
+        // AJOUT ICI : Protection de l'agenda Default
+        if(targetAgenda.nom === 'Default') {
+            return res.status(403).json({ error: "L'agenda Default ne peut pas être renommé." });
         }
 
         await renommerAgenda(bdd, id, nom);

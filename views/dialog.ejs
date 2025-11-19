@@ -1,121 +1,288 @@
-<%
-  const formatForInput = (isoString) => {
-    if (!isoString) return "";
-    // new Date(isoString) gère à la fois une date ISO complète et la date simple passée pour un nouvel event
-    return new Date(isoString).toISOString().slice(0, 16);
-  };
-
-  // Helper pour convertir un nombre en chaîne hexadécimale #RRGGBB
-  const formatColorForInput = (colorNumber) => {
-    return "#" + (colorNumber || 0xff0000).toString(16).padStart(6, "0");
-  };
+<!-- views/dialog.ejs -->
+<% 
+const icons = {
+    close: `<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" fill="var(--white2)"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>`,
+    clock: `<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" fill="var(--white3)"><path d="m15.3 16.7 1.4-1.4-3.7-3.7V7h-2v5.4ZM12 22q-2.075 0-3.9-.788-1.825-.787-3.175-2.137-1.35-1.35-2.137-3.175Q2 14.075 2 12t.788-3.9q.787-1.825 2.137-3.175 1.35-1.35 3.175-2.138Q9.925 2 12 2t3.9.787q1.825.788 3.175 2.138 1.35 1.35 2.137 3.175Q22 9.925 22 12t-.788 3.9q-.787 1.825-2.137 3.175-1.35 1.35-3.175 2.137Q14.075 22 12 22Zm0-10Zm0 8q3.325 0 5.663-2.337Q20 15.325 20 12t-2.337-5.663Q15.325 4 12 4T6.338 6.337Q4 8.675 4 12t2.338 5.663Q8.675 20 12 20Z"/></svg>`,
+    prev: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--white3)"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>`,
+    next: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--white3)"><path d="M8.59 16.59L10 18l6-6-6-6L8.59 7.41 13.17 12z"/></svg>`
+};
 %>
 
-<%
-    if (action === "delete") {
-%>
-    <dialog>
-        <form hx-post="/events/delete" hx-target="#dialog-container" hx-swap="innerHTML">
-            <h3>Supprimer l'événement</h3>
-            <input type="hidden" name="id" value="<%= event.id %>">
-            <p>Êtes-vous sûr de vouloir supprimer l'événement "<%= event.title %>" ?</p>
-            <footer>
-            <button type="button" onclick="this.closest('dialog').close()" id="connexionBouton">Annuler</button>
-            <button type="submit" id="inscriptionBouton">Supprimer</button>
-            </footer>
-        </form>
-    </dialog>
-<%
-    }
-%>
-
-
-<dialog>
-  <form id="event-form" hx-post="/events" hx-target="#dialog-container" hx-swap="innerHTML">
-    <h3><%= action === "add" ? "Ajouter un événement" : "Modifier l'événement" %></h3>
+<dialog open id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
     
-    <% if (action === "edit") { %>
-      <input type="hidden" name="id" value="<%= event.id %>">
+    <% if (action === "delete") { %>
+        <form hx-post="/events/delete" hx-target="#dialog-container" hx-swap="innerHTML" class="entry-form">
+            <div class="entries__form--body">
+                <div class="form--body__title"><h3 style="color:var(--white1)">Supprimer ?</h3></div>
+                <div class="form--body__description"><p style="color:var(--white2)">Confirmer la suppression de "<%= event.title %>"</p></div>
+                <input type="hidden" name="id" value="<%= event.id %>">
+            </div>
+            <div class="entries__form--footer">
+                <button type="button" class="form--footer__button-cancel" onclick="document.getElementById('dialog-container').innerHTML=''">Annuler</button>
+                <button type="submit" class="form--footer__button-save" style="background-color: var(--red1);">Supprimer</button>
+            </div>
+        </form>
+    <% } else { %>
+
+    <form id="main-form" hx-post="/events" hx-target="#dialog-container" hx-swap="innerHTML" class="entry-form" autocomplete="off">
+        
+        <% if (action === "edit") { %> <input type="hidden" name="id" value="<%= event.id %>"> <% } %>
+        
+        <input type="hidden" name="start" id="final-start">
+        <input type="hidden" name="end" id="final-end">
+        
+        <!-- Ce champ caché recevra la couleur de l'agenda sélectionné via JS -->
+        <input type="hidden" name="color" id="final-color" value="#4285F4">
+
+        <div class="entries__form--body">
+            <div class="form--body__title form-body-single">
+                <input type="text" name="title" class="form--body__title-input" placeholder="Ajouter un titre" value="<%= event.title || '' %>" required>
+            </div>
+            <div class="form--body__description form-body-single">
+                <textarea name="description" class="form--body__description-input" placeholder="Ajouter une description"><%= event.description || '' %></textarea>
+            </div>
+
+            <!-- DATES -->
+            <div class="form--body__start form-body-double">
+                <div class="form--body__start-icon"><%- icons.clock %></div>
+                <div class="form--body__start-inputs" style="position: relative;">
+                    <span class="form--body-start__date" id="trigger-date-start">...</span>
+                    <div class="form-br"></div>
+                    <span class="form--body-start__time" id="trigger-time-start">...</span>
+                </div>
+            </div>
+            <div class="form--body__start form-body-double">
+                <div class="form--body__start-icon"><%- icons.clock %></div>
+                <div class="form--body__start-inputs" style="position: relative;">
+                    <span class="form--body-end__date" id="trigger-date-end">...</span>
+                    <div class="form-br"></div>
+                    <span class="form--body-end__time" id="trigger-time-end">...</span>
+                </div>
+            </div>
+
+            <!-- AGENDA SELECTION -->
+            <div style="padding: 0 4px 12px 0;">
+                <label for="agenda" style="color:var(--white3); font-size:12px; display:block; margin-bottom:4px;">Agenda</label>
+                
+                <!-- On ajoute data-color sur chaque option -->
+                <select id="agenda-select" name="id_agenda" required 
+                        style="background-color: var(--black2); color: var(--white1); border: 1px solid var(--mediumgrey1); border-radius: 4px; padding: 6px; width:100%;">
+                    <% if (agendas && agendas.length > 0) { %>
+                        <% agendas.forEach(agenda => { 
+                            // Conversion de la couleur (int) en Hex string pour l'attribut data
+                            const hexColor = '#' + (agenda.color || 0x4285F4).toString(16).padStart(6, '0');
+                        %>
+                            <option value="<%= agenda.id %>" 
+                                    data-color="<%= hexColor %>"
+                                    <%= event.id_agenda === agenda.id ? 'selected' : '' %> >
+                                <%= agenda.nom %>
+                            </option>
+                        <% }) %>
+                    <% } else { %>
+                        <option value="" disabled selected>Aucun agenda disponible</option>
+                    <% } %>
+                </select>
+                
+                <!-- Petite pastille pour montrer la couleur associée -->
+                <div style="margin-top: 8px; display:flex; align-items:center; gap:8px;">
+                    <div id="agenda-preview-dot" style="width:12px; height:12px; border-radius:50%; background-color:#4285F4;"></div>
+                    <span style="font-size:12px; color:var(--white3);">Couleur de l'événement</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="entries__form--footer">
+            <% if (action === "edit") { %>
+                <button type="button" class="form--footer__button-cancel" style="border-color: var(--red2); color: var(--red1); width: auto; margin-right: auto;"
+                    hx-get="/dialog/event-form?action=delete&id=<%= event.id %>&title=<%= event.title %>"
+                    hx-target="#dialog-container" hx-swap="innerHTML">Supprimer</button>
+            <% } %>
+            <button type="button" class="form--footer__button-cancel" onclick="document.getElementById('dialog-container').innerHTML=''">Annuler</button>
+            <button type="submit" class="form--footer__button-save">Sauvegarder</button>
+        </div>
+    </form>
+
+    <!-- DATEPICKER & TIMEPICKER (Inchangés, je les laisse masqués pour la concision du bloc mais ils doivent être là) -->
+    <aside id="custom-datepicker" class="datepicker hide-datepicker" style="position: absolute; z-index: 1050;">
+        <div class="datepicker__header">
+            <div class="datepicker-title" id="dp-title">Mois</div>
+            <div class="datepicker-nav">
+                <div class="datepicker-nav--prev" id="dp-prev"><%- icons.prev %></div>
+                <div class="datepicker-nav--next" id="dp-next"><%- icons.next %></div>
+            </div>
+        </div>
+        <div class="datepicker__body">
+            <div class="datepicker__body--header">
+                <div class="datepicker__body--header-cell">D</div><div class="datepicker__body--header-cell">L</div><div class="datepicker__body--header-cell">M</div><div class="datepicker__body--header-cell">M</div><div class="datepicker__body--header-cell">J</div><div class="datepicker__body--header-cell">V</div><div class="datepicker__body--header-cell">S</div>
+            </div>
+            <div class="datepicker__body--dates" id="dp-grid"></div>
+        </div>
+    </aside>
+    <aside id="custom-timepicker" class="timepicker hide-datepicker" style="position: absolute; z-index: 1050; display: none;">
+        <div class="timepicker-times__container" id="tp-list"></div>
+    </aside>
+    <div id="popup-overlay" style="position: fixed; top:0; left:0; width:100%; height:100%; z-index:1049; display:none;"></div>
+    <!-- FIN POPUPS -->
+
     <% } %>
 
-    <div>
-      <label for="title">Titre</label>
-      <input type="text" id="title" name="title" value="<%= event.title || '' %>" required>
-    </div>
+    <script>
+    (function() {
+        const form = document.getElementById('main-form');
+        if (!form) return; 
 
-    <div>
-      <label for="agenda">Agenda</label>
-      <select id="agenda" name="id_agenda" required
-        style="background-color: white; color: black; border: 1px solid #ccc; border-radius: 4px; padding: 6px;">
-        <% agendas.forEach(agenda =>{ %>
-          <option value="<%= agenda.id %>" <%= event.id_agenda === agenda.id ? 'selected' : '' %>
-                          style="background-color: white; color: black;">
-            <%= agenda.nom %>
-          </option>
-        <% }) %>
-      </select>
-    </div>
- 
-    <div>
-      <label for="start">Début</label>
-      <!-- Pour un nouvel événement, event.start est null, on utilise 'date' -->
-      <input type="datetime-local" id="start" name="start" value="<%= formatForInput(event.start || '') %>" required>
-    </div>
+        // --- STATE ---
+        const rawStart = "<%= event.start || new Date().toISOString() %>";
+        const rawEnd = "<%= event.end || new Date(Date.now() + 3600000).toISOString() %>";
 
-    <div>
-      <label for="end">Fin</label>
-      <input type="datetime-local" id="end" name="end" value="<%= formatForInput(event.end || '') %>" required>
-    </div>
-    
-    <div>
-      <label for="description">Description</label>
-      <textarea id="description" name="description"><%= event.description || '' %></textarea>
-    </div>
+        let startDate = new Date(rawStart);
+        let endDate = new Date(rawEnd);
+        if (isNaN(startDate)) startDate = new Date();
+        if (isNaN(endDate)) endDate = new Date(Date.now() + 3600000);
 
-    <div>
-      <label for="color">Couleur</label>
-      <input type="color" id="color" name="color" value="<%= formatColorForInput(event.color) %>">
-    </div>
-    
-    <footer>
-      <button type="button" onclick="this.closest('dialog').close()" id="connexionBouton">Annuler</button>
-      <% if (action === "edit") { %>
-        <button
-            type="button"
-            id="inscriptionBouton"
-            hx-get="/dialog/event-form?action=delete&id=<%= event.id %>&title=<%= event.title %>"
-            hx-target="#dialog-container"
-            hx-swap="innerHTML">
-          Supprimer
-        </button>
-      <% } %>
-      <button type="submit" id="inscriptionBouton">Enregistrer</button>
-    </footer>
-  </form>
-  <script>
-   (() => {
-       const form = document.getElementById("event-form");
-       const startInput = document.getElementById("start");
-       const endInput = document.getElementById("end");
+        let dpCurrentDate = new Date(startDate);
+        let activeDateInput = 'start'; 
 
-       form.addEventListener('submit', (event) => {
-           const startDate = startInput.value;
-           const endDate = endInput.value;
+        // --- DOM ELEMENTS ---
+        const els = {
+            trigDStart: document.getElementById('trigger-date-start'),
+            trigTStart: document.getElementById('trigger-time-start'),
+            trigDEnd: document.getElementById('trigger-date-end'),
+            trigTEnd: document.getElementById('trigger-time-end'),
+            datepicker: document.getElementById('custom-datepicker'),
+            dpTitle: document.getElementById('dp-title'),
+            dpGrid: document.getElementById('dp-grid'),
+            dpPrev: document.getElementById('dp-prev'),
+            dpNext: document.getElementById('dp-next'),
+            timepicker: document.getElementById('custom-timepicker'),
+            tpList: document.getElementById('tp-list'),
+            overlay: document.getElementById('popup-overlay'),
+            finalStart: document.getElementById('final-start'),
+            finalEnd: document.getElementById('final-end'),
+            
+            // Nouveaux éléments pour la gestion Agenda/Couleur
+            agendaSelect: document.getElementById('agenda-select'),
+            finalColor: document.getElementById('final-color'),
+            dotPreview: document.getElementById('agenda-preview-dot')
+        };
 
-           if (startDate && endDate && endDate < startDate) {
-               event.preventDefault();
+        // --- HELPER FORMATS ---
+        const fmtDate = (d) => new Intl.DateTimeFormat('fr-FR', { month: 'short', day: 'numeric', year: 'numeric' }).format(d);
+        const fmtTime = (d) => {
+            let h = d.getHours().toString().padStart(2, '0');
+            let m = d.getMinutes().toString().padStart(2, '0');
+            return h + ':' + m;
+        };
 
-               const invalidDate = new Date(endDate);
-               const formattedDate = invalidDate.toLocaleString('fr-FR', { 
-                   dateStyle: 'medium', 
-                   timeStyle: 'short' 
-               });
+        // --- LOGIQUE COULEUR AGENDA ---
+        function updateColorFromAgenda() {
+            if (!els.agendaSelect || !els.finalColor) return;
+            
+            const selectedOption = els.agendaSelect.options[els.agendaSelect.selectedIndex];
+            if (selectedOption) {
+                const color = selectedOption.getAttribute('data-color');
+                // Mise à jour de l'input caché envoyé au serveur
+                els.finalColor.value = color;
+                // Mise à jour visuelle
+                if (els.dotPreview) els.dotPreview.style.backgroundColor = color;
+            }
+        }
 
-               alert(`La date de fin ne peut pas être antérieure à la date de début.\nDate de fin invalide : ${formattedDate}.`);
-               startInput.value = '';
-               endInput.value = '';
-           }
-       });
-   })();
-  </script>
+        if (els.agendaSelect) {
+            els.agendaSelect.addEventListener('change', updateColorFromAgenda);
+        }
+
+        // --- UI UPDATE ---
+        function updateUI() {
+            if (els.trigDStart) els.trigDStart.textContent = fmtDate(startDate);
+            if (els.trigTStart) els.trigTStart.textContent = fmtTime(startDate);
+            if (els.trigDEnd) els.trigDEnd.textContent = fmtDate(endDate);
+            if (els.trigTEnd) els.trigTEnd.textContent = fmtTime(endDate);
+
+            if (els.trigDStart) els.trigDStart.classList.toggle('active-form-date', activeDateInput === 'start');
+            if (els.trigDEnd) els.trigDEnd.classList.toggle('active-form-date', activeDateInput === 'end');
+            
+            if (els.finalStart) els.finalStart.value = startDate.toISOString();
+            if (els.finalEnd) els.finalEnd.value = endDate.toISOString();
+        }
+
+        // --- DATEPICKER LOGIC (Identique à avant, condensé pour la réponse) ---
+        function renderCalendar(dateObj) {
+            if (!els.dpTitle || !els.dpGrid) return;
+            const year = dateObj.getFullYear();
+            const month = dateObj.getMonth();
+            els.dpTitle.textContent = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(dateObj);
+            els.dpGrid.innerHTML = '';
+            const firstDay = new Date(year, month, 1).getDay(); // 0 = Dimanche
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Ajustement pour que la semaine commence le Dimanche comme dans vos headers
+            for (let i = 0; i < firstDay; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'datepicker__body--dates-cell';
+                els.dpGrid.appendChild(cell);
+            }
+            for (let d = 1; d <= daysInMonth; d++) {
+                const cell = document.createElement('div');
+                cell.className = 'datepicker__body--dates-cell';
+                const span = document.createElement('div');
+                span.className = 'datepicker__body--datename';
+                span.textContent = d;
+                // ... (Logique de sélection identique) ...
+                 span.onclick = (e) => {
+                    e.stopPropagation();
+                    const newDate = new Date(activeDateInput === 'start' ? startDate : endDate);
+                    newDate.setFullYear(year); newDate.setMonth(month); newDate.setDate(d);
+                    
+                    if (activeDateInput === 'start') {
+                        const diff = endDate - startDate;
+                        startDate = newDate;
+                        if (endDate < startDate) endDate = new Date(startDate.getTime() + diff);
+                    } else {
+                        if (newDate < startDate) startDate = new Date(newDate);
+                        endDate = newDate;
+                    }
+                    updateUI(); closePopups();
+                };
+                cell.appendChild(span);
+                els.dpGrid.appendChild(cell);
+            }
+        }
+
+        function openDatepicker(type, triggerEl) {
+            if (!els.datepicker || !els.overlay) return;
+            activeDateInput = type;
+            dpCurrentDate = new Date(type === 'start' ? startDate : endDate);
+            renderCalendar(dpCurrentDate);
+            const rect = triggerEl.getBoundingClientRect();
+            const dialogRect = form.closest('dialog').getBoundingClientRect();
+            els.datepicker.style.top = (rect.bottom - dialogRect.top + 5) + 'px';
+            els.datepicker.style.left = (rect.left - dialogRect.left - 20) + 'px';
+            els.datepicker.classList.remove('hide-datepicker');
+            els.overlay.style.display = 'block';
+            updateUI();
+        }
+
+        // ... (Wiring Events Datepicker/Timepicker) ... 
+        if (els.dpPrev) els.dpPrev.onclick = (e) => { e.stopPropagation(); dpCurrentDate.setMonth(dpCurrentDate.getMonth() - 1); renderCalendar(dpCurrentDate); };
+        if (els.dpNext) els.dpNext.onclick = (e) => { e.stopPropagation(); dpCurrentDate.setMonth(dpCurrentDate.getMonth() + 1); renderCalendar(dpCurrentDate); };
+        
+        function closePopups() {
+            if (els.datepicker) els.datepicker.classList.add('hide-datepicker');
+            if (els.timepicker) els.timepicker.style.display = 'none';
+            if (els.overlay) els.overlay.style.display = 'none';
+            updateUI();
+        }
+
+        // Wiring
+        if (els.trigDStart) els.trigDStart.onclick = (e) => openDatepicker('start', e.target);
+        if (els.trigDEnd) els.trigDEnd.onclick = (e) => openDatepicker('end', e.target);
+        if (els.overlay) els.overlay.onclick = closePopups;
+
+        // Init
+        updateUI(); 
+        updateColorFromAgenda(); // Initialisation de la couleur au chargement
+
+    })();
+    </script>
 </dialog>

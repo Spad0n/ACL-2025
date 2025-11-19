@@ -116,12 +116,12 @@ function renderCategories(model, dispatch) {
                     ]),
                     // Les icônes d'édition/suppression apparaissent au survol (géré par CSS)
                     h('div.sbch-form--item__col--actions', [
-                        name !== 'default' ? h('button.sbch-col--actions__delete-icon', {
+                        name !== 'Default' ? h('button.sbch-col--actions__delete-icon', {
                             on: { click: (e) => { e.stopPropagation(); dispatch(Msg.OpenModal('deleteConfirmation', { type: 'category', id: name })) } }
                         }, '×') : null,
-                        h('button.sbch-col--actions__edit-icon', {
+                        name !== 'Default' ? h('button.sbch-col--actions__edit-icon', {
                             on: { click: (e) => { e.stopPropagation(); dispatch(Msg.EditCategory(name)) } }
-                        }, '✎')
+                        }, '✎') : null,
                     ])
                 ])
             ))

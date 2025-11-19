@@ -276,14 +276,14 @@ export function update(msg, model) {
     case 'DELETE_CATEGORY': {
         const categoryNameToDelete = msg.payload;
         
-        if (categoryNameToDelete === 'default' || !model.categories[categoryNameToDelete]) {
+        if (categoryNameToDelete === 'Default' || !model.categories[categoryNameToDelete]) {
             console.warn("Tentative de suppression de la catégorie par défaut ou d'une catégorie inexistante.");
             return model; // Toujours retourner un tableau de commandes
         }
         
         const newEntries = model.entries.map(entry => {
             if (entry.category === categoryNameToDelete) {
-                return { ...entry, category: 'default' };
+                return { ...entry, category: 'Default' };
             }
             return entry;
         });
@@ -449,11 +449,15 @@ export function update(msg, model) {
 
         // Réassigner les événements à la catégorie par défaut
         const newEntries = model.entries.map(entry => 
-            entry.category === categoryName ? { ...entry, category: 'Personnel' } : entry // Assurez-vous d'avoir une catégorie par défaut
+            entry.category === categoryName ? { ...entry, category: 'Default' } : entry
         );
 
         const newModel = { ...model, categories: newCategories, entries: newEntries };
         return newModel;
+    }
+    case 'AGENDAS_LOADED': {
+        // Mise à jour pure du modèle avec les nouvelles catégories
+        return { ...model, categories: msg.payload };
     }
     default:
         console.warn('Message non traité:', msg.type);

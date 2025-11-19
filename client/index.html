@@ -30,23 +30,19 @@
     <link href="css/aside/toggleForm.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
   </head>
-
   <body>
     <div id="app">
       <p style="text-align: center; padding-top: 50px; font-family: sans-serif;">Loading Calendar...</p>
     </div>
     <div id="dialog-container"></div>
     <script type="module" src="/src/main.js"></script>
-
     <script>
-
-    
-     document.body.addEventListener('htmx:afterSwap', function (event) {
-         const dialog = event.detail.elt.querySelector('dialog');
-         if (dialog) {
-             dialog.showModal();
-         }
-     });
+     //document.body.addEventListener('htmx:afterSwap', function (event) {
+     //    const dialog = event.detail.elt.querySelector('dialog');
+     //    if (dialog) {
+     //        dialog.showModal();
+     //    }
+     //});
 
      document.body.addEventListener("categorySaved", (evt) => {
          const serverData = evt.detail; // ex: { name: 'Nouveau Nom', color: '#ff0000', oldName: 'Ancien Nom' }
@@ -92,7 +88,5 @@
          document.body.dispatchEvent(appEvent);
      });
     </script>
-
   </body>
 </html>
-

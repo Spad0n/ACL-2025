@@ -210,6 +210,46 @@ app.get('/dialog/category-form', (req, res) => {
     res.render('category_form', model);
 });
 
+app.post("/categories/delete", async (req, res) => {
+    try {
+        const { id, name } = req.body;
+        
+        // Vérification sécurité token
+        const tokenSigne = req.cookies.accessToken;
+        const tokkenSansSigne = jwt.verify(tokenSigne, process.env.SECRET);
+        const username = tokkenSansSigne.username;
+
+        const id_utilisateurRows = await recupUtilisateurID(bdd, username);
+        const id_utilisateur = id_utilisateurRows[0].id;
+
+        // Sécurité : Vérifier que l'agenda appartient bien à l'utilisateur
+        // et que ce n'est pas "Default"
+        const agendas = await recupAgendaUtilisateurConnecte(bdd, id_utilisateur);
+        const targetAgenda = agendas.find(a => a.id.toString() === id.toString());
+
+        if (!targetAgenda) {
+            return res.status(404).json({ error: "Agenda introuvable" });
+        }
+        if (targetAgenda.nom === 'Default') {
+            return res.status(403).json({ error: "Impossible de supprimer l'agenda Default" });
+        }
+
+        // Appel à la fonction BDD créée à l'étape 4
+        // import { reassignerEvenementsEtSupprimerAgenda } from './fonctionsBdd.js'; (Assurez-vous de l'import en haut du fichier)
+        const { reassignerEvenementsEtSupprimerAgenda } = await import('./fonctionsBdd.js'); // Ou ajoutez-le aux imports statiques en haut
+        
+        await reassignerEvenementsEtSupprimerAgenda(bdd, id, id_utilisateur);
+
+        // On déclenche l'événement HTMX pour le frontend
+        res.set('HX-Trigger', JSON.stringify({ categoryDeleted: name }));
+        res.send(''); // Réponse vide (200 OK) car HTMX gère l'UI via le trigger
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.get("/agendas", async(req, res) =>{
     try{
         const tokenSigne = req.cookies.accessToken;

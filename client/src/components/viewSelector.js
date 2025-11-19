@@ -12,11 +12,11 @@ import { Msg } from '../messages';
  * @type {Array<{key: string, name: string, value: 'day'|'week'|'month'|'year'|'list'}>}
  */
 const views = [
-    { key: 'D', name: 'Jour', value: 'day' },
-    { key: 'W', name: 'Semaine', value: 'week' },
-    { key: 'M', name: 'Mois', value: 'month' },
-    { key: 'Y', name: 'Année', value: 'year' },
-    { key: 'L', name: 'Planning', value: 'list' },
+    { key: 'D', name: 'Day', value: 'day' },
+    { key: 'W', name: 'Week', value: 'week' },
+    { key: 'M', name: 'Month', value: 'month' },
+    { key: 'Y', name: 'Year', value: 'year' },
+    { key: 'L', name: 'Schedule', value: 'list' },
 ];
 
 /**

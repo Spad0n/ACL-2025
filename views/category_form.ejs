@@ -1,0 +1,73 @@
+<!-- views/category_form.ejs -->
+
+<dialog open id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
+    
+    <!-- Le formulaire poste vers /agendas -->
+    <form id="category-form" hx-post="/agendas" hx-target="#dialog-container" hx-swap="innerHTML" class="entry-form" autocomplete="off">
+        
+        <div class="entries__form--body" style="padding: 20px; overflow: visible;">
+            <div class="form--body__title" style="margin-bottom: 20px;">
+                <h3 style="color:var(--white1); font-size: 18px; font-weight: 500;">
+                    <%= action === 'add' ? 'Nouvel Agenda' : 'Modifier l\'Agenda' %>
+                </h3>
+            </div>
+
+            <!-- Champ NOM -->
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; color:var(--white3); font-size:12px; margin-bottom: 6px;">Nom de l'agenda</label>
+                <input type="text" name="nom" value="<%= category.name %>" required placeholder="Ex: Travail, Sport..." 
+                       class="form--body__title-input" 
+                       style="background-color: var(--black2); border: 1px solid var(--mediumgrey1); border-radius: 4px; padding: 8px; height: 40px;">
+            </div>
+
+            <!-- Champ COULEUR -->
+            <div style="margin-bottom: 10px;">
+                <label style="display:block; color:var(--white3); font-size:12px; margin-bottom: 6px;">Couleur du calendrier</label>
+                
+                <div style="display: flex; align-items: center; gap: 12px; background-color: var(--black2); padding: 8px; border-radius: 4px; border: 1px solid var(--mediumgrey1);">
+                    <!-- Input couleur natif masqué mais clickable via le label/div -->
+                    <div style="position: relative; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 2px solid var(--white3);">
+                        <input type="color" name="color" id="agenda-color-input" value="<%= category.color %>" 
+                               style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; cursor: pointer; padding: 0; margin: 0;">
+                    </div>
+                    <span style="color: var(--white2); font-size: 14px;">Choisir une couleur</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer avec boutons -->
+        <div class="entries__form--footer">
+            <button type="button" class="form--footer__button-cancel" onclick="document.getElementById('dialog-container').innerHTML=''">Annuler</button>
+            <button type="submit" class="form--footer__button-save">
+                <%= action === 'add' ? 'Créer' : 'Sauvegarder' %>
+            </button>
+        </div>
+
+    </form>
+
+    <script>
+    (function() {
+        // Petit script pour rafraîchir la page après la création réussie
+        // C'est nécessaire pour que le nouvel agenda apparaisse dans la sidebar et dans les filtres
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            // On vérifie que la requête vient bien de ce formulaire et qu'elle a réussi (status 200/201)
+            if (evt.target.id === 'category-form' && evt.detail.successful) {
+                // On recharge pour mettre à jour tout l'état (sidebar + store)
+                // Idéalement on ferait ça en JS pur, mais le reload est plus sûr pour l'instant
+                window.location.reload();
+            }
+        });
+
+        // Mise à jour visuelle de la bordure du rond de couleur quand on change
+        const colorInput = document.getElementById('agenda-color-input');
+        if(colorInput) {
+            colorInput.addEventListener('input', (e) => {
+                e.target.parentElement.style.borderColor = e.target.value;
+            });
+            // Init
+            colorInput.parentElement.style.borderColor = colorInput.value;
+        }
+    })();
+    </script>
+</dialog>>

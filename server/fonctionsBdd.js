@@ -62,6 +62,34 @@ function creerTableAgendasPartages(dataBase){
     })
 }
 
+function reassignerEvenementsEtSupprimerAgenda(dataBase, idAgendaASupprimer, idUtilisateur) {
+    return new Promise((resolve, reject) => {
+        // 1. Trouver l'ID de l'agenda "Default" de cet utilisateur
+        const sqlFindDefault = "SELECT id FROM agendas WHERE nom = 'Default' AND id_utilisateur = ?";
+        
+        dataBase.get(sqlFindDefault, [idUtilisateur], (err, row) => {
+            if (err) return reject(err);
+            if (!row) return reject(new Error("Agenda Default introuvable pour cet utilisateur"));
+
+            const idDefault = row.id;
+
+            // 2. Déplacer les événements vers l'agenda Default
+            const sqlUpdateEvents = "UPDATE evenements SET id_agenda = ? WHERE id_agenda = ?";
+            
+            dataBase.run(sqlUpdateEvents, [idDefault, idAgendaASupprimer], function(err) {
+                if (err) return reject(err);
+                
+                // 3. Maintenant que les événements sont saufs, on supprime l'agenda
+                const sqlDeleteAgenda = "DELETE FROM agendas WHERE id = ?";
+                dataBase.run(sqlDeleteAgenda, [idAgendaASupprimer], function(err) {
+                    if (err) return reject(err);
+                    resolve();
+                });
+            });
+        });
+    });
+}
+
 // Ouvre une connexion avec la BDD
 async function creerBdd(chemin) {
     return new Promise ( (res, rej) => {
@@ -541,27 +569,28 @@ await creerBdd("bdd.db")
 initBdd(bdd);
 
 export { bdd ,
-	 initBdd ,
-	 ajouterAgenda,
-     ajouterAgendasPartages,
-	 recupUtilisateur,
-	 supprimerAgenda,
-     renommerAgenda,
-	 ajouterUtilisateur,
-	 retournerContenuTableUtilisateur,
-	 fetchUtilisateur,
-	 recupEvenement,
-	 ajouterEvenement,
-	 supprimerEvenement,
-	 modifierEvenement,
-	 retournerContenuTableEvenement,
-	 creerAgendaDefautUtilisateur,
-	 recupUtilisateurID,
-	 recupAgendaUtilisateurConnecte,
-	 recupEvenementAgenda,
-	 recupIdUtilisateur,
-	 recupAgendaIdByName,
-	 creerAgendaImporter,
-	 ajouterEvenementsAgendaImporte,
-     recupTousAgendas
-       } ;
+         initBdd ,
+         ajouterAgenda,
+         ajouterAgendasPartages,
+         recupUtilisateur,
+         supprimerAgenda,
+         renommerAgenda,
+         ajouterUtilisateur,
+         retournerContenuTableUtilisateur,
+         fetchUtilisateur,
+         recupEvenement,
+         ajouterEvenement,
+         supprimerEvenement,
+         modifierEvenement,
+         retournerContenuTableEvenement,
+         creerAgendaDefautUtilisateur,
+         recupUtilisateurID,
+         recupAgendaUtilisateurConnecte,
+         recupEvenementAgenda,
+         recupIdUtilisateur,
+         recupAgendaIdByName,
+         creerAgendaImporter,
+         ajouterEvenementsAgendaImporte,
+         recupTousAgendas,
+         reassignerEvenementsEtSupprimerAgenda,
+       };

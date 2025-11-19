@@ -88,7 +88,7 @@ export default function listView(model, dispatch) {
     // Si pas d'événements, afficher un message
     if (upcomingEntries.length === 0) {
         return h('div.listview.empty-list', [
-            h('h2.empty-list-title', 'Aucun événement à venir.')
+            h('h2.empty-list-title', 'No upcoming events')
         ]);
     }
     

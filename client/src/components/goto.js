@@ -65,9 +65,9 @@ export default function gotoView(model, dispatch) {
         // Conteneur de la modale
         h('aside.go-to-date', [
             h('div.go-to__header', [
-                h('span.go-to-title', 'Aller à la date'),
+                h('span.go-to-title', 'Go to date'),
                 h('div.go-to-subtitle', [
-                    h('span.gts-format', 'jour mois année'),
+                    h('span.gts-format', 'day month year'),
                     h('span.gts-mid', 'ou'),
                     h('span.gts-format', 'JJ/MM/AAAA'),
                 ])
@@ -101,10 +101,10 @@ export default function gotoView(model, dispatch) {
             h('div.go-to__footer', [
                 h('button.cancel-go-to', {
                     on: { click: () => dispatch(Msg.CloseAllModals()) }
-                }, 'Annuler'),
+                }, 'Cancel'),
                 h('button.submit-go-to', {
                     on: { click: handleSubmit }
-                }, 'Aller')
+                }, 'Go')
             ])
         ])
     ]);

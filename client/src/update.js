@@ -223,10 +223,17 @@ export function update(msg, model) {
             return newModel;
         }
         if (type === 'category' && id) {
-            // On déclenche une requête POST au backend pour supprimer la catégorie
-            triggerHtmxPost('/categories/delete', { name: id });
+            const categoryName = id;
+            const categoryObj = model.categories[categoryName];
+
+            if (categoryObj) {
+                // On envoie l'ID BDD et le Nom au serveur
+                triggerHtmxPost('/categories/delete', { 
+                    id: categoryObj.id, 
+                    name: categoryName 
+                });
+            }
             
-            // On ferme la modale de confirmation
             const newUiState = {
                 ...model.ui,
                 activeModal: null,
@@ -447,12 +454,18 @@ export function update(msg, model) {
         const newCategories = { ...model.categories };
         delete newCategories[categoryName];
 
-        // Réassigner les événements à la catégorie par défaut
         const newEntries = model.entries.map(entry => 
-            entry.category === categoryName ? { ...entry, category: 'Default' } : entry
+            entry.category === categoryName 
+                ? { ...entry, category: 'Default' } // <--- CORRECTION ICI ('Default' au lieu de 'Personnel')
+                : entry
         );
-
-        const newModel = { ...model, categories: newCategories, entries: newEntries };
+        const newModel = { 
+            ...model, 
+            categories: newCategories, 
+            entries: newEntries,
+            ui: { ...model.ui, activeModal: null } 
+        };
+        
         return newModel;
     }
     case 'AGENDAS_LOADED': {

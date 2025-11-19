@@ -27,7 +27,7 @@ import { Msg } from '../messages';
  * @returns {import('snabbdom').VNode}
  */
 function renderMonthGrid(monthDate, model, yearEntriesSet, dispatch) {
-    const weekdays = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+    const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
     const monthStart = startOfMonth(monthDate);
     const daysInMonth = getDaysInMonth(monthDate);
     // getDay() est 0 pour Dimanche, 1 pour Lundi, etc.

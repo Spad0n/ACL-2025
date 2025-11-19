@@ -100,34 +100,34 @@ export default function settingsView(model, dispatch) {
                     // --- Section Données (Import/Export) ---
                     h('div.sub-menu--item', [
                         h('div.sub-menu--item__title', 'Données du Calendrier (JSON)'),
-                        h('div.sub-menu--item__description', 'Téléchargez une sauvegarde ou importez depuis un fichier. L\'importation écrasera toutes les données existantes.'),
+                        h('div.sub-menu--item__description', 'Download a backup or import from a file. Importing will overwrite existing data.'),
                         h('div.sub-menu--item__actions', [
                             h('div.sm-download-json', [
                                 h('button.sm-json-btn.down-json', { on: { click: () => {
                                     window.location.href = '/importerExporter/agenda';
-                                } } }, 'Importer ou Exporter Agenda')
+                                } } }, 'Import or Export Agenda')
                             ])
                         ])
                     ]),
                     
                     // --- Section Thème ---
                     h('div.sub-menu--item.smi-theme-actions', [
-                        h('div.sub-menu--item__title', 'Thème de l\'Application'),
+                        h('div.sub-menu--item__title', 'App Theme'),
                         renderThemeOptions(model, dispatch)
                     ]),
                     
                     // --- Section Préférences ---
-                    h('div.sub-menu--item.smias', [
-                        h('div.sub-menu--item__title', 'Préférences'),
-                        h('div.sub-menu--item__actions.preferences-actions', { style: { flexDirection: 'column', alignItems: 'flex-start' } }, [
-                            renderToggle('Activer les raccourcis clavier', model.settings.shortcutsEnabled, Msg.ToggleShortcuts(), dispatch),
-                            renderToggle('Activer les animations', model.settings.animationsEnabled, Msg.ToggleAnimations(), dispatch),
-                            h('button.toggle-kb-shortcuts-btn__smia', {
-                                style: { marginTop: '16px' },
-                                on: { click: () => dispatch(Msg.OpenModal('shortcuts')) }
-                            }, 'Voir tous les raccourcis')
-                        ])
-                    ])
+                    //h('div.sub-menu--item.smias', [
+                    //    h('div.sub-menu--item__title', 'Préférences'),
+                    //    h('div.sub-menu--item__actions.preferences-actions', { style: { flexDirection: 'column', alignItems: 'flex-start' } }, [
+                    //        renderToggle('Activer les raccourcis clavier', model.settings.shortcutsEnabled, Msg.ToggleShortcuts(), dispatch),
+                    //        renderToggle('Activer les animations', model.settings.animationsEnabled, Msg.ToggleAnimations(), dispatch),
+                    //        h('button.toggle-kb-shortcuts-btn__smia', {
+                    //            style: { marginTop: '16px' },
+                    //            on: { click: () => dispatch(Msg.OpenModal('shortcuts')) }
+                    //        }, 'Voir tous les raccourcis')
+                    //    ])
+                    //])
                 ])
             ])
         ])

@@ -216,6 +216,17 @@ export function triggerHtmxPost(url, data) {
         dispatch(Msg.CloseAllModals());
     });
 
+    document.body.addEventListener('categoryDeleted', (evt) => {
+        const categoryName = evt.detail.value || evt.detail;
+        
+        console.log("HTMX Signal: Catégorie supprimée ->", categoryName);
+        
+        if (categoryName) {
+            dispatch(Msg.CategoryDeleted(categoryName));
+            dispatch(Msg.CloseAllModals());
+        }
+    });
+
     // Écouteur pour le dispatch manuel
     document.body.addEventListener('dispatchApp', (evt) => {
         console.log("Événement manuel reçu:", evt.detail);

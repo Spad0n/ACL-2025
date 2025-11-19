@@ -120,6 +120,19 @@ export default function headerView(model, dispatch) {
                         on: { click: () => dispatch(Msg.OpenModal('settings')) },
                         attrs: { 'data-tooltip': 'Paramètres', 'aria-label': 'Paramètres' }
                     }, [ /* ... SVG de paramètres ... */ ]),
+
+                    // --- Bouton pour partager un événements ---
+                    h('button.partage', {
+                        on: { click: () => dispatch(Msg.OpenModal('partage')) },
+                        attrs: { 'data-tooltip': 'Partage', 'aria-label': 'Partage' }
+                    }, [
+                        h('img', {
+                            attrs: {
+                                src: '/public/assets/icons/partager.png',
+                                alt: 'Partager'
+                            }
+                        })
+                     ]),
                     
                     // --- Sélecteur de Vue ---
                     h('div.select-wrapper', [

@@ -44,6 +44,19 @@
     </div>
 
     <div>
+      <label for="agenda">Agenda</label>
+      <select id="agenda" name="id_agenda" required
+        style="background-color: white; color: black; border: 1px solid #ccc; border-radius: 4px; padding: 6px;">
+        <% agendas.forEach(agenda =>{ %>
+          <option value="<%= agenda.id %>" <%= event.id_agenda === agenda.id ? 'selected' : '' %>
+                          style="background-color: white; color: black;">
+            <%= agenda.nom %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+ 
+    <div>
       <label for="start">Début</label>
       <!-- Pour un nouvel événement, event.start est null, on utilise 'date' -->
       <input type="datetime-local" id="start" name="start" value="<%= formatForInput(event.start || '') %>" required>

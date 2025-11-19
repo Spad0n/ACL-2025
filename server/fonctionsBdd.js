@@ -45,9 +45,13 @@ function creerTableAgendasPartages(dataBase){
     return new Promise( (res, rej) => {
         const sql = ' CREATE TABLE IF NOT EXISTS agendaspartage(id INTEGER PRIMARY KEY, id_agenda INTEGER NOT NULL, id_user1 INTEGER, id_user2 INTEGER, FOREIGN KEY (id_agenda) REFERENCES agendas(id), FOREIGN KEY (id_user1) REFERENCES utilisateurs(id), FOREIGN KEY (id_user2) REFERENCES utilisateurs(id), UNIQUE(id_agenda, id_user2))';
         dataBase.run(sql, (err) => {
-            rej(new Error("Erreur lors de la création de la table agendaspartages"));
+            if(err){
+                rej(new Error("Erreur lors de la création de la table agendaspartages"));
+            }
+            else{
+                res("Table agendaspartages OK");
+            }
         });
-        res("Table agendaspartages OK");
     })
 }
 
@@ -163,7 +167,8 @@ function recupEvenement(dataBase){
                 description: r.description || '', // Pas obligatoire
                 color: r.couleur ? r.couleur : 0xff0000,
                 start: new Date(r.start).toISOString(),
-                end: new Date(r.end).toISOString()
+                end: new Date(r.end).toISOString(),
+                id_agenda: r.id_agenda
             }));
 
             res(events);
@@ -188,6 +193,31 @@ function recupEvenementAgenda(dataBase, idAgenda) {
         );
     });
 }
+
+
+async function recupTousAgendas(bdd, id_utilisateur){
+    const agendasUtilisateurConnecte = await recupAgendaUtilisateurConnecte(bdd, id_utilisateur);
+
+    const sqlagendaPartage = ' SELECT a.id, a.nom, u.username AS proprietaire FROM agendaspartage ap JOIN agendas a ON ap.id_agenda = a.id JOIN utilisateurs u ON a.id_utilisateur = u.id WHERE ap.id_user2 = ?';
+    
+    const agendasPartages = await new Promise((res, rej) => {
+        bdd.all(sqlagendaPartage, [id_utilisateur], (err, rows) => {
+            if(err){
+                rej(err);
+            }
+            else{
+                res(rows);
+            }
+        });
+    });
+    const agendaspartageNOM = agendasPartages.map(a => ({
+        id: a.id,
+        nom: `${a.nom} (partagé par ${a.proprietaire})`
+    }));
+    return [...agendasUtilisateurConnecte, ...agendaspartageNOM];
+}
+
+
 
 // Permet d'ajouter un utilisateur dans la BDD
 function ajouterUtilisateur(dataBase, objetUtilisateur) {
@@ -523,5 +553,6 @@ export { bdd ,
 	 recupIdUtilisateur,
 	 recupAgendaIdByName,
 	 creerAgendaImporter,
-	 ajouterEvenementsAgendaImporte
+	 ajouterEvenementsAgendaImporte,
+     recupTousAgendas
        } ;

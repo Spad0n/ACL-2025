@@ -167,7 +167,10 @@ export function update(msg, model) {
             newUiState.deleteConfirmation = { type: payload.type, id: payload.id };
         } else if (name === 'goto') {
             newUiState.goto = getInitialModel().ui.goto;
-        } else if (name === 'datepicker') {
+        }else if (name === 'partage'){
+            triggerHtmxDialog('/dialog/partage');
+            return model;
+        }else if (name === 'datepicker') {
             const { date, position, target } = payload;
             const popupStyle = placePopup(256, 216, position); 
             
@@ -308,6 +311,32 @@ export function update(msg, model) {
         if (!oldCategory) return model;
         const newCategories = { ...model.categories, [categoryName]: { ...oldCategory, active: !oldCategory.active } };
         return { ...model, categories: newCategories };
+    }
+    case 'COMFIRMER_PARTAGE':{
+        const { id_agenda, username } = msg.payload;
+        triggerHtmxPost('/agenda/partage', {
+            id_agenda, 
+            username
+        });
+
+        const newUiState = {
+            ...model.ui,
+            activeModal: null
+        };
+
+        return { ...model, ui: newUiState};
+    }
+    case 'PARTAGE_OK':{
+        return{
+            ...model,
+            ui: {
+                ...model.ui,
+                toast: "Agenda partagé"
+            }
+        };
+    }
+    case 'HIDE_TOAST': {
+        return { ...model, ui: { ...model.ui, toast: null}};
     }
     case 'DATEPICKER_SET_DISPLAY_DATE': {
         const newDatepicker = { ...model.ui.datepicker, displayDate: msg.payload };

@@ -18,7 +18,8 @@ import {
     recupUtilisateur,
     ajouterAgenda,
     supprimerAgenda,
-    renommerAgenda
+    renommerAgenda,
+    recupTousAgendas,
 } from './fonctionsBdd.js';
 import { tr } from 'date-fns/locale';
 
@@ -88,24 +89,45 @@ app.get('/events', async (_req, res) => {
 });
 
 // Affichage du dialogue de création/édition
-app.get('/dialog/event-form', (req, res) => {
-    const { action, date, id, title, description, color, start, end } = req.query;
+app.get('/dialog/event-form', async (req, res) => {
+    try {
+        const { action, date, id, title, description, color, start, end } = req.query;
 
-    console.log(req.query);
+        const token = req.cookies.accessToken;
+        if (!token) return res.status(401).send("Utilisateur non connecté");
 
-    const model = {
-        action: action, // 'add' ou 'edit'
-        event: {
-            id: id || null,
-            title: title || '',
-            description: description || '',
-            start: start || null,
-            end: end || null,
-            couleur: color ? parseInt(color, 10) : 0xff0000
-        }
-    };
-    res.render('dialog', model);
+        const decoded = jwt.verify(token, process.env.SECRET);
+        const username = decoded.username;
+
+        const id_utilisateurRows = await recupUtilisateurID(bdd, username);
+        if (!id_utilisateurRows.length) return res.status(404).send("Utilisateur introuvable");
+
+        const id_utilisateur = id_utilisateurRows[0].id;
+
+        const agendas = await recupTousAgendas(bdd, id_utilisateur);
+
+        const model = {
+            action,
+            event: {
+                id: id || null,
+                title: title || '',
+                description: description || '',
+                start: start || null,
+                end: end || null,
+                color: color ? parseInt(color, 10) : 0xff0000,
+                id_agenda: null 
+            },
+            agendas
+        };
+
+        res.render('dialog', model);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Erreur serveur");
+    }
 });
+
 
 app.post('/events', (req, res) => {
     const { id, title, description, color, start, end } = req.body;
@@ -170,30 +192,43 @@ app.post('/events/delete', (req, res) => {
     );
 });
 
-app.get("/agendas", async(req, res) => {
+app.get("/agendas", async(req, res) =>{
     try{
-        const tokkensSigne = req.cookies.accessToken;
-        const tokkenSansSigne = jwt.verify(tokkensSigne, process.env.SECRET);
-        const username = tokkenSansSigne.username;
-        
-        if(!username){
-            return res.status(401).json({error: "Aucin Utilisateur n'est connecté "});
+        const tokenSigne = req.cookies.accessToken;
+        let token;
+        try {
+            token = jwt.verify(tokenSigne, process.env.SECRET);
+        } catch (err) {
+            return res.status(401).json({ error: "Token invalide" });
         }
-
-        const id_utilisateurRows = await recupUtilisateurID(bdd, username);
-        if(id_utilisateurRows.length === 0){
+        const username = token.username;
+        const id = await recupUtilisateurID(bdd, username);
+        if(id.length === 0){
             return res.status(404).json({error: "Utilisateur introuvable"});
         }
+        const id_utilisateur = id[0].id;
 
-        const id_utilisateur = id_utilisateurRows[0].id;
-        const agendas = await recupAgendaUtilisateurConnecte(bdd, id_utilisateur);
+        const sql = 'SELECT a.id, a.nom, a.id_utilisateur, CASE WHEN ap.id_user2 IS NOT NULL THEN 1 ELSE 0 END AS shared FROM agendas a LEFT JOIN agendaspartage ap ON a.id = ap.id_agenda AND ap.id_user2 = ? WHERE a.id_utilisateur = ? OR ap.id_user2 = ?';
+        const agendas = await new Promise((res, rej) => {
+            bdd.all(sql, [id_utilisateur, id_utilisateur, id_utilisateur], (err, rows) => {
+                if(err){
+                    return rej(err);
+                }
+                else{
+                    res(rows.map(r => ({
+                        id: r.id,
+                        name: r.nom,
+                        shared: r.shared === 1
+                    })));
+                }
+            });
+        });
         res.json(agendas);
+    }catch(err){
+        console.error(err);
+        res.status(500).json({error: err.message});
     }
-    catch(err){
-        console.log(err);
-        res.status(500).json({ error: err.message});
-    }
-});
+})
 
 app.post("/agendas/partage", async (req, res) => {
     const tokenSigne = req.cookies.accessToken;
@@ -266,6 +301,10 @@ app.get('/recupUtilisateur', async (req, res) => {
         res.status(500).json({ error: err.message});
     }
 } )
+
+app.get('/dialog/partage', (req, res) => {
+    res.render("dialog_partage");
+})
 
 
 // +-------------------------------------------------------------------

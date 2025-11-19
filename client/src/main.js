@@ -58,6 +58,33 @@ document.getElementById("share-confirm").onclick = () => {
 }
 */
 
+export async function fetchAgendasFromBDD(){
+    try{
+        const agandasRes = await fetch('/agendas');
+        if(!agandasRes.ok){
+            throw new Error('Erreur lors de la récupération des agendas');
+        }
+        const rows = await agandasRes.json();
+        const agendas = {};
+        rows.forEach(row => {
+            const key = row.shared ? `${row.name} (partagé)` : row.name;
+            agendas[key] = {
+                color: row.shared ? '#aaa' : '#007bff',
+                active: true,
+                id: row.id,
+                shared: row.shared
+            };
+        });
+        return agendas;
+    } catch(err){
+        console.log("Impossible de charger les agendas :", err);
+        return {};
+    }
+}
+
+
+
+
 /**
  * @param {string} url 
  */
@@ -106,16 +133,23 @@ export function triggerHtmxPost(url, data) {
         console.log("Tentative de récupération des événements...");
         const response = await fetch('/events');
         const serverEvents = await response.json();
+        model.categories = await fetchAgendasFromBDD();
 
-        const hydratedEntries = serverEvents.map(entry => ({
-            ...entry,
+        const hydratedEntries = serverEvents.map(entry => {
+        const categoryName = Object.keys(model.categories).find(name => model.categories[name].id === entry.id_agenda) || "default";
+
+        return {
+            id: entry.id.toString(),
+            title: entry.title,
+            description: entry.title,
             start: new Date(entry.start),
             end: new Date(entry.end),
-            category: 'Personnel'
-        }));
+            category: categoryName
+        }
+    });
+
+    model.entries = hydratedEntries;
         
-        console.log("Événements chargés et hydratés:", hydratedEntries);
-        model.entries = hydratedEntries;
     } catch (err) {
         console.error("Erreur lors de la recuperation des evenements:", err);
     }

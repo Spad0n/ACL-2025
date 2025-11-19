@@ -168,7 +168,6 @@ const today = startOfDay(new Date());
         // --- Données ---
         entries: [],
         categories: {
-            'Personnel': { color: '#4285F4', active: true },
         },
 
         // --- Préférences utilisateur ---

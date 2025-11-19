@@ -37,12 +37,12 @@
     <div id="dialog-container"></div>
     <script type="module" src="/src/main.js"></script>
     <script>
-     document.body.addEventListener('htmx:afterSwap', function (event) {
-         const dialog = event.detail.elt.querySelector('dialog');
-         if (dialog) {
-             dialog.showModal();
-         }
-     });
+     //document.body.addEventListener('htmx:afterSwap', function (event) {
+     //    const dialog = event.detail.elt.querySelector('dialog');
+     //    if (dialog) {
+     //        dialog.showModal();
+     //    }
+     //});
 
      document.body.addEventListener("categorySaved", (evt) => {
          const serverData = evt.detail; // ex: { name: 'Nouveau Nom', color: '#ff0000', oldName: 'Ancien Nom' }

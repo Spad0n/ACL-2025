@@ -1,108 +1,351 @@
-<%
-  const formatForInput = (isoString) => {
-    if (!isoString) return "";
-    // new Date(isoString) gère à la fois une date ISO complète et la date simple passée pour un nouvel event
-    return new Date(isoString).toISOString().slice(0, 16);
-  };
-
-  // Helper pour convertir un nombre en chaîne hexadécimale #RRGGBB
-  const formatColorForInput = (colorNumber) => {
-    return "#" + (colorNumber || 0xff0000).toString(16).padStart(6, "0");
-  };
+<% 
+const icons = {
+    close: `<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" fill="var(--white2)"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>`,
+    clock: `<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" fill="var(--white3)"><path d="m15.3 16.7 1.4-1.4-3.7-3.7V7h-2v5.4ZM12 22q-2.075 0-3.9-.788-1.825-.787-3.175-2.137-1.35-1.35-2.137-3.175Q2 14.075 2 12t.788-3.9q.787-1.825 2.137-3.175 1.35-1.35 3.175-2.138Q9.925 2 12 2t3.9.787q1.825.788 3.175 2.138 1.35 1.35 2.137 3.175Q22 9.925 22 12t-.788 3.9q-.787 1.825-2.137 3.175-1.35 1.35-3.175 2.137Q14.075 22 12 22Zm0-10Zm0 8q3.325 0 5.663-2.337Q20 15.325 20 12t-2.337-5.663Q15.325 4 12 4T6.338 6.337Q4 8.675 4 12t2.338 5.663Q8.675 20 12 20Z"/></svg>`,
+    repeat: `<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" fill="var(--white3)"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>`, 
+    category: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--white3)"><path d="M0 0h24v24H0z" fill="none"/><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`,
+    prev: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--white3)"><path d="M0 0h24v24H0z" fill="none"/><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>`,
+    next: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--white3)"><path d="M0 0h24v24H0z" fill="none"/><path d="M8.59 16.59L10 18l6-6-6-6L8.59 7.41 13.17 12z"/></svg>`
+};
 %>
 
-<%
-    if (action === "delete") {
-%>
-    <dialog>
-        <form hx-post="/events/delete" hx-target="#dialog-container" hx-swap="innerHTML">
-            <h3>Supprimer l'événement</h3>
-            <input type="hidden" name="id" value="<%= event.id %>">
-            <p>Êtes-vous sûr de vouloir supprimer l'événement "<%= event.title %>" ?</p>
-            <footer>
-            <button type="button" onclick="this.closest('dialog').close()" id="connexionBouton">Annuler</button>
-            <button type="submit" id="inscriptionBouton">Supprimer</button>
-            </footer>
-        </form>
-    </dialog>
-<%
-    }
-%>
-
-
-<dialog>
-  <form id="event-form" hx-post="/events" hx-target="#dialog-container" hx-swap="innerHTML">
-    <h3><%= action === "add" ? "Ajouter un événement" : "Modifier l'événement" %></h3>
+<!-- Ajout d'un ID "active-dialog" pour faciliter la fermeture -->
+<dialog open id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
     
-    <% if (action === "edit") { %>
-      <input type="hidden" name="id" value="<%= event.id %>">
+    <% if (action === "delete") { %>
+        <!-- DELETE FORM -->
+        <form hx-post="/events/delete" hx-target="#dialog-container" hx-swap="innerHTML" class="entry-form">
+            <div class="entries__form--body">
+                <div class="form--body__title"><h3 style="color:var(--white1)">Supprimer ?</h3></div>
+                <div class="form--body__description"><p style="color:var(--white2)">Confirmer la suppression de "<%= event.title %>"</p></div>
+                <input type="hidden" name="id" value="<%= event.id %>">
+            </div>
+            <div class="entries__form--footer">
+                <!-- Utilisation de remove() pour vider le DOM proprement puisque HTMX gère l'injection -->
+                <button type="button" class="form--footer__button-cancel" onclick="document.getElementById('dialog-container').innerHTML=''">Annuler</button>
+                <button type="submit" class="form--footer__button-save" style="background-color: var(--red1);">Supprimer</button>
+            </div>
+        </form>
+    <% } else { %>
+
+    <!-- MAIN FORM -->
+    <form id="main-form" hx-post="/events" hx-target="#dialog-container" hx-swap="innerHTML" class="entry-form" autocomplete="off">
+        
+        <% if (action === "edit") { %> <input type="hidden" name="id" value="<%= event.id %>"> <% } %>
+        
+        <!-- INPUTS CACHÉS CRUCIAUX: name="start" et name="end" doivent être remplis EN PERMANENCE -->
+        <input type="hidden" name="start" id="final-start">
+        <input type="hidden" name="end" id="final-end">
+
+        <div class="entries__form--body">
+            <div class="form--body__title form-body-single">
+                <input type="text" name="title" class="form--body__title-input" placeholder="Add title" value="<%= event.title || '' %>" required>
+            </div>
+            <div class="form--body__description form-body-single">
+                <textarea name="description" class="form--body__description-input" placeholder="Add description"><%= event.description || '' %></textarea>
+            </div>
+
+            <!-- DATES ROW -->
+            <div class="form--body__start form-body-double">
+                <div class="form--body__start-icon"><%- icons.clock %></div>
+                <div class="form--body__start-inputs" style="position: relative;">
+                    <span class="form--body-start__date" id="trigger-date-start">...</span>
+                    <div class="form-br"></div>
+                    <span class="form--body-start__time" id="trigger-time-start">...</span>
+                </div>
+            </div>
+            <div class="form--body__start form-body-double">
+                <div class="form--body__start-icon"><%- icons.clock %></div>
+                <div class="form--body__start-inputs" style="position: relative;">
+                    <span class="form--body-end__date" id="trigger-date-end">...</span>
+                    <div class="form-br"></div>
+                    <span class="form--body-end__time" id="trigger-time-end">...</span>
+                </div>
+            </div>
+
+            <!-- COLOR -->
+            <div class="form--body__category form-body-double">
+                <div class="form--body__category-icon"><%- icons.category %></div>
+                <div class="form--body__category-inputs">
+                    <div class="form--body__category-modal--wrapper-selection" style="position: relative;">
+                        <!-- Input couleur standard qui fonctionne bien avec le back-end actuel -->
+                        <input type="color" name="color" id="inp-color" value="<%= '#' + (event.couleur || 0xff0000).toString(16).padStart(6, '0') %>" style="position: absolute; inset: 0; opacity: 0; width: 100%; height:100%; cursor: pointer;">
+                        <span class="form--body__category-modal--wrapper__color" id="display-color-box" style="background-color: <%= '#' + (event.couleur || 0xff0000).toString(16).padStart(6, '0') %>;"></span> 
+                        <span class="form--body__category-modal--wrapper__title">Couleur</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="entries__form--footer">
+            <% if (action === "edit") { %>
+                <button type="button" class="form--footer__button-cancel" style="border-color: var(--red2); color: var(--red1); width: auto; margin-right: auto;"
+                    hx-get="/dialog/event-form?action=delete&id=<%= event.id %>&title=<%= event.title %>"
+                    hx-target="#dialog-container" hx-swap="innerHTML">Supprimer</button>
+            <% } %>
+            <!-- Modification du bouton Annuler pour vider le conteneur -->
+            <button type="button" class="form--footer__button-cancel" onclick="document.getElementById('dialog-container').innerHTML=''">Cancel</button>
+            <button type="submit" class="form--footer__button-save">Save</button>
+        </div>
+    </form>
+
+    <!-- COMPONENTS POPUPS -->
+    <aside id="custom-datepicker" class="datepicker hide-datepicker" style="position: absolute; z-index: 1050;">
+        <div class="datepicker__header">
+            <div class="datepicker-title" id="dp-title">Month</div>
+            <div class="datepicker-nav">
+                <div class="datepicker-nav--prev" id="dp-prev"><%- icons.prev %></div>
+                <div class="datepicker-nav--next" id="dp-next"><%- icons.next %></div>
+            </div>
+        </div>
+        <div class="datepicker__body">
+            <div class="datepicker__body--header">
+                <div class="datepicker__body--header-cell">S</div><div class="datepicker__body--header-cell">M</div><div class="datepicker__body--header-cell">T</div><div class="datepicker__body--header-cell">W</div><div class="datepicker__body--header-cell">T</div><div class="datepicker__body--header-cell">F</div><div class="datepicker__body--header-cell">S</div>
+            </div>
+            <div class="datepicker__body--dates" id="dp-grid"></div>
+        </div>
+    </aside>
+
+    <aside id="custom-timepicker" class="timepicker hide-datepicker" style="position: absolute; z-index: 1050; display: none;">
+        <div class="timepicker-times__container" id="tp-list"></div>
+    </aside>
+    
+    <div id="popup-overlay" style="position: fixed; top:0; left:0; width:100%; height:100%; z-index:1049; display:none;"></div>
+
     <% } %>
 
-    <div>
-      <label for="title">Titre</label>
-      <input type="text" id="title" name="title" value="<%= event.title || '' %>" required>
-    </div>
+    <script>
+    (function() {
+        const form = document.getElementById('main-form');
+        if (!form) return; // Sécurité si on est en mode delete
 
-    <div>
-      <label for="start">Début</label>
-      <!-- Pour un nouvel événement, event.start est null, on utilise 'date' -->
-      <input type="datetime-local" id="start" name="start" value="<%= formatForInput(event.start || '') %>" required>
-    </div>
+        // --- STATE ---
+        const rawStart = "<%= event.start || new Date().toISOString() %>";
+        const rawEnd = "<%= event.end || new Date(Date.now() + 3600000).toISOString() %>";
 
-    <div>
-      <label for="end">Fin</label>
-      <input type="datetime-local" id="end" name="end" value="<%= formatForInput(event.end || '') %>" required>
-    </div>
-    
-    <div>
-      <label for="description">Description</label>
-      <textarea id="description" name="description"><%= event.description || '' %></textarea>
-    </div>
+        let startDate = new Date(rawStart);
+        let endDate = new Date(rawEnd);
 
-    <div>
-      <label for="color">Couleur</label>
-      <input type="color" id="color" name="color" value="<%= formatColorForInput(event.color) %>">
-    </div>
-    
-    <footer>
-      <button type="button" onclick="this.closest('dialog').close()" id="connexionBouton">Annuler</button>
-      <% if (action === "edit") { %>
-        <button
-            type="button"
-            id="inscriptionBouton"
-            hx-get="/dialog/event-form?action=delete&id=<%= event.id %>&title=<%= event.title %>"
-            hx-target="#dialog-container"
-            hx-swap="innerHTML">
-          Supprimer
-        </button>
-      <% } %>
-      <button type="submit" id="inscriptionBouton">Enregistrer</button>
-    </footer>
-  </form>
-  <script>
-   (() => {
-       const form = document.getElementById("event-form");
-       const startInput = document.getElementById("start");
-       const endInput = document.getElementById("end");
+        // Correction Dates Invalides (au cas où)
+        if (isNaN(startDate)) startDate = new Date();
+        if (isNaN(endDate)) endDate = new Date(Date.now() + 3600000);
 
-       form.addEventListener('submit', (event) => {
-           const startDate = startInput.value;
-           const endDate = endInput.value;
+        let dpCurrentDate = new Date(startDate);
+        let activeDateInput = 'start'; 
 
-           if (startDate && endDate && endDate < startDate) {
-               event.preventDefault();
+        // --- DOM ELEMENTS ---
+        const els = {
+            trigDStart: document.getElementById('trigger-date-start'),
+            trigTStart: document.getElementById('trigger-time-start'),
+            trigDEnd: document.getElementById('trigger-date-end'),
+            trigTEnd: document.getElementById('trigger-time-end'),
+            
+            datepicker: document.getElementById('custom-datepicker'),
+            dpTitle: document.getElementById('dp-title'),
+            dpGrid: document.getElementById('dp-grid'),
+            dpPrev: document.getElementById('dp-prev'),
+            dpNext: document.getElementById('dp-next'),
 
-               const invalidDate = new Date(endDate);
-               const formattedDate = invalidDate.toLocaleString('fr-FR', { 
-                   dateStyle: 'medium', 
-                   timeStyle: 'short' 
-               });
+            timepicker: document.getElementById('custom-timepicker'),
+            tpList: document.getElementById('tp-list'),
 
-               alert(`La date de fin ne peut pas être antérieure à la date de début.\nDate de fin invalide : ${formattedDate}.`);
-               startInput.value = '';
-               endInput.value = '';
-           }
-       });
-   })();
-  </script>
+            overlay: document.getElementById('popup-overlay'),
+            
+            // Inputs cachés pour le POST
+            finalStart: document.getElementById('final-start'),
+            finalEnd: document.getElementById('final-end'),
+            
+            // J'ai supprimé les références à recInput/recDisplay car ils n'existent pas dans le HTML
+            colInput: document.getElementById('inp-color'),
+            colBox: document.getElementById('display-color-box')
+        };
+
+        const fmtDate = (d) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(d);
+        const fmtTime = (d) => {
+            let h = d.getHours();
+            let m = d.getMinutes();
+            const ampm = h >= 12 ? 'pm' : 'am';
+            h = h % 12;
+            h = h ? h : 12; 
+            m = m < 10 ? '0'+m : m;
+            return h + ':' + m + ampm;
+        };
+
+        // --- UI UPDATE & DATA BINDING ---
+        function updateUI() {
+            // 1. Mise à jour visuelle
+            els.trigDStart.textContent = fmtDate(startDate);
+            els.trigTStart.textContent = fmtTime(startDate);
+            els.trigDEnd.textContent = fmtDate(endDate);
+            els.trigTEnd.textContent = fmtTime(endDate);
+
+            els.trigDStart.classList.toggle('active-form-date', activeDateInput === 'start');
+            els.trigDEnd.classList.toggle('active-form-date', activeDateInput === 'end');
+            
+            els.colBox.style.backgroundColor = els.colInput.value;
+
+            // 2. MISE À JOUR DES INPUTS CACHÉS POUR HTMX (CRUCIAL)
+            // On le fait ici pour être sûr que HTMX a les bonnes données quand il submit
+            els.finalStart.value = startDate.toISOString();
+            els.finalEnd.value = endDate.toISOString();
+        }
+
+        // --- DATEPICKER ---
+        function renderCalendar(dateObj) {
+            const year = dateObj.getFullYear();
+            const month = dateObj.getMonth();
+            const today = new Date();
+
+            els.dpTitle.textContent = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(dateObj);
+            els.dpGrid.innerHTML = '';
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'datepicker__body--dates-cell';
+                els.dpGrid.appendChild(cell);
+            }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const cell = document.createElement('div');
+                cell.className = 'datepicker__body--dates-cell';
+                
+                const span = document.createElement('div');
+                span.className = 'datepicker__body--datename';
+                span.textContent = d;
+
+                if (year === today.getFullYear() && month === today.getMonth() && d === today.getDate()) {
+                    span.classList.add('datepicker__body--datename-today');
+                }
+
+                const targetDate = activeDateInput === 'start' ? startDate : endDate;
+                if (year === targetDate.getFullYear() && month === targetDate.getMonth() && d === targetDate.getDate()) {
+                    span.classList.add('datepicker__body--datename-selected');
+                    span.classList.remove('datepicker__body--datename-today'); 
+                }
+
+                span.onclick = (e) => {
+                    e.stopPropagation();
+                    const newDate = new Date(targetDate);
+                    newDate.setFullYear(year);
+                    newDate.setMonth(month);
+                    newDate.setDate(d);
+
+                    if (activeDateInput === 'start') {
+                        const diff = endDate - startDate;
+                        startDate = newDate;
+                        // Optionnel : garder la durée de l'événement
+                        if (endDate < startDate) endDate = new Date(startDate.getTime() + diff);
+                    } else {
+                        if (newDate < startDate) startDate = new Date(newDate);
+                        endDate = newDate;
+                    }
+                    updateUI();
+                    closePopups();
+                };
+
+                cell.appendChild(span);
+                els.dpGrid.appendChild(cell);
+            }
+        }
+
+        function openDatepicker(type, triggerEl) {
+            activeDateInput = type;
+            dpCurrentDate = new Date(type === 'start' ? startDate : endDate);
+            renderCalendar(dpCurrentDate);
+            
+            const rect = triggerEl.getBoundingClientRect();
+            const dialogRect = form.closest('dialog').getBoundingClientRect();
+            
+            els.datepicker.style.top = (rect.bottom - dialogRect.top + 5) + 'px';
+            els.datepicker.style.left = (rect.left - dialogRect.left - 20) + 'px';
+            
+            els.datepicker.classList.remove('hide-datepicker');
+            els.overlay.style.display = 'block';
+            updateUI();
+        }
+
+        els.dpPrev.onclick = (e) => { e.stopPropagation(); dpCurrentDate.setMonth(dpCurrentDate.getMonth() - 1); renderCalendar(dpCurrentDate); };
+        els.dpNext.onclick = (e) => { e.stopPropagation(); dpCurrentDate.setMonth(dpCurrentDate.getMonth() + 1); renderCalendar(dpCurrentDate); };
+
+        // --- TIMEPICKER ---
+        function renderTimeList(targetDate) {
+            els.tpList.innerHTML = '';
+            for (let h = 0; h < 24; h++) {
+                for (let m = 0; m < 60; m += 15) {
+                    const div = document.createElement('div');
+                    div.className = 'timepicker-time';
+                    
+                    let displayH = h % 12;
+                    displayH = displayH ? displayH : 12;
+                    let displayM = m < 10 ? '0'+m : m;
+                    let ampm = h >= 12 ? 'pm' : 'am';
+                    
+                    div.textContent = `${displayH}:${displayM}${ampm}`;
+
+                    if (h === targetDate.getHours() && m === targetDate.getMinutes()) {
+                        div.classList.add('timepicker-time--selected');
+                        setTimeout(() => {
+                            if(els.timepicker.style.display !== 'none') 
+                                els.timepicker.scrollTop = div.offsetTop - 80;
+                        }, 0);
+                    }
+
+                    div.onclick = (e) => {
+                        e.stopPropagation();
+                        if (activeDateInput === 'start') {
+                            startDate.setHours(h);
+                            startDate.setMinutes(m);
+                            if (endDate <= startDate) endDate = new Date(startDate.getTime() + 3600000);
+                        } else {
+                            endDate.setHours(h);
+                            endDate.setMinutes(m);
+                            if (endDate <= startDate) startDate = new Date(endDate.getTime() - 3600000);
+                        }
+                        updateUI();
+                        closePopups();
+                    };
+
+                    els.tpList.appendChild(div);
+                }
+            }
+        }
+
+        function openTimepicker(type, triggerEl) {
+            activeDateInput = type;
+            renderTimeList(type === 'start' ? startDate : endDate);
+            
+            const rect = triggerEl.getBoundingClientRect();
+            const dialogRect = form.closest('dialog').getBoundingClientRect();
+            
+            els.timepicker.style.top = (rect.bottom - dialogRect.top + 5) + 'px';
+            els.timepicker.style.left = (rect.left - dialogRect.left) + 'px';
+            
+            els.timepicker.style.display = 'block';
+            els.overlay.style.display = 'block';
+        }
+
+        function closePopups() {
+            els.datepicker.classList.add('hide-datepicker');
+            els.timepicker.style.display = 'none';
+            els.overlay.style.display = 'none';
+            updateUI();
+        }
+
+        // --- WIRING ---
+        els.trigDStart.onclick = (e) => openDatepicker('start', e.target);
+        els.trigDEnd.onclick = (e) => openDatepicker('end', e.target);
+        els.trigTStart.onclick = (e) => openTimepicker('start', e.target);
+        els.trigTEnd.onclick = (e) => openTimepicker('end', e.target);
+        els.overlay.onclick = closePopups;
+
+        els.colInput.addEventListener('input', updateUI);
+
+        // --- INITIALISATION ---
+        updateUI(); // Appelé immédiatement pour remplir les champs cachés
+
+    })();
+    </script>
 </dialog>

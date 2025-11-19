@@ -96,6 +96,11 @@ export function triggerHtmxPost(url, data) {
     function render() {
         const newVnode = appView(model, dispatch);
         vnode = patch(vnode, newVnode);
+
+        document.body.className = ''; // Reset
+        if (model.settings.theme !== 'dark') {
+            document.body.classList.add(`${model.settings.theme}-mode`);
+        }
     }
 
     window.addEventListener('hashchange', () => {
@@ -108,6 +113,16 @@ export function triggerHtmxPost(url, data) {
         window.location.hash = model.currentView;
         render(); // Appeler render() si dispatch n'a pas été appelé
     }
+
+    // Écoute l'événement déclenché par le serveur après une suppression
+    document.body.addEventListener('eventDeleted', (evt) => {
+        const idToDelete = evt.detail.value; // HTMX passe la valeur ici
+        console.log("HTMX Signal: Suppression de", idToDelete);
+        dispatch(Msg.EntryDeleted(idToDelete));
+        
+        // On ferme aussi la modale si elle est encore ouverte
+        dispatch(Msg.CloseAllModals()); 
+    });
 
     document.body.addEventListener('dispatchApp', (evt) => {
         console.log("Événement reçu pour dispatch:", evt.detail);

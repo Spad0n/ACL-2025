@@ -277,5 +277,15 @@ export const Msg = {
      * @returns {Message}
      */
     CategoryDeleted: (categoryName) => ({ type: 'CATEGORY_DELETED', payload: categoryName }),
+
+    /**
+     * Met à jour la liste des catégories (Agendas) dans le modèle.
+     * @param {Object} categories - Le nouvel objet de catégories.
+     * @returns {Message}
+     */
+    AgendasLoaded: (categories) => ({
+        type: 'AGENDAS_LOADED',
+        payload: categories
+    }),
 };
 

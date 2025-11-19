@@ -94,7 +94,7 @@ function renderCategories(model, dispatch) {
     return h('div.sb__categories', [
         h('div.sb__categories--header', [
             h('div.sbch-col__one', /* ... */ [
-                h('div.sbch-title', 'Mes calendriers'),
+                h('div.sbch-title', 'My calendars'),
             ]),
             h('div.sbch-plus', { on: { click: () => dispatch(Msg.AddCategory()) } }, '+')
         ]),
@@ -116,12 +116,12 @@ function renderCategories(model, dispatch) {
                     ]),
                     // Les icônes d'édition/suppression apparaissent au survol (géré par CSS)
                     h('div.sbch-form--item__col--actions', [
-                        name !== 'default' ? h('button.sbch-col--actions__delete-icon', {
+                        name !== 'Default' ? h('button.sbch-col--actions__delete-icon', {
                             on: { click: (e) => { e.stopPropagation(); dispatch(Msg.OpenModal('deleteConfirmation', { type: 'category', id: name })) } }
                         }, '×') : null,
-                        h('button.sbch-col--actions__edit-icon', {
-                            on: { click: (e) => { e.stopPropagation(); dispatch(Msg.EditCategory(name)) } }
-                        }, '✎')
+                        //name !== 'Default' ? h('button.sbch-col--actions__edit-icon', {
+                        //    on: { click: (e) => { e.stopPropagation(); dispatch(Msg.EditCategory(name)) } }
+                        //}, '✎') : null,
                     ])
                 ])
             ))
@@ -155,11 +155,11 @@ export default function sidebarView(model, dispatch) {
                          h('path', { attrs: { fill: "#EA4335", d: "M20 16V6h-4v14z" } }),
                     ])
                 ]),
-                h('span.sb-toggle-form-btn__content', 'Créer')
+                h('span.sb-toggle-form-btn__content', 'Create')
             ]),
             h('button.sb-data-btn', {
                 on: { click: () => dispatch(Msg.OpenModal('settings')) },
-                attrs: { 'aria-label': 'Paramètres & Données' }
+                attrs: { 'aria-label': 'Settings & Data' }
             }, '...') // Simplifié, pourrait être un SVG
         ]),
         

@@ -169,7 +169,7 @@ export default function dayView(model, dispatch) {
                 }, format(currentDate, 'd'))
             ]),
             h('div.dv-info-day-wrapper', [
-                h('div.dayview--header-day__info', `${dayEntries.length} événement(s)`)
+                h('div.dayview--header-day__info', `${dayEntries.length} event(s)`)
             ])
         ]),
         

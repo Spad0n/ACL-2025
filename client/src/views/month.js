@@ -88,7 +88,7 @@ function renderCell(date, model, entriesByDate, dispatch) {
                     on: { click: (e) => { e.stopPropagation(); handleDayClick(); } } // Cliquer sur le groupe mène aussi à la vue journalière
                   }, [
                       h('div.monthview--grouped', [
-                          h('div.monthview--daycontent__grouped-title', `+${hiddenEntriesCount} de plus`)
+                          h('div.monthview--daycontent__grouped-title', `+${hiddenEntriesCount} more`)
                       ])
                   ])
                 : null
@@ -105,7 +105,7 @@ function renderCell(date, model, entriesByDate, dispatch) {
 export default function monthView(model, dispatch) {
     const { currentDate } = model;
     const dates = getMonthViewDates(currentDate);
-    const weekdays = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
+    const weekdays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
     const activeCategories = new Set(
         Object.keys(model.categories).filter(key => model.categories[key].active)

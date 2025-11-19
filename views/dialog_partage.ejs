@@ -1,0 +1,123 @@
+<dialog>
+  <form id="share-form">
+    <h2>Partager un agenda</h2>
+
+    <!-- Conteneur pour afficher les messages d'erreur -->
+    <div id="message-erreur" style="color: red; margin-bottom: 10px;"></div>
+
+    <label>Choisir un agenda :</label>
+    <select id="select-agenda-partage" name="id_agenda" style="width: 100%; margin-bottom: 10px;"></select>
+
+    <label>Partager avec :</label>
+    <input type="text" id="rechercher-utilisateur" placeholder="Rechercher un utilisateur..."
+           style="width: 100%; margin-bottom: 10px;" required>
+    <input type="hidden" name="username" id="selected-username">
+
+    <div id="resultats-recherche" class="user-list"></div>
+
+    <footer style="margin-top: 10px;">
+      <button type="button" class="btn btn-cancel" onclick="this.closest('dialog').close()">Annuler</button>
+      <button type="submit" id="confirmer-partage" disabled class="btn btn-primary">Partager</button>
+    </footer>
+
+    <script>
+      (async function() {
+        const agendas = await fetch("/agendas").then(r => r.json());
+        const agendaSelect = document.getElementById("select-agenda-partage");
+        agendaSelect.innerHTML = agendas.map(a => `<option value="${a.id}">${a.name}</option>`).join("");
+
+        const utilisateurs = await fetch("/recupUtilisateur").then(r => r.json());
+        const searchInput = document.getElementById("rechercher-utilisateur");
+        const resultsDiv = document.getElementById("resultats-recherche");
+        const shareBtn = document.getElementById("confirmer-partage");
+        const selectedUsernameInput = document.getElementById("selected-username");
+
+        function updateResults() {
+          const query = searchInput.value.toLowerCase();
+          const filtered = utilisateurs.filter(u => u.username.toLowerCase().includes(query));
+          resultsDiv.innerHTML = filtered.map(u => `<div class="result-item" data-username="${u.username}">${u.username}</div>`).join("");
+
+          for (const item of resultsDiv.querySelectorAll(".result-item")) {
+            item.onclick = () => {
+              selectedUsernameInput.value = item.dataset.username;
+              searchInput.value = item.dataset.username;
+              resultsDiv.innerHTML = "";
+              shareBtn.disabled = false;
+            };
+          }
+        }
+
+        searchInput.addEventListener("input", updateResults);
+        updateResults();
+        shareBtn.disabled = true;
+      })();
+
+    document.getElementById("share-form").onsubmit = async (e) => {
+    e.preventDefault();
+
+    const form = e.target;
+    const data = Object.fromEntries(new FormData(form));
+
+    const res = await fetch("/agendas/partage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+        document.getElementById("message-erreur").innerText = result.error || "Erreur inconnue";
+        return;
+    }
+
+    form.closest("dialog").close();
+};
+
+    </script>
+
+    <style>
+      .user-list {
+        border: 1px solid #ccc;
+        max-height: 140px;
+        overflow-y: auto;
+        margin-bottom: 10px;
+      }
+      .result-item {
+        padding: 6px;
+        cursor: pointer;
+      }
+      .result-item:hover {
+        background: #efefef;
+      }
+      #select-agenda-partage {
+        background: white;
+        color: black;
+        border: 1px solid #ccc;
+        padding: 6px;
+        border-radius: 4px;
+      }
+      .btn {
+        padding: 8px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 500;
+        border: none;
+        margin-right: 8px;
+      }
+      .btn-cancel {
+        background: #ddd;
+        color: #333;
+      }
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    </style>
+
+  </form>
+</dialog>

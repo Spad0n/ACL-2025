@@ -167,7 +167,10 @@ export function update(msg, model) {
             newUiState.deleteConfirmation = { type: payload.type, id: payload.id };
         } else if (name === 'goto') {
             newUiState.goto = getInitialModel().ui.goto;
-        } else if (name === 'datepicker') {
+        }else if (name === 'partage'){
+            triggerHtmxDialog('/dialog/partage');
+            return model;
+        }else if (name === 'datepicker') {
             const { date, position, target } = payload;
             const popupStyle = placePopup(256, 216, position); 
             
@@ -220,10 +223,17 @@ export function update(msg, model) {
             return newModel;
         }
         if (type === 'category' && id) {
-            // On déclenche une requête POST au backend pour supprimer la catégorie
-            triggerHtmxPost('/categories/delete', { name: id });
+            const categoryName = id;
+            const categoryObj = model.categories[categoryName];
+
+            if (categoryObj) {
+                // On envoie l'ID BDD et le Nom au serveur
+                triggerHtmxPost('/categories/delete', { 
+                    id: categoryObj.id, 
+                    name: categoryName 
+                });
+            }
             
-            // On ferme la modale de confirmation
             const newUiState = {
                 ...model.ui,
                 activeModal: null,
@@ -273,14 +283,14 @@ export function update(msg, model) {
     case 'DELETE_CATEGORY': {
         const categoryNameToDelete = msg.payload;
         
-        if (categoryNameToDelete === 'default' || !model.categories[categoryNameToDelete]) {
+        if (categoryNameToDelete === 'Default' || !model.categories[categoryNameToDelete]) {
             console.warn("Tentative de suppression de la catégorie par défaut ou d'une catégorie inexistante.");
             return model; // Toujours retourner un tableau de commandes
         }
         
         const newEntries = model.entries.map(entry => {
             if (entry.category === categoryNameToDelete) {
-                return { ...entry, category: 'default' };
+                return { ...entry, category: 'Default' };
             }
             return entry;
         });
@@ -308,6 +318,32 @@ export function update(msg, model) {
         if (!oldCategory) return model;
         const newCategories = { ...model.categories, [categoryName]: { ...oldCategory, active: !oldCategory.active } };
         return { ...model, categories: newCategories };
+    }
+    case 'COMFIRMER_PARTAGE':{
+        const { id_agenda, username } = msg.payload;
+        triggerHtmxPost('/agenda/partage', {
+            id_agenda, 
+            username
+        });
+
+        const newUiState = {
+            ...model.ui,
+            activeModal: null
+        };
+
+        return { ...model, ui: newUiState};
+    }
+    case 'PARTAGE_OK':{
+        return{
+            ...model,
+            ui: {
+                ...model.ui,
+                toast: "Agenda partagé"
+            }
+        };
+    }
+    case 'HIDE_TOAST': {
+        return { ...model, ui: { ...model.ui, toast: null}};
     }
     case 'DATEPICKER_SET_DISPLAY_DATE': {
         const newDatepicker = { ...model.ui.datepicker, displayDate: msg.payload };
@@ -418,13 +454,23 @@ export function update(msg, model) {
         const newCategories = { ...model.categories };
         delete newCategories[categoryName];
 
-        // Réassigner les événements à la catégorie par défaut
         const newEntries = model.entries.map(entry => 
-            entry.category === categoryName ? { ...entry, category: 'Personnel' } : entry // Assurez-vous d'avoir une catégorie par défaut
+            entry.category === categoryName 
+                ? { ...entry, category: 'Default' } // <--- CORRECTION ICI ('Default' au lieu de 'Personnel')
+                : entry
         );
-
-        const newModel = { ...model, categories: newCategories, entries: newEntries };
+        const newModel = { 
+            ...model, 
+            categories: newCategories, 
+            entries: newEntries,
+            ui: { ...model.ui, activeModal: null } 
+        };
+        
         return newModel;
+    }
+    case 'AGENDAS_LOADED': {
+        // Mise à jour pure du modèle avec les nouvelles catégories
+        return { ...model, categories: msg.payload };
     }
     default:
         console.warn('Message non traité:', msg.type);

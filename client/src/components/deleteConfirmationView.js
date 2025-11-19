@@ -21,15 +21,15 @@ export default function deleteConfirmationView(model, dispatch) {
     const { type, id } = model.ui.deleteConfirmation;
 
     // Prépare le message à afficher en fonction du type d'élément à supprimer
-    let confirmationText = 'Êtes-vous sûr(e) de vouloir supprimer cet élément ?';
+    let confirmationText = 'Are you sure you want to delete this item?';
     if (type === 'entry') {
         const entry = model.entries.find(e => e.id === id);
         if (entry) {
-            confirmationText = `Êtes-vous sûr(e) de vouloir supprimer l'événement "${entry.title}" ?`;
+            confirmationText = `Are you sure you want to delete the event "${entry.title}"?`;
         }
     } else if (type === 'category') {
         // La logique pour la suppression de catégorie peut être plus complexe
-        confirmationText = `Êtes-vous sûr(e) de vouloir supprimer la catégorie "${id}" ? Tous les événements associés seront [action à définir].`;
+        confirmationText = `Are you sure you want to delete the category "${id}"?`;
     }
 
     return h('div.delete-confirmation-container', [
@@ -55,11 +55,11 @@ export default function deleteConfirmationView(model, dispatch) {
                 // Bouton "Annuler"
                 h('button.delete-popup__cancel', {
                     on: { click: () => dispatch(Msg.CloseAllModals()) }
-                }, 'Annuler'),
+                }, 'Cancel'),
                 // Bouton "Supprimer"
                 h('button.delete-popup__confirm', {
                     on: { click: () => dispatch(Msg.ConfirmDeletion()) }
-                }, 'Supprimer')
+                }, 'Delete')
             ])
         ])
     ]);

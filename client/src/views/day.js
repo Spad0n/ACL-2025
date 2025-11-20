@@ -55,7 +55,6 @@ function renderTimedEntry(entry, model, dispatch, position) {
             borderLeft: `3px solid ${categoryColor}`,
         },
         on: {
-            // TODO: Logique de Drag-and-drop
             click: (e) => { e.stopPropagation(); dispatch(Msg.OpenModal('entryOptions', { entryId: entry.id, position: e.target.getBoundingClientRect() })); }
         }
     }, [

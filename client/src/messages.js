@@ -115,22 +115,6 @@ export const Msg = {
         type: 'SET_THEME',
         payload: theme
     }),
-
-    /**
-     * Active ou désactive les raccourcis clavier.
-     * @returns {Message}
-     */
-    ToggleShortcuts: () => ({
-        type: 'TOGGLE_SHORTCUTS'
-    }),
-    
-    /**
-     * Active ou désactive les animations.
-     * @returns {Message}
-     */
-    ToggleAnimations: () => ({
-        type: 'TOGGLE_ANIMATIONS'
-    }),
     
     /**
      * Déclenche l'exportation des données du calendrier au format JSON.

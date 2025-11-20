@@ -43,33 +43,6 @@ function renderThemeOptions(model, dispatch) {
     ));
 }
 
-/**
- * Rend un interrupteur (toggle switch) pour une préférence.
- * @private
- * @param {string} label - Le texte à afficher.
- * @param {boolean} isChecked - Si l'interrupteur est activé.
- * @param {Message} message - Le message à dispatcher au changement.
- * @param {function(Message): void} dispatch - La fonction de dispatch.
- * @returns {import('snabbdom').VNode}
- */
-function renderToggle(label, isChecked, message, dispatch) {
-    // Unique ID for the input and label association
-    const inputId = `toggle-${label.replace(/\s+/g, '-')}`;
-
-    return h('div.smia-set-shortcut-status', [
-        h('span.smia-set-status-title', label),
-        h('div.smia-disable-shortcuts__btn', [
-            h('label', { attrs: { for: inputId } }, [
-                h('input', {
-                    props: { type: 'checkbox', id: inputId, checked: isChecked },
-                    on: { change: () => dispatch(message) }
-                }),
-                h('span.smia-slider')
-            ])
-        ])
-    ]);
-}
-
 //==================================================================================
 // COMPOSANT PRINCIPAL
 //==================================================================================

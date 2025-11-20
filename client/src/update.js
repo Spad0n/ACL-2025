@@ -323,16 +323,6 @@ export function update(msg, model) {
         const newSettings = { ...model.settings, theme: msg.payload };
         return { ...model, settings: newSettings };
     }
-    case 'TOGGLE_SHORTCUTS': {
-        const newStatus = !model.settings.shortcutsEnabled;
-        const newSettings = { ...model.settings, shortcutsEnabled: newStatus };
-        return { ...model, settings: newSettings };
-    }
-    case 'TOGGLE_ANIMATIONS': {
-        const newStatus = !model.settings.animationsEnabled;
-        const newSettings = { ...model.settings, animationsEnabled: newStatus };
-        return { ...model, settings: newSettings };
-    }
     case 'EXPORT_DATA': {
         return model;
     }

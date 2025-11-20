@@ -67,11 +67,6 @@ function renderGlobalOverlays(model, dispatch) {
         // Superpositions contextuelles
         datepickerView(model, dispatch),
         viewSelectorView(model, dispatch),
-        
-        // Superposition pour le drag-and-drop (simple)
-        h('aside.resize-overlay', { 
-            class: { 'hide-resize-overlay': !model.ui.isDragging } 
-        }),
     ];
 }
 

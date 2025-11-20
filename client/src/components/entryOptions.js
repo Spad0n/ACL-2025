@@ -31,14 +31,14 @@ function getTimeHeaderText(start, end) {
 
     if (end < now) {
         if (differenceInDays(now, end) < 1) {
-            return `Terminé il y a ${formatDistanceToNowStrict(end, options)}`;
+            return `Ended ${formatDistanceToNowStrict(end, options)}`;
         }
-        return `Terminé le ${format(end, 'd MMM', options)}`;
+        return `Ended on ${format(end, 'd MMM', options)}`;
     }
     if (start > now) {
-        return `Commence dans ${formatDistanceToNowStrict(start, options)}`;
+        return `Starts in ${formatDistanceToNowStrict(start, options)}`;
     }
-    return `Se termine dans ${formatDistanceToNowStrict(end, options)}`;
+    return `Ends in ${formatDistanceToNowStrict(end, options)}`;
 }
 
 /**
@@ -100,7 +100,7 @@ export default function entryOptionsView(model, dispatch) {
                     h('div.entry__options--header-icons', [
                         h('button.entry__options-icon.eoi__edit', {
                             on: { click: () => dispatch(Msg.OpenModal('form', { id: entry.id })) },
-                            attrs: { 'data-tooltip': 'Modifier' }
+                            attrs: { 'data-tooltip': 'Edit' }
                         }, editIcon),
                         //h('button.entry__options-icon.eoi__delete', {
                         //    on: { click: () => dispatch(Msg.OpenModal('deleteConfirmation', { type: 'entry', id: entry.id })) },
@@ -108,7 +108,7 @@ export default function entryOptionsView(model, dispatch) {
                         //}, deleteIcon),
                         h('button.entry__options-icon.eoi__close', {
                             on: { click: () => dispatch(Msg.CloseAllModals()) },
-                            attrs: { 'data-tooltip': 'Fermer' }
+                            attrs: { 'data-tooltip': 'Close' }
                         }, closeIcon)
                     ])
                 ]),

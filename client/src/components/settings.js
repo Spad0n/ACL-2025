@@ -19,9 +19,9 @@ import { Msg } from '../messages';
  */
 function renderThemeOptions(model, dispatch) {
     const themes = [
-        { value: 'dark', label: 'Sombre', className: 'theme-option-dark' },
-        { value: 'light', label: 'Clair', className: 'theme-option-light' },
-        { value: 'contrast', label: 'Contraste Élevé', className: 'theme-option-contrast' }
+        { value: 'dark', label: 'Dark', className: 'theme-option-dark' },
+        { value: 'light', label: 'Light', className: 'theme-option-light' },
+        { value: 'contrast', label: 'High Contrast', className: 'theme-option-contrast' }
     ];
 
     return h('div.sub-menu--item__actions.theme-actions', themes.map(theme =>
@@ -63,7 +63,7 @@ export default function settingsView(model, dispatch) {
         h('aside.sidebar-sub-menu', [
             // --- En-tête de la modale ---
             h('div.sub-menu__header', [
-                h('div.sub-menu--title', 'Paramètres & Données'),
+                h('div.sub-menu--title', 'Settings & Data'),
                 h('div.close-sub-menu', { on: { click: () => dispatch(Msg.CloseAllModals()) } }, '×')
             ]),
             // --- Corps de la modale ---
@@ -72,7 +72,7 @@ export default function settingsView(model, dispatch) {
 
                     // --- Section Données (Import/Export) ---
                     h('div.sub-menu--item', [
-                        h('div.sub-menu--item__title', 'Données du Calendrier (JSON)'),
+                        h('div.sub-menu--item__title', 'Calendar Data (JSON)'),
                         h('div.sub-menu--item__description', 'Download a backup or import from a file. Importing will overwrite existing data.'),
                         h('div.sub-menu--item__actions', [
                             h('div.sm-download-json', [

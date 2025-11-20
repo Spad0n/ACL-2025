@@ -54,7 +54,7 @@ export default function gotoView(model, dispatch) {
             dispatch(Msg.CloseAllModals());
         } else {
             // Sinon, on dispatche une mise à jour de l'erreur.
-            dispatch(Msg.GotoSetError('Format de date invalide.'));
+            dispatch(Msg.GotoSetError('Invalid date format.'));
         }
     };
 
@@ -68,7 +68,7 @@ export default function gotoView(model, dispatch) {
                 h('span.go-to-title', 'Go to date'),
                 h('div.go-to-subtitle', [
                     h('span.gts-format', 'day month year'),
-                    h('span.gts-mid', 'ou'),
+                    h('span.gts-mid', 'or'),
                     h('span.gts-format', 'JJ/MM/AAAA'),
                 ])
             ]),

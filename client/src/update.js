@@ -229,6 +229,25 @@ export function update(msg, model) {
         triggerHtmxDialog(url);
         return model; // Ne modifie plus l'état local
     }
+    case 'CATEGORY_DELETED': {
+        const categoryName = msg.payload;
+        
+        const newCategories = { ...model.categories };
+        delete newCategories[categoryName];
+
+        const newEntries = model.entries.map(entry => 
+            entry.category === categoryName 
+                ? { ...entry, category: 'Default' } 
+            : entry
+        );
+
+        return {
+            ...model,
+            categories: newCategories,
+            entries: newEntries,
+            ui: { ...model.ui, activeModal: null }
+        };
+    }
     case 'DELETE_CATEGORY': {
         const categoryNameToDelete = msg.payload;
         

@@ -69,18 +69,10 @@ export function triggerHtmxDialog(url) {
  * Envoie une requête POST via HTMX (sans retour HTML attendu).
  */
 export function triggerHtmxPost(url, data) {
-    const triggerElement = document.createElement('div');
-    triggerElement.setAttribute('hx-post', url);
-    triggerElement.setAttribute('hx-swap', 'none');
-    triggerElement.setAttribute('hx-vals', JSON.stringify(data));
-
-    try {
-        document.body.appendChild(triggerElement);
-        htmx.process(triggerElement);
-        htmx.trigger(triggerElement, "click");
-    } finally {
-        document.body.removeChild(triggerElement);
-    }
+    htmx.ajax('POST', url, {
+        values: data,
+        swap: 'none' // Pas de remplacement HTML, on attend juste l'événement
+    });
 }
 
 /**
@@ -167,7 +159,6 @@ export function triggerHtmxPost(url, data) {
         
         console.log("HTMX Signal Brut (Save):", savedEventRaw);
 
-        // Sécurité : Si l'objet est mal formé, on ne fait rien pour éviter le crash
         if (!savedEventRaw || !savedEventRaw.start) {
             console.warn("Données d'événement incomplètes reçues, rechargement conseillé.");
             return;
@@ -178,7 +169,6 @@ export function triggerHtmxPost(url, data) {
 
         const [categoryName, categoryObj] = categoryEntry;
 
-        // On réhydrate les dates et on retrouve la catégorie
         const savedEvent = {
             ...savedEventRaw,
             id: savedEventRaw.id.toString(),
@@ -209,12 +199,8 @@ export function triggerHtmxPost(url, data) {
     document.body.addEventListener('agendaSaved', async (evt) => {
         console.log("HTMX Signal: Nouvel agenda créé");
         
-        // On recharge la liste complète des agendas depuis le serveur
-        // pour être sûr d'avoir les bons IDs et couleurs
         const newAgendas = await fetchAgendasFromBDD();
         
-        // On met à jour le modèle via le message AgendasLoaded
-        // (Assurez-vous que ce Message existe bien dans messages.js et est traité dans update.js)
         dispatch(Msg.AgendasLoaded(newAgendas));
         
         dispatch(Msg.CloseAllModals());

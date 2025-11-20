@@ -32,17 +32,10 @@ export function update(msg, model) {
     console.log(msg.type);
     switch (msg.type) {
     case 'SET_VIEW': {
-        const newView = msg.payload;
-        const newModel = {
-            ...model,
-            currentView: newView,
-            ui: { ...model.ui, viewSelectorOpen: false }
-        };
-        return newModel;
+        return { ...model, currentView: msg.payload, ui: { ...model.ui, viewSelectorOpen: false } };
     }
     case 'SET_DATE': {
-        const newDate = startOfDay(msg.payload);
-        return { ...model, currentDate: newDate };
+        return { ...model, currentDate: startOfDay(msg.payload) };
     }
     case 'NAVIGATE': {
         const navMap = {
@@ -50,11 +43,7 @@ export function update(msg, model) {
             prev: { day: subDays, week: subWeeks, month: subMonths, year: subYears }
         };
         const navFunc = navMap[msg.payload][model.currentView];
-        if (navFunc) {
-            const newDate = navFunc(model.currentDate, 1);
-            return { ...model, currentDate: newDate };
-        }
-        return model;
+        return navFunc ? { ...model, currentDate: navFunc(model.currentDate, 1) } : model;
     }
     case 'GO_TO_TODAY': {
         return { ...model, currentDate: model.today };
@@ -62,10 +51,9 @@ export function update(msg, model) {
     case 'HASH_CHANGE': {
         const view = msg.payload.slice(1) || 'month';
         const validViews = ['day', 'week', 'month', 'year', 'list'];
-        if (validViews.includes(view) && model.currentView !== view) {
-            return [{ ...model, currentView: view }, saveCmd('currentView', view)];
-        }
-        return model;
+        return (validViews.includes(view) && model.currentView !== view)
+            ? { ...model, currentView: view }
+        : model;
     }
     case 'ADD_EVENT':
         triggerHtmxDialog('/dialog/event-form?action=add');
@@ -94,40 +82,6 @@ export function update(msg, model) {
         const suppUrl = `/dialog/event-form?${paramsSupp.toString()}`;
         triggerHtmxDialog(suppUrl);
         return model;
-    case 'EVENT_DELETED': {
-        const newModel = { ...model };
-        const eventIdToDelete = msg.payload;
-        console.log("Suppression de l'événement avec l'ID:", eventIdToDelete);
-        const newEntries = newModel.entries.filter(e => e.id !== eventIdToDelete);
-        return { ...model, entries: newEntries };
-    }
-    case 'SAVE_EVENT': { // Enveloppez dans un bloc {}
-        const newModel = { ...model };
-        // L'objet `event` arrive via msg.event, comme défini dans votre index.html
-        const receivedEvent = msg.payload;
-
-        // --- ÉTAPE CRUCIALE : LA RÉHYDRATATION ---
-        const hydratedEvent = {
-            ...receivedEvent,
-            start: new Date(receivedEvent.start), // Convertit la chaîne en objet Date
-            end: new Date(receivedEvent.end),     // Convertit la chaîne en objet Date
-            // La couleur est déjà un nombre grâce à votre script dans index.html
-        };
-
-        const eventIndex = newModel.entries.findIndex(e => e.id === hydratedEvent.id);
-
-        let newEntries;
-        if (eventIndex > -1) {
-            console.log("Mise à jour d'un événement existant:", hydratedEvent);
-            newEntries = newModel.entries.map((e) =>
-                e.id === hydratedEvent.id ? hydratedEvent : e
-            );
-        } else {
-            console.log("Ajout d'un nouvel événement:", hydratedEvent);
-            newEntries = [...newModel.entries, hydratedEvent];
-        }
-        return { ...model, entries: newEntries };
-    }
     case 'OPEN_MODAL': {
         const { name, ...payload } = msg.payload;
         console.log(name);
@@ -275,11 +229,6 @@ export function update(msg, model) {
         triggerHtmxDialog(url);
         return model; // Ne modifie plus l'état local
     }
-    case 'DELETE_ENTRY': {
-        const entryIdToDelete = msg.payload;
-        const newEntries = model.entries.filter(e => e.id !== entryIdToDelete);
-        return { ...model, entries: newEntries, ui: { ...model.ui, activeModal: null } };
-    }
     case 'DELETE_CATEGORY': {
         const categoryNameToDelete = msg.payload;
         
@@ -425,47 +374,6 @@ export function update(msg, model) {
         const entryId = msg.payload;
         const newEntries = model.entries.filter(e => e.id !== entryId);
         const newModel = { ...model, entries: newEntries };
-        return newModel;
-    }
-    case 'SAVE_CATEGORY': {
-        const { name, color, oldName } = msg.payload;
-        const newCategories = { ...model.categories };
-        let newEntries = [...model.entries];
-
-        // Si oldName existe, c'est une modification de nom
-        if (oldName && oldName !== name) {
-            // 1. Mettre à jour les événements
-            newEntries = newEntries.map(entry => 
-                entry.category === oldName ? { ...entry, category: name } : entry
-            );
-            // 2. Supprimer l'ancienne catégorie
-            delete newCategories[oldName];
-        }
-        
-        // 3. Ajouter/Mettre à jour la nouvelle catégorie
-        newCategories[name] = { color, active: newCategories[oldName]?.active ?? true };
-        
-        const newModel = { ...model, categories: newCategories, entries: newEntries };
-        return newModel;
-    }
-
-    case 'CATEGORY_DELETED': {
-        const categoryName = msg.payload;
-        const newCategories = { ...model.categories };
-        delete newCategories[categoryName];
-
-        const newEntries = model.entries.map(entry => 
-            entry.category === categoryName 
-                ? { ...entry, category: 'Default' } // <--- CORRECTION ICI ('Default' au lieu de 'Personnel')
-                : entry
-        );
-        const newModel = { 
-            ...model, 
-            categories: newCategories, 
-            entries: newEntries,
-            ui: { ...model.ui, activeModal: null } 
-        };
-        
         return newModel;
     }
     case 'AGENDAS_LOADED': {

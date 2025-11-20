@@ -115,19 +115,6 @@ export default function settingsView(model, dispatch) {
                         h('div.sub-menu--item__title', 'App Theme'),
                         renderThemeOptions(model, dispatch)
                     ]),
-                    
-                    // --- Section Préférences ---
-                    //h('div.sub-menu--item.smias', [
-                    //    h('div.sub-menu--item__title', 'Préférences'),
-                    //    h('div.sub-menu--item__actions.preferences-actions', { style: { flexDirection: 'column', alignItems: 'flex-start' } }, [
-                    //        renderToggle('Activer les raccourcis clavier', model.settings.shortcutsEnabled, Msg.ToggleShortcuts(), dispatch),
-                    //        renderToggle('Activer les animations', model.settings.animationsEnabled, Msg.ToggleAnimations(), dispatch),
-                    //        h('button.toggle-kb-shortcuts-btn__smia', {
-                    //            style: { marginTop: '16px' },
-                    //            on: { click: () => dispatch(Msg.OpenModal('shortcuts')) }
-                    //        }, 'Voir tous les raccourcis')
-                    //    ])
-                    //])
                 ])
             ])
         ])

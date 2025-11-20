@@ -17,59 +17,6 @@ import { calculateLayout } from './layoutUtils';
 const TOTAL_MINUTES_IN_DAY = 24 * 60;
 
 //==================================================================================
-// LOGIQUE DE CALCUL DE LA DISPOSITION (OVERLAP)
-//==================================================================================
-
-///**
-// * Calcule la position et le regroupement des événements qui se chevauchent pour une journée donnée.
-// * @private
-// * @param {import('../model').Entry[]} dayEntries - Les événements programmés pour un seul jour.
-// * @returns {Map<string, { colIndex: number, totalCols: number }>} Une Map associant l'ID de l'événement à sa position.
-// */
-//function calculateOverlap(dayEntries) {
-//    const sortedEntries = [...dayEntries].sort((a, b) => a.start - b.start);
-//    const entryPositions = new Map();
-//
-//    for (const entry of sortedEntries) {
-//        let maxCols = 1;
-//        let colIndex = 0;
-//        const overlappingGroup = [entry];
-//
-//        for (const otherEntry of sortedEntries) {
-//            if (entry.id === otherEntry.id) continue;
-//            if (entry.start < otherEntry.end && entry.end > otherEntry.start) {
-//                overlappingGroup.push(otherEntry);
-//            }
-//        }
-//        
-//        overlappingGroup.sort((a, b) => a.start - b.start);
-//        
-//        const columns = [];
-//        for (const item of overlappingGroup) {
-//            let placed = false;
-//            for (let i = 0; i < columns.length; i++) {
-//                const lastInColumn = columns[i][columns[i].length - 1];
-//                if (item.start >= lastInColumn.end) {
-//                    columns[i].push(item);
-//                    if(item.id === entry.id) colIndex = i;
-//                    placed = true;
-//                    break;
-//                }
-//            }
-//            if (!placed) {
-//                columns.push([item]);
-//                if(item.id === entry.id) colIndex = columns.length - 1;
-//            }
-//        }
-//        maxCols = columns.length;
-//
-//        entryPositions.set(entry.id, { colIndex, totalCols: maxCols });
-//    }
-//    
-//    return entryPositions;
-//}
-
-//==================================================================================
 // SOUS-COMPOSANTS DE LA VUE
 //==================================================================================
 

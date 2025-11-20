@@ -109,12 +109,6 @@ export default function headerView(model, dispatch) {
                 ]),
                 
                 h('div.h-col-3', [
-                    // --- Bouton "Aller à" (Go To) ---
-                    //h('button.h-search', {
-                    //    on: { click: () => dispatch(Msg.OpenModal('goto')) },
-                    //    attrs: { 'data-tooltip': 'Aller à la date', 'aria-label': 'Aller à la date' }
-                    //}, [ /* ... SVG de recherche ... */ ]),
-                    
                     // --- Bouton Paramètres ---
                     h('button.settings', {
                         on: { click: () => dispatch(Msg.OpenModal('settings')) },

@@ -28,7 +28,6 @@
     <link href="css/aside/timepicker.css" rel="stylesheet">
     <link href="css/aside/toast.css" rel="stylesheet">
     <link href="css/aside/toggleForm.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
   </head>
   <body>
     <div id="app">
@@ -36,57 +35,5 @@
     </div>
     <div id="dialog-container"></div>
     <script type="module" src="/src/main.js"></script>
-    <script>
-     //document.body.addEventListener('htmx:afterSwap', function (event) {
-     //    const dialog = event.detail.elt.querySelector('dialog');
-     //    if (dialog) {
-     //        dialog.showModal();
-     //    }
-     //});
-
-     document.body.addEventListener("categorySaved", (evt) => {
-         const serverData = evt.detail; // ex: { name: 'Nouveau Nom', color: '#ff0000', oldName: 'Ancien Nom' }
-         const appEvent = new CustomEvent('dispatchApp', {
-             detail: { type: 'SAVE_CATEGORY', payload: serverData }
-         });
-         document.body.dispatchEvent(appEvent);
-     });
-
-     document.body.addEventListener("categoryDeleted", (evt) => {
-         const categoryName = evt.detail; // Le détail est directement le nom
-         const appEvent = new CustomEvent('dispatchApp', {
-             detail: { type: 'CATEGORY_DELETED', payload: categoryName }
-         });
-         document.body.dispatchEvent(appEvent);
-     });
-
-     document.body.addEventListener("eventSaved", (evt) => {
-         const serverData = evt.detail;
-         const cleanEvent = {
-             id: serverData.id,
-             title: serverData.title,
-             description: serverData.description,
-             start: serverData.start, // Chaîne de caractères ISO
-             end: serverData.end,     // Chaîne de caractères ISO
-             color: parseInt(serverData.color, 16),
-             // Assurez-vous que le backend renvoie bien la catégorie !
-             category: serverData.category || 'Personnel' // Mettez une catégorie par défaut si besoin
-         };
-
-         const appEvent = new CustomEvent('dispatchApp', {
-             // On envoie l'objet propre, pas l'objet potentiellement contaminé
-             detail: { type: 'SAVE_EVENT', payload: cleanEvent }
-         });
-         document.body.dispatchEvent(appEvent);
-     });
-
-     document.body.addEventListener("eventDeleted", (evt) => {
-         const serverData = evt.detail;
-         const appEvent = new CustomEvent('dispatchApp', {
-             detail: { type: 'EVENT_DELETED', event: serverData.value }
-         });
-         document.body.dispatchEvent(appEvent);
-     });
-    </script>
   </body>
 </html>

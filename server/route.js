@@ -214,6 +214,7 @@ function snapShotCreation(evenements, nomAgenda, idAgenda) {
 	AGENDA.id  = idAgenda;
 	
 	for(const e of evenements) {
+            console.log(e);
 	    AGENDA[e.id] = e ;
 	}
 

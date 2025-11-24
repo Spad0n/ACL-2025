@@ -110,7 +110,7 @@ function recupTokenClient(req,res) {
 // +-------------------------------------------
 // | -> permet de créer le snapshot que le client demande
 // --------------------------------------------
-export function callFrontEndDeporter(req, res) {
+export function callFrontEndExporter(req, res) {
     setTimeout(() => console.log('SERVEUR log : callFrontEndDeporter'));
 
     // On récupère le nom de l'agenda que l'utilisateur veut déporter
@@ -285,6 +285,7 @@ export function importerAgendaUtilisateur(req,res) {
 						    .catch(error => console.error(erreur));
 					    }
 					}
+                                        res.json({etat: true, message: "Agenda importé avec succès !"});
 				    }
 				})
 				.catch(error => console.error(error));
@@ -292,6 +293,7 @@ export function importerAgendaUtilisateur(req,res) {
 			.catch(error => {
 			    console.error(error);
 			    // il faut informer le client qu'il a déjà cet agenda.
+                            res.json({etat: false, message: "Agenda non importé, vous le possédez déjà !"});
 			});
 		}
 	    })

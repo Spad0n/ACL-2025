@@ -405,7 +405,7 @@ app.get('/download/agenda/:agenda', (req, res) => {
     });
 });
 
-app.post('/importerExporter/agendaExporter', routes.callFrontEndDeporter);
+app.post('/importerExporter/agendaExporter', routes.callFrontEndExporter);
 
 app.post('/importerExporter/agendaImporter', routes.importerAgendaUtilisateur);
 

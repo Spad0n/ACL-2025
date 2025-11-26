@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang='fr'>
+
+      <head>
+	<meta charset='utf-8'>
+	<title> Modification des informations </title>
+      </head>
+      <body>
+      <h1> INFORMATIONS </h1>
+      <form name="modificationsUtilisateur" action="/modifier/informations/utilisateur" method="POST">
+      <div>
+      <label for="username"> Nouveau username :  </label>
+      <input type="text" name="username" id="username" required />
+      </div>
+      <div>
+      <label for="newPassword"> Nouveau mot de passe : </label>
+      <input type="password" name="newPassword" id="newPassword" required />
+      </div>
+
+      <label> Pour appliquer les changements votre ancien mot de passe est obligatoire </label>
+      <br>
+      <label for="oldPassword"> Ancien mot de passe : </label>
+      <input type="password" name="oldPassword" id="oldPassword" required />
+      <span id='oldPerr' hidden> </span>
+      </div>
+      
+      <div>
+      <input type="submit" value="Modifier" />
+      </div>
+      </form>
+      <script>
+            // Il faut pas envoyer tout de suite le formulaire.
+      	    // Il faut vérifier que l'utilisateur à bien donné le bon oldPassword.
+      	    // (C'est son mdp actuel oldPassword).
+      	    // Si oui alors on peut POST sur l'url.
+      	    // Sinon on avertit l'utilisateur que c'est pas le bon mdp.
+
+	    function validerMotDePasse() {
+	    	     const motDePasse = document.forms.modificationsUtilisateur.oldPassword.value ;
+		     const objetJson  = { mdp : motDePasse };
+	    	     fetch('/demande/motDePasse/utilisateur',
+		     { method: 'POST',
+		       headers: { 'Content-Type': 'application/json'},
+		       body: JSON.stringify(objetJson)
+		       })
+		     .then( serveur => serveur.json())
+		     .then( resServeur => {
+		         if (typeof resServeur === 'object') {
+
+			    // Le mot de passe donné est le bon
+			    if(resServeur.etat) {
+
+			    	// on envoie au serveur pour traiter les données.
+			    	document.forms.modificationsUtilisateur.submit();
+			    }
+			    else {
+			    	 const span       = document.getElementById('oldPerr');
+				 span.hidden	  = false ;
+				 span.textContent = resServeur.message;
+			    }	 
+			 }
+		     })
+		     .catch( erreur => console.error(erreur));
+	    }
+	    
+	    const formulaire = document.forms.modificationsUtilisateur;
+	    formulaire.addEventListener('submit', (e) => {
+	    	e.preventDefault();
+		validerMotDePasse();
+	    });
+      </script>
+      </body>
+</html>

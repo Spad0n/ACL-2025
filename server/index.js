@@ -518,6 +518,21 @@ app.patch("/agendas/:id", async (req, res) => {
     }
 });
 
+//=====================================
+//Modifier les informations utilisateur
+//=====================================
+
+// route pour accéder à la page de modification
+app.get('/compte/modifier/utilisateur', (request, response) => {
+    response.render('modifierUtilisateur');
+});
+
+// route pour l'envoie du formulaire avec les modifications
+app.post('/modifier/informations/utilisateur', routes.modificationUtilisateur);
+
+// route pour vérifier le mot de passe donné par l'utilisateur
+app.post('/demande/motDePasse/utilisateur', routes.demandeMdp);
+
 app.listen(PORT, "0.0.0.0", (_err) => {
     console.log(`Serveur lancé sur http://localhost:${PORT}`);
 });

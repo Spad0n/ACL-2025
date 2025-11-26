@@ -300,3 +300,65 @@ export function importerAgendaUtilisateur(req,res) {
 	    .catch(error => console.error(error));
     }
 }
+
+export function modificationUtilisateur(request, response) {
+
+    const pseudo = recupTokenClient(request, response);
+
+    if(pseudo !== -1) {
+        console.log('SERVEUR log : demande de modification par utilisateur : ', pseudo);
+        // console.log(request.body);
+        const {username, newPassword, oldPassword} = request.body;
+        // si username != pseudo => l'utilisateur veut changer son nom d'utilisateur.
+        // il faut vérifier que username n'est pas déjà présent dans la BDD. Si non alors mettre à jour.
+
+        console.log(username);
+        console.log(newPassword);
+        console.log(oldPassword);
+        
+        if(pseudo != username) {
+            recupIdUtilisateur(bdd, username)
+                .then( resultat => {
+                    // si rien n'est trouvé, on peut lui assigné son nouveau username
+                    if(resultat.length == 0) {
+                        
+                    }
+                })
+                .catch();
+        }
+        
+        // si newPassword != oldPassword  => l'utilisateur veut changer son mot de passe.
+        // dans ce cas, il faut vérifier qu'il a bien donné le bon ancien mot de passe.
+        if( newPassword != oldPassword) {
+            
+        }
+    }
+    else {
+        // utilisateur inconnu ?
+    }
+}
+
+export function demandeMdp(request, response) {
+    const { mdp }  = request.body ;
+    const username = recupTokenClient(request, response);
+
+    if(username !== -1) {
+        console.log('SERVEUR log : demandeMdp : ', username);
+        fetchUtilisateur(bdd, username, mdp)
+            .then( resultat => {
+
+                // On l'a trouvé, il a donné le bon mdp.
+                if(resultat.length == 1) {
+                    response.json({etat: true});
+                }
+                // si on l'a pas trouvé
+                else {
+                    response.json({etat: false, message: 'Mot de passe faux !'});
+                }
+            })
+            .catch(error => console.error(error));
+    }
+    else {
+        // utilisateur inconnu ? 
+    }
+}

@@ -12,7 +12,8 @@ import { bdd,
 	 recupEvenementAgenda,
 	 recupIdUtilisateur,
 	 recupAgendaIdByName,
-	 
+         updateUsername,
+	 updatePassword,
 	 
        } from "./fonctionsBdd.js";
 import jwt from "jsonwebtoken";
@@ -302,9 +303,15 @@ export function importerAgendaUtilisateur(req,res) {
 }
 
 export function modificationUtilisateur(request, response) {
-
+    // Si on est dans cette fonction, c'est que l'utilisateur à bien donné le bon mot de passe actuel.
+    // On peut donc lancer la procédure de modification des informations.
     const pseudo = recupTokenClient(request, response);
 
+    let boolUsername = false ;
+    let boolPassword = false ;
+    let boolUserOK   = false ;
+    let boolPassOK   = false ; 
+    
     if(pseudo !== -1) {
         console.log('SERVEUR log : demande de modification par utilisateur : ', pseudo);
         // console.log(request.body);
@@ -317,24 +324,62 @@ export function modificationUtilisateur(request, response) {
         console.log(oldPassword);
         
         if(pseudo != username) {
+            boolUsername = true ; 
             recupIdUtilisateur(bdd, username)
                 .then( resultat => {
                     // si rien n'est trouvé, on peut lui assigné son nouveau username
                     if(resultat.length == 0) {
-                        
+                        updateUsername(bdd, pseudo, username)
+                            .then( bddRes => {
+                                // username mis à jour. 
+                                console.log(bddRes);
+                                boolUserOK = true ; 
+                            })
+                            .catch(erreur => console.error(erreur));
+                    }
+                    else {
+                        // on lui indique que ce n'est pas possible.
+                        response.render('modifierUtilisateur',
+                        {nameError: 'ce nom d\'utilisateur est déjà affecté !'});
                     }
                 })
-                .catch();
+                .catch(erreur => console.error(erreur));
         }
         
         // si newPassword != oldPassword  => l'utilisateur veut changer son mot de passe.
         // dans ce cas, il faut vérifier qu'il a bien donné le bon ancien mot de passe.
         if( newPassword != oldPassword) {
-            
+            boolPassword = true ;
+            recupIdUtilisateur(bdd, username)
+                .then( bddRes => {
+                    if(bddRes.length > 0) {
+                        const id = bddRes[0].id;
+                        updatePassword(bdd, oldPassword, newPassword, id)
+                            .then( resultat => {
+                                console.log(resultat);
+                                boolPassOK = true ;
+                            })
+                            .catch(erreur => console.error(erreur));
+                    }
+                    else {
+                        response.render('modifierUtilisateur',
+                        {mdpError: 'Merci de vous reconnectez votre token a expiré !'});
+                    }
+                })
+                .catch(erreur => console.error(erreur));
+        }
+
+        // si c'est good tout est OK 
+        if(boolPassword == boolPassOK) {
+
+            if(boolUsername == boolUserOK) {
+                response.redirect('/');
+            }
         }
     }
     else {
         // utilisateur inconnu ?
+        response.redirect('/login');
     }
 }
 

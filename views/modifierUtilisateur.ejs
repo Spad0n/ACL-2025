@@ -27,6 +27,9 @@
       <div>
       <input type="submit" value="Modifier" />
       </div>
+      <label> <%= locals.nameError ?? '' %> </label>
+      <br>
+      <label> <%= locals.mdpError ?? '' %> </label>
       </form>
       <script>
             // Il faut pas envoyer tout de suite le formulaire.

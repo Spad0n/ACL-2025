@@ -49,12 +49,12 @@ app.get('/hello', (_req, res) => {
 });
 
 app.get('/', (req, res) => {
-    console.log(req.cookies.accessToken);
     if (req.cookies.accessToken !== undefined) {
-	app.use(express.static(path.join(__dirname, '../dist')));
-	res.sendFile(path.join(__dirname, "../dist/index.html"));
+        console.log('SERVEUR log : token de la session :', req.cookies.accessToken);
+        app.use(express.static(path.join(__dirname, '../dist')));
+        res.sendFile(path.join(__dirname, "../dist/index.html"));
     } else {
-	res.redirect("/login");
+	    res.redirect("/login");
     }
 });
 

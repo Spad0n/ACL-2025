@@ -73,12 +73,21 @@ export default function settingsView(model, dispatch) {
                     // --- Section Données (Import/Export) ---
                     h('div.sub-menu--item', [
                         h('div.sub-menu--item__title', 'Calendar Data (JSON)'),
-                        h('div.sub-menu--item__description', 'Download a backup or import from a file. Importing will overwrite existing data.'),
+                        h('div.sub-menu--item__description', 'Download a backup or import from a file.'),
                         h('div.sub-menu--item__actions', [
                             h('div.sm-download-json', [
                                 h('button.sm-json-btn.down-json', { on: { click: () => {
                                     window.location.href = '/importerExporter/agenda';
                                 } } }, 'Import or Export Agenda')
+                            ])
+                        ]),
+                        h('div.sub-menu--item__title', 'Modifier les informations du compte'),
+                        h('div.sub-menu--item__description', 'Changer le mot de passe ou le nom d\'utilisateur'),
+                        h('div.sub-menu--item__actions', [
+                            h('div.sm-download-json', [
+                                h('button.sm-json-btn.down-json', { on: { click: () => {
+                                    window.location.href = '/compte/modifier/utilisateur';
+                                } } }, 'Espace compte')
                             ])
                         ])
                     ]),

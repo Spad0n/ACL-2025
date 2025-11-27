@@ -1,37 +1,37 @@
 <!DOCTYPE html>
 <html lang='fr'>
-
       <head>
 	<meta charset='utf-8'>
 	<title> Modification des informations </title>
       </head>
       <body>
-      <h1> INFORMATIONS </h1>
-      <form name="modificationsUtilisateur" action="/modifier/informations/utilisateur" method="POST">
-      <div>
-      <label for="username"> Nouveau username :  </label>
-      <input type="text" name="username" id="username" required />
-      </div>
-      <div>
-      <label for="newPassword"> Nouveau mot de passe : </label>
-      <input type="password" name="newPassword" id="newPassword" required />
-      </div>
-
-      <label> Pour appliquer les changements votre ancien mot de passe est obligatoire </label>
-      <br>
-      <label for="oldPassword"> Ancien mot de passe : </label>
-      <input type="password" name="oldPassword" id="oldPassword" required />
-      <span id='oldPerr' hidden> </span>
-      </div>
+	<h1> INFORMATIONS </h1>
+	<button onClick='retourAcceuil()'> Acceuil </button>
+	<form name="modificationsUtilisateur" action="/modifier/informations/utilisateur" method="POST">
+	  <div>
+	    <label for="username"> Nouveau username :  </label>
+	    <input type="text" name="username" id="username" required />
+	  </div>
+	  <div>
+	    <label for="newPassword"> Nouveau mot de passe : </label>
+	    <input type="password" name="newPassword" id="newPassword" required />
+	  </div>
+	  
+	  <label> Pour appliquer les changements votre ancien mot de passe est obligatoire </label>
+	  <br>
+	  <label for="oldPassword"> Ancien mot de passe : </label>
+	  <input type="password" name="oldPassword" id="oldPassword" required />
+	  <span id='oldPerr' hidden> </span>
       
-      <div>
-      <input type="submit" value="Modifier" />
-      </div>
-      <label> <%= locals.nameError ?? '' %> </label>
-      <br>
-      <label> <%= locals.mdpError ?? '' %> </label>
-      </form>
-      <script>
+	  <div>
+	    <input type="submit" value="Modifier" />
+	  </div>
+	  <label> <%= locals.nameError ?? '' %> </label>
+	  <br>
+	  <label> <%= locals.mdpError ?? '' %> </label>
+	</form>
+
+	<script>
             // Il faut pas envoyer tout de suite le formulaire.
       	    // Il faut vérifier que l'utilisateur à bien donné le bon oldPassword.
       	    // (C'est son mdp actuel oldPassword).
@@ -71,6 +71,11 @@
 	    	e.preventDefault();
 		validerMotDePasse();
 	    });
-      </script>
+          
+          function retourAcceuil() {
+            window.location.href = '/';
+          }
+	  
+	</script>
       </body>
 </html>

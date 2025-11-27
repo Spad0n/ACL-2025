@@ -11,6 +11,7 @@ import { bdd,
 	 recupAgendaUtilisateurConnecte,
 	 recupEvenementAgenda,
 	 recupIdUtilisateur,
+         recupHacheUtilisateur,
 	 recupAgendaIdByName,
          updateUsername,
 	 updatePassword,
@@ -307,10 +308,11 @@ export function modificationUtilisateur(request, response) {
     // On peut donc lancer la procédure de modification des informations.
     const pseudo = recupTokenClient(request, response);
 
-    let boolUsername = false ;
-    let boolPassword = false ;
-    let boolUserOK   = false ;
-    let boolPassOK   = false ; 
+
+    // INFORMATIONS IMPORTANTES :
+    // le newPassword est prérempli avec le haché de l'ancien
+    // le username est aussi prérempli avec sa valeur actuel
+    // le oldPassword n'arrive pas haché !!!! peut poser des problèmes de sécurité
     
     if(pseudo !== -1) {
         console.log('SERVEUR log : demande de modification par utilisateur : ', pseudo);
@@ -319,12 +321,11 @@ export function modificationUtilisateur(request, response) {
         // si username != pseudo => l'utilisateur veut changer son nom d'utilisateur.
         // il faut vérifier que username n'est pas déjà présent dans la BDD. Si non alors mettre à jour.
 
-        console.log(username);
-        console.log(newPassword);
-        console.log(oldPassword);
+        console.log('SERVEUR log : modification username : ', username);
+        console.log('SERVEUR log : modification mot de passe : ', newPassword);
+        console.log('SERVEUR log : mot de passe actuel : ', oldPassword);
         
         if(pseudo != username) {
-            boolUsername = true ; 
             recupIdUtilisateur(bdd, username)
                 .then( resultat => {
                     // si rien n'est trouvé, on peut lui assigné son nouveau username
@@ -332,15 +333,14 @@ export function modificationUtilisateur(request, response) {
                         updateUsername(bdd, pseudo, username)
                             .then( bddRes => {
                                 // username mis à jour. 
-                                console.log(bddRes);
-                                boolUserOK = true ; 
+                                console.log(bddRes); 
                             })
                             .catch(erreur => console.error(erreur));
                     }
                     else {
                         // on lui indique que ce n'est pas possible.
                         response.render('modifierUtilisateur',
-                        {nameError: 'ce nom d\'utilisateur est déjà affecté !'});
+                        { nameError: 'ce nom d\'utilisateur est déjà affecté !'});
                     }
                 })
                 .catch(erreur => console.error(erreur));
@@ -348,34 +348,29 @@ export function modificationUtilisateur(request, response) {
         
         // si newPassword != oldPassword  => l'utilisateur veut changer son mot de passe.
         // dans ce cas, il faut vérifier qu'il a bien donné le bon ancien mot de passe.
-        if( newPassword != oldPassword) {
-            boolPassword = true ;
-            recupIdUtilisateur(bdd, username)
-                .then( bddRes => {
-                    if(bddRes.length > 0) {
-                        const id = bddRes[0].id;
-                        updatePassword(bdd, oldPassword, newPassword, id)
-                            .then( resultat => {
-                                console.log(resultat);
-                                boolPassOK = true ;
-                            })
-                            .catch(erreur => console.error(erreur));
-                    }
-                    else {
-                        response.render('modifierUtilisateur',
-                        {mdpError: 'Merci de vous reconnectez votre token a expiré !'});
-                    }
-                })
-                .catch(erreur => console.error(erreur));
-        }
-
-        // si c'est good tout est OK 
-        if(boolPassword == boolPassOK) {
-
-            if(boolUsername == boolUserOK) {
-                response.redirect('/');
+        // si le mdp n'est pas > 8, cela signifie qu'il ne peut/veut pas changer son mdp.
+        if(newPassword.length >= 8) {
+            if( newPassword != oldPassword ) {
+                recupIdUtilisateur(bdd, username)
+                    .then( bddRes => {
+                        if(bddRes.length > 0) {
+                            const id = bddRes[0].id;
+                            updatePassword(bdd, oldPassword, newPassword, id)
+                                .then( resultat => {
+                                    console.log(resultat);
+                                })
+                                .catch(erreur => console.error(erreur));
+                        }
+                        else {
+                            response.render('modifierUtilisateur',
+                                            {mdpError: 'Merci de vous reconnectez votre token a expiré !'});
+                        }
+                    })
+                    .catch(erreur => console.error(erreur));
             }
         }
+        // on déconnecte l'utilisateur
+        setTimeout(() => logout(request, response));
     }
     else {
         // utilisateur inconnu ?
@@ -383,6 +378,11 @@ export function modificationUtilisateur(request, response) {
     }
 }
 
+// +-----------------------------------------------------------------
+// | Lors de la modification des informations,
+// | le client doit utiliser son mot de passe actuel pour valider.
+// | Cette fonction permet de vérifier si il a bien donné le bon mdp.
+// ------------------------------------------------------------------
 export function demandeMdp(request, response) {
     const { mdp }  = request.body ;
     const username = recupTokenClient(request, response);
@@ -407,3 +407,32 @@ export function demandeMdp(request, response) {
         // utilisateur inconnu ? 
     }
 }
+
+// +---------------------------------------------------------
+// | Affiche la vue pour modifier les informations du compte
+// ----------------------------------------------------------
+export function afficherPageModification(request , response) {
+
+    // récupération du nom d'utilisateur
+    const username = recupTokenClient(request, response);
+
+    if(username !== -1) {
+        
+        console.log('SERVEUR log : demande page modification du client : ', username);
+        // ici on va récupérer des informations pour pré-remplir le formulaire du client.
+        response.render('modifierUtilisateur', {user: username});
+    }
+    else {
+        // utilisateur inconnu ? 
+    }
+}
+
+// Permet de déconnecter le client
+export function logout(req, res) {
+    res.cookie("accessToken", "", {
+        expires: new Date(0),
+        httpOnly: true
+    });
+    res.redirect("/");
+}
+

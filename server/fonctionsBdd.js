@@ -160,6 +160,22 @@ function updatePassword(dataBase, oldPassword, newPassword, id) {
 }
 // +--------------------------------------------
 // | username : String
+// | Renvoie le haché du mot de passe de l'utilisateur
+// ---------------------------------------------
+function recupHacheUtilisateur(dataBase, username) {
+    return new Promise ( (res, rej) => {
+        const sql = `SELECT password FROM utilisateurs WHERE utilisateurs.username=?`;
+        dataBase.all(sql, [username], (err,rows) => {
+            if(err) {
+                rej(err);
+            }
+            res(rows);
+        });
+    });
+}
+
+// +--------------------------------------------
+// | username : String
 // | Renvoie l'id de l'utilisateur
 // ---------------------------------------------
 function recupIdUtilisateur(dataBase, username) {
@@ -618,6 +634,7 @@ export { bdd ,
          recupEvenementAgenda,
          recupIdUtilisateur,
          recupAgendaIdByName,
+         recupHacheUtilisateur,
          creerAgendaImporter,
          ajouterEvenementsAgendaImporte,
          recupTousAgendas,

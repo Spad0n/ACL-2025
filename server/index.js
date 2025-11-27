@@ -54,17 +54,11 @@ app.get('/', (req, res) => {
         app.use(express.static(path.join(__dirname, '../dist')));
         res.sendFile(path.join(__dirname, "../dist/index.html"));
     } else {
-	    res.redirect("/login");
+	res.redirect("/login");
     }
 });
 
-app.get('/logout', (req, res) => {
-    res.clearCookie('accessToken', {
-	httpOnly: true,
-	secure: true,
-    });
-    res.redirect("/login");
-});
+app.get('/logout', routes.logout);
 
 app.get('/login', (req, res) => {
     const message = req.query.message;
@@ -523,9 +517,7 @@ app.patch("/agendas/:id", async (req, res) => {
 //=====================================
 
 // route pour accéder à la page de modification
-app.get('/compte/modifier/utilisateur', (request, response) => {
-    response.render('modifierUtilisateur');
-});
+app.get('/compte/modifier/utilisateur', routes.afficherPageModification);
 
 // route pour l'envoie du formulaire avec les modifications
 app.post('/modifier/informations/utilisateur', routes.modificationUtilisateur);

@@ -1,0 +1,9 @@
+<dialog id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
+    <h2>Notifications de partage</h2>
+
+    <div id="liste-notifications" hx-get="/recupNotification" hx-trigger="load" hx-target="#liste-notifications">
+        <p>Chargement...</p>    
+    </div>
+
+     <button type="button" class="btn btn-cancel" onclick="document.getElementById('dialog-container').innerHTML = ''">Annuler</button>
+</div>

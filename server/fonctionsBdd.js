@@ -59,7 +59,30 @@ function creerTableAgendasPartages(dataBase){
                 res("Table agendaspartages OK");
             }
         });
-    })
+    }) ;
+}
+
+function creerTableNotificationPartage(dataBase){
+    return new Promise( (res, rej) => {
+        const sql = `CREATE TABLE IF NOT EXISTS notificationpartage(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                    id_envoi INTEGER NOT NULL, 
+                    id_recoit INTEGER NOT NULL,
+                    id_agenda INTEGER NOT NULL,
+                    etat TEXT NOT NULL DEFAULT 'attente' CHECK(etat IN ('attente', 'accepte', 'refuse')),
+                    creation DATETIME DEFAULT CURRENT_TIMESTAMP, 
+                    FOREIGN KEY (id_envoi) REFERENCES utilisateurs(id), 
+                    FOREIGN KEY (id_recoit) REFERENCES utilisateurs(id),
+                    FOREIGN KEY (id_agenda) REFERENCES agendas(id))`;
+        dataBase.run(sql, (err) => {
+            if(err){
+                rej(new Error("Erreur lors de la création de la table notificationpartage"));
+            }
+            else{
+                res("Table notificationpartage OK")
+            }
+        });
+    });
 }
 
 function reassignerEvenementsEtSupprimerAgenda(dataBase, idAgendaASupprimer, idUtilisateur) {
@@ -144,6 +167,35 @@ function recupIdUtilisateur(dataBase, username) {
 	});
     });
 }
+
+function recupNotification(dataBase, username) {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT 
+                n.id,
+                n.id_envoi,
+                n.id_recoit,
+                n.id_agenda,
+                n.etat,
+                n.creation,
+                u2.username AS envoyeur,
+                a.nom AS agenda_nom
+            FROM notificationpartage n
+            JOIN utilisateurs u ON n.id_recoit = u.id
+            JOIN utilisateurs u2 ON n.id_envoi = u2.id
+            JOIN agendas a ON n.id_agenda = a.id
+            WHERE n.etat = "attente" AND u.username = ?
+        `;
+
+        dataBase.all(sql, [username], (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+}
+
+
+
 
 // +-----------------------------------------------------
 // | idUtilisateur : Entier
@@ -318,6 +370,51 @@ function ajouterAgendasPartages(dataBase, id_agenda, id_user1, id_user2){
         }
     });
 }
+
+function ajouterNotificationPartage(dataBase, id_envoi, id_recoit, id_agenda) {
+    return new Promise((res, rej) => {
+        const sql = `
+            INSERT INTO notificationpartage(id_envoi, id_recoit, id_agenda)
+            VALUES (?, ?, ?)
+        `;
+
+        dataBase.run(sql, [id_envoi, id_recoit, id_agenda], function(err) {
+            if (err) {
+                return rej(err);
+            }
+
+            return res("Notification ajoutée");
+        });
+    });
+}
+
+function changerEtatNotificationAccepte(dataBase, id){
+    return new Promise((res, rej) => {
+        const sql = ` UPDATE notificationpartage SET etat = "accepte" WHERE id = ?`;
+
+        dataBase.run(sql, [id], function(err) {
+            if(err){
+                return rej(err);
+            }
+            return res("Changement de l'état de la notififcation en accepte");
+        });
+    });
+}
+
+function changerEtatNotificationRefuse(dataBase, id){
+    return new Promise((res, rej) => {
+        const sql = ` UPDATE notificationpartage SET etat = "refuse" WHERE id = ?`;
+
+        dataBase.run(sql, [id], function(err) {
+            if(err){
+                return rej(err);
+            }
+            return res("Changement de l'état de la notififcation en refuse");
+        });
+    });
+}
+
+    
 
 async function ajouterEvenement(dataBase, token,objectEvenement, callback) {
    try{
@@ -555,6 +652,10 @@ async function initBdd(dataBase) {
     await creerTableAgendasPartages(dataBase)
         .then( res => console.log(res) )
         .catch( err => console.error(err) );
+
+    await creerTableNotificationPartage(dataBase)
+        .then( res => console.log(res) )
+        .catch( err => console.error(err) );
 }
 
 // ici bdd.db le chemin depend de l'endroit où la commande node a été excuté
@@ -593,4 +694,8 @@ export { bdd ,
          ajouterEvenementsAgendaImporte,
          recupTousAgendas,
          reassignerEvenementsEtSupprimerAgenda,
+         ajouterNotificationPartage, 
+         recupNotification, 
+         changerEtatNotificationAccepte, 
+         changerEtatNotificationRefuse
        };

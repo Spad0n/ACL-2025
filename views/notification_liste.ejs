@@ -1,0 +1,21 @@
+<% if (notifications.length === 0) { %>
+    <p>Aucune notification.</p>
+<% } else { %>
+    <% notifications.forEach(n => { %>
+        <div class="notif-item">
+            <strong><%= n.envoyeur %></strong> souhaite partager l’agenda 
+            <em><%= n.agenda_nom %></em>
+            <div>
+                <button 
+                    hx-post="/notification/accepter"
+                    hx-vals='{"id": <%= n.id %>}'  
+                    class="btn btn_primary">Accepter</button>
+
+                <button 
+                    hx-post="/notification/refuser"
+                    hx-vals='{"id": <%= n.id %>}'  
+                    class="btn">Refuser</button>
+            </div>
+        </div>
+    <% }); %>
+<% } %>

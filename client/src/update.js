@@ -124,6 +124,9 @@ export function update(msg, model) {
         }else if (name === 'partage'){
             triggerHtmxDialog('/dialog/partage');
             return model;
+        }else if(name === 'notification'){
+            triggerHtmxDialog('/dialog/notification');
+            return model; 
         }else if (name === 'datepicker') {
             const { date, position, target } = payload;
             const popupStyle = placePopup(256, 216, position); 

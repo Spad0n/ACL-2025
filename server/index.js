@@ -20,6 +20,10 @@ import {
     supprimerAgenda,
     renommerAgenda,
     recupTousAgendas,
+    ajouterNotificationPartage, 
+    recupNotification, 
+    changerEtatNotificationAccepte, 
+    changerEtatNotificationRefuse
 } from './fonctionsBdd.js';
 import { tr } from 'date-fns/locale';
 
@@ -348,11 +352,11 @@ app.post("/agendas/partage", async (req, res) => {
 
         const id_utilisateurAquiPartage = idUsuarioPartage[0].id;
 
-        await ajouterAgendasPartages(
+        await ajouterNotificationPartage(
             bdd,
-            id_agenda,
             id_utilisateur,
-            id_utilisateurAquiPartage
+            id_utilisateurAquiPartage,
+            id_agenda
         );
 
         return res.json({ success: true });
@@ -364,6 +368,24 @@ app.post("/agendas/partage", async (req, res) => {
         
         console.error("Erreur serveur :", err);
         return res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/recupNotification', async (req, res) => {
+    try{
+            const tokenSigne = req.cookies.accessToken;
+            let token;
+            try {
+                token = jwt.verify(tokenSigne, process.env.SECRET);
+            } catch (err) {
+                return res.status(401).json({ error: "Token invalide" });
+            }
+            const username = token.username;
+            const notifications = await recupNotification(bdd, username);
+            res.render('notification_liste', {notifications});
+        } 
+    catch (err){
+        res.status(500).json({ error: err.message});
     }
 });
 
@@ -386,7 +408,70 @@ app.get('/recupUtilisateur', async (req, res) => {
 
 app.get('/dialog/partage', (req, res) => {
     res.render("dialog_partage");
+});
+
+app.get('/dialog/notification', (req, res) =>{
+    res.render("dialog_notification");
+});
+
+app.post('/notification/accepter', async (req,res) => {
+    try{
+        const tokenSigne = req.cookies.accessToken;
+        let token;
+        try {
+            token = jwt.verify(tokenSigne, process.env.SECRET);
+        } catch (err) {
+            return res.status(401).json({ error: "Token invalide" });
+        }
+        const username = token.username;
+        const notifications = await recupNotification(bdd, username);
+
+        if (notifications.length === 0) {
+            return res.status(400).json({ error: "Aucune notification trouvée" });
+        }
+
+        const notif = notifications[0];
+
+        ajouterAgendasPartages(bdd, notif.id_agenda, notif.id_envoi, notif.id_recoit);
+        changerEtatNotificationAccepte(bdd, notif.id);
+
+        res.json({ message: "Partage accepté !" });
+        
+    }
+    catch(err){
+         res.status(500).json({ error: err.message});
+    }
 })
+
+app.post('/notification/refuser', async (req,res) => {
+try{
+        const tokenSigne = req.cookies.accessToken;
+        let token;
+        try {
+            token = jwt.verify(tokenSigne, process.env.SECRET);
+        } catch (err) {
+            return res.status(401).json({ error: "Token invalide" });
+        }
+        const username = token.username;
+        const notifications = await recupNotification(bdd, username);
+
+        if (notifications.length === 0) {
+            return res.status(400).json({ error: "Aucune notification trouvée" });
+        }
+
+        const notif = notifications[0];
+        console.log("-----", notif.id);
+
+        changerEtatNotificationRefuse(bdd, notif.id);
+
+        res.json({ message: "Partage redusé !" });
+        
+    }
+    catch(err){
+         res.status(500).json({ error: err.message});
+    }
+})
+
 
 
 // +-------------------------------------------------------------------

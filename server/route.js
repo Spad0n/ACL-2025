@@ -1,3 +1,5 @@
+"use strict";
+
 import { createHash } from "crypto"; 
 import { createJWT } from "./outils/jwt.js";
 import { bdd,
@@ -303,7 +305,7 @@ export function importerAgendaUtilisateur(req,res) {
     }
 }
 
-export function modificationUtilisateur(request, response) {
+export async function modificationUtilisateur(request, response) {
     // Si on est dans cette fonction, c'est que l'utilisateur à bien donné le bon mot de passe actuel.
     // On peut donc lancer la procédure de modification des informations.
     const pseudo = recupTokenClient(request, response);
@@ -313,7 +315,67 @@ export function modificationUtilisateur(request, response) {
     // le newPassword est prérempli avec le haché de l'ancien
     // le username est aussi prérempli avec sa valeur actuel
     // le oldPassword n'arrive pas haché !!!! peut poser des problèmes de sécurité
-    
+
+    if(pseudo !== -1) {
+
+        const objERREUR = {user: pseudo} ;
+        let aErreur   = false ;
+
+        const {username, newPassword, oldPassword} = request.body ;
+
+        console.log('SERVEUR log : modification username : ', username);
+        console.log('SERVEUR log : modification mot de passe : ', newPassword);
+        console.log('SERVEUR log : mot de passe actuel : ', oldPassword);
+
+        if(username != pseudo) {
+            try {
+                const id1 = await recupIdUtilisateur(bdd, username);
+                
+                if(id1.length == 0) {
+                    const resUpdate = await updateUsername(bdd, pseudo, username);
+                    console.log(resUpdate);
+                }
+                else {
+                    // ajout de l'erreur dans l'objet erreur
+                    objERREUR.nameError =  'Ce nom d\'utilisateur est déjà affecté !';
+                    aErreur = true ; 
+                }
+            }
+            catch(erreur) {
+                console.error(erreur) ;
+            }
+        }
+
+        if(newPassword.length >= 8) {
+            if(newPassword != oldPassword) {
+                try {
+                    const id2 = await recupIdUtilisateur(bdd,username);
+
+                    if(id2.length > 0) {
+                        const realId  = id2[0].id ;
+                        const updateP = await updatePassword(bdd, oldPassword, newPassword, realId);
+                    }
+                    else {
+                        objERREUR.mdpError = 'Merci de vous reconnectez votre token a expiré !';
+                        aErreur = true ;
+                    }
+                }
+                catch(erreur) {
+                    console.error(erreur);
+                }
+            }
+        }
+
+        if(aErreur) {
+            response.render('modifierUtilisateur' , objERREUR);
+        }
+        else {
+            // pas de soucis on le deco. 
+            logout(request, response);
+        }
+    }
+
+    /*
     if(pseudo !== -1) {
         console.log('SERVEUR log : demande de modification par utilisateur : ', pseudo);
         // console.log(request.body);
@@ -339,8 +401,7 @@ export function modificationUtilisateur(request, response) {
                     }
                     else {
                         // on lui indique que ce n'est pas possible.
-                        response.render('modifierUtilisateur',
-                        { nameError: 'ce nom d\'utilisateur est déjà affecté !'});
+                        response.render('modifierUtilisateur',{ nameError: 'ce nom d\'utilisateur est déjà affecté !'});
                     }
                 })
                 .catch(erreur => console.error(erreur));
@@ -370,12 +431,13 @@ export function modificationUtilisateur(request, response) {
             }
         }
         // on déconnecte l'utilisateur
-        setTimeout(() => logout(request, response));
+        // setTimeout(() => logout(request, response));
     }
     else {
         // utilisateur inconnu ?
         response.redirect('/login');
-    }
+        }
+   */
 }
 
 // +-----------------------------------------------------------------

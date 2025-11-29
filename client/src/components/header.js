@@ -37,6 +37,10 @@ function getHeaderTitle(model) {
     }
 }
 
+const rechercheIcon = h('svg', { attrs: { focusable: "false", viewBox: "0 0 24 24", width: "24px", height: "24px", fill: "var(--white2)" } }, [
+    h('path', { attrs: { d: "M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C8.01 14 6 11.99 6 9.5S8.01 5 10.5 5 15 7.01 15 9.5 12.99 14 10.5 14z" } })
+]);
+
 const logoutIcon = h('svg', { attrs: { focusable: "false", viewBox: "0 0 24 24", width: "24px", height: "24px", fill: "var(--white2)" } }, [
     h('path', { attrs: { d: "M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" } })
 ]);
@@ -109,6 +113,11 @@ export default function headerView(model, dispatch) {
                 ]),
                 
                 h('div.h-col-3', [
+                    // --- Bouton Recherche ---
+                    h('button.h-search', {
+                        on: { click: () => dispatch(Msg.OpenModal('recherche')) },
+                        attrs: { 'data-tooltip': 'Rechercher un événement', 'aria-label': 'Rechercher un événement' }
+                    }, [rechercheIcon]),
                     // --- Bouton Paramètres ---
                     h('button.settings', {
                         on: { click: () => dispatch(Msg.OpenModal('settings')) },

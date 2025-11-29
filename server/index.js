@@ -20,6 +20,7 @@ import {
     supprimerAgenda,
     renommerAgenda,
     recupTousAgendas,
+    filtrerEvenementNom,
 } from './fonctionsBdd.js';
 import { tr } from 'date-fns/locale';
 
@@ -386,8 +387,28 @@ app.get('/recupUtilisateur', async (req, res) => {
 
 app.get('/dialog/partage', (req, res) => {
     res.render("dialog_partage");
-})
+});
 
+app.get('/dialog/recherche', (req, res) => {
+    res.render("recherche");
+});
+
+app.get('/events/search-events', async (req, res) => {
+    const searchQuery = req.query.q;
+
+    if (!searchQuery) {
+        return res.json([]);
+    }
+
+    try {
+        const events = await filtrerEvenementNom(bdd, searchQuery, 2);
+        res.json(events);
+
+    } catch (err) {
+        console.error("Erreur lors de la recherche d'événements :", err);
+        res.status(500).json({ error: "Erreur serveur" });
+    }
+});
 
 // +-------------------------------------------------------------------
 // | GESTION de la fonctionalité exporter/importer un agenda

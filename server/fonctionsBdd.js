@@ -6,6 +6,7 @@ import { parseISO, setHours, setMinutes } from 'date-fns';
 import { error } from "console";
 import { th } from "date-fns/locale/th";
 import { resolve } from "path";
+import levenshtein from "fast-levenshtein";
 
 
 const sqlite3 = sqlite3pkg.verbose();
@@ -538,6 +539,48 @@ function retournerContenuTableEvenement(dataBase) {
     }) ;
 }
 
+// Rechercher un événement par nom
+function filtrerEvenementNom(dataBase, nomEvenement, maxDistance = 2) {
+    return new Promise((res, rej) => {
+        const sql = `SELECT id, title, start FROM evenements`;
+
+        dataBase.all(sql, [], (err, rows) => {
+            if(err) return rej(err);
+
+            const recherche = (nomEvenement || '').toLowerCase();
+
+            const filtre = rows
+                .map(r => {
+                    const nomEvent = (r.title || '').toLowerCase();
+
+                    if (nomEvent.includes(recherche)) {
+                        return {
+                            id: r.id.toString(),
+                            title: r.title,
+                            start: new Date(r.start).toISOString(),
+                            distance: 0
+                        };
+                    }
+                    const distance = levenshtein.get(nomEvent, recherche);
+                    return {
+                        id: r.id.toString(),
+                        title: r.title,
+                        start: new Date(r.start).toISOString(),
+                        distance: distance
+                    };
+                })
+                .filter(r => r.distance <= maxDistance)
+                .sort((a, b) => {
+                    if (a.distance !== b.distance) {
+                        return a.distance - b.distance;
+                    }
+                    return new Date(a.start) - new Date(b.start);
+                });
+            res(filtre);
+        });
+    });
+}
+
 // Permet d'initialiser la BDD en créant la table utilisateur
 async function initBdd(dataBase) {
     await creerTableUtilisateur(dataBase)
@@ -593,4 +636,5 @@ export { bdd ,
          ajouterEvenementsAgendaImporte,
          recupTousAgendas,
          reassignerEvenementsEtSupprimerAgenda,
+         filtrerEvenementNom
        };

@@ -357,7 +357,98 @@ async function ajouterEvenement(dataBase, token,objectEvenement, callback) {
         console.error(err);
     };
 }
+/**
+// ajouter un nouveau tag
+async function ajouterNouveauTag(dataBase, nomTag, id_utilisateur){
+    return new Promise( (resolve, reject) => {
+        const sql = 'INSERT INTO tags(tag_name, user_id) VALUES (?,?)';
+        dataBase.run(sql, [nomTag, id_utilisateur], function(err) {
+            if (err) {
+                reject(err.message);
+            } else {
+                resolve({ id: this.lastID, tag_id: nomTag, user_id: id_utilisateur });
+            }
+        });
+    });
+}
 
+// récupérer tous les tags d'un utilisateur
+async function recupTousTags(dataBase, id_utilisateur){
+    return new Promise( (resolve, reject) => {
+        const sql = 'SELECT tag_name FROM tags WHERE tags.user_id = ?';
+        dataBase.all(sql, [id_utilisateur], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows);
+            }
+        });
+    });
+}
+
+
+async function ajouterNouveauTagEvenement(dataBase, id_evenement, id_tag){
+    return new Promise( (resolve, reject) => {
+        const sql = 'INSERT INTO eventTags(tag_id, id_event) VALUES (?,?)';
+        dataBase.run(sql, [id_evenement, id_tag], function(err) {
+            if (err) {
+                reject(err.message);
+            } else {
+                resolve({ id: this.lastID, id_evet: id_evenement, tag_id: id_tag });
+            }
+        });
+    });
+}
+
+// récupérer tous les tags d'un événement
+async function recupTagsEvenement(dataBase, id_evenement){
+    return new Promise( (resolve, reject) => {
+        const sql = `SELECT t.tag_name
+                     FROM tags t 
+                     JOIN eventTags et ON t.tag_name = et.tag_id 
+                     WHERE et.id_event = ?`;
+        dataBase.all(sql, [id_evenement], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows);
+            }
+        });
+    });
+}
+
+// supprimer un tag d'un événement
+async function supprimerTagEvenement(dataBase, id_evenement, id_tag){
+    return new Promise( (resolve, reject) => {
+        const sql = 'DELETE FROM eventTags WHERE id_event = ? AND tag_id = ?';
+        dataBase.run(sql, [id_evenement, id_tag], function(err) {
+            if (err) {
+                reject(err.message);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
+// récupérer tous les événements d'un tag
+async function recupEvenementsTag(dataBase, id_tag){
+    return new Promise( (resolve, reject) => {
+        const sql = `SELECT e.*
+                     FROM evenements e
+                     JOIN eventTags et ON e.id = et.id_event
+                     WHERE et.tag_id = ?`;
+        dataBase.all(sql, [id_tag], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows);
+            }
+        });
+    });
+}
+
+*/
 // +-------------------------------------------------------------------------
 // | idAgenda       : Entier
 // | objetEvenement : Objet qui contient les infos d'un événement

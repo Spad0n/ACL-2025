@@ -11,16 +11,49 @@
         </div>
         <div id="search-results"></div>
     <footer style="margin-top: 10px;">
-        <button type="button" class="btn btn-cancel" onclick="document.getElementById('dialog-container').innerHTML = ''">×</button>
+        <button type="button" class="btn btn-cancel" onclick="document.getElementById('active-dialog').close()">×</button>
     </footer>
     </form>
 
     <script>
         (function() {
-
             const dialog_recherche = document.getElementById('active-dialog');
+            const dialogContainer = document.getElementById('dialog-container');
             const queryInput = dialog_recherche.querySelector('#query');
             const resultsContainer = dialog_recherche.querySelector('#search-results');
+            const cancelButton = document.getElementById('btn-cancel-dialog');
+
+            if (dialog_recherche && dialogContainer) {
+                dialog_recherche.addEventListener('close', () => {
+                    dialogContainer.innerHTML = '';
+                });
+
+                dialog_recherche.showModal();
+            }
+
+            if (cancelButton) {
+                cancelButton.addEventListener('click', () => {
+                    dialog_recherche.close();
+                });
+            }
+
+            resultsContainer.addEventListener('click', (e) => {
+                const clickedLi = e.target.closest('li[data-start-date]');
+
+                if (clickedLi) {
+                    const startDate = clickedLi.getAttribute('data-start-date');
+                    const appEvent = new CustomEvent('dispatchApp', {
+                        detail: { type: 'SET_DATE', payload: startDate }
+                    });
+                    document.body.dispatchEvent(appEvent);
+
+                    if (dialog_recherche) {
+                        dialog_recherche.close();
+                    } else {
+                        document.getElementById('dialog-container').innerHTML = '';
+                    }
+                }
+            });
 
             function delayStg(func, delay) {
                 let timeoutId;
@@ -99,6 +132,11 @@
         width: 400px;
         padding: 20px;
 
+    }
+
+    dialog::backdrop {
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(2px);
     }
 
     #recherche {

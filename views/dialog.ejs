@@ -8,7 +8,7 @@ const icons = {
 };
 %>
 
-<dialog open id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
+<dialog id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
     
     <% if (action === "delete") { %>
         <form hx-post="/events/delete" hx-target="#dialog-container" hx-swap="innerHTML" class="entry-form">
@@ -61,7 +61,7 @@ const icons = {
             </div>
 
             <!-- AGENDA SELECTION -->
-            <div style="padding: 0 4px 12px 0;">
+            <div style="padding: 0 4px 12px 0px;">
                 <label for="agenda" style="color:var(--white3); font-size:12px; display:block; margin-bottom:4px;">Calendar</label>
                 
                 <!-- On ajoute data-color sur chaque option -->
@@ -87,7 +87,7 @@ const icons = {
 
         <div class="entries__form--footer">
             <% if (action === "edit") { %>
-                <button type="button" class="form--footer__button-cancel" style="border-color: var(--red2); color: var(--red1); width: auto; margin-right: auto;"
+                <button type="button" class="form--footer__button-cancel" style="border-color: var(--red2); color: var(--red1); width: auto; margin-right: auto; margin-left:15px ;padding: 5px;"
                     hx-get="/dialog/event-form?action=delete&id=<%= event.id %>&title=<%= event.title %>"
                     hx-target="#dialog-container" hx-swap="innerHTML">Delete</button>
             <% } %>
@@ -382,6 +382,17 @@ const icons = {
          updateUI(); 
          updateColorFromAgenda();
 
+         const dialog = document.getElementById('active-dialog');
+         if (dialog) {
+             dialog.showModal();
+         }
+
      })();
     </script>
 </dialog>
+<style>
+    dialog::backdrop {
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(2px);
+    }
+</style>

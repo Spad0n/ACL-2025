@@ -11,7 +11,7 @@
         </div>
         <div id="search-results"></div>
     <footer style="margin-top: 10px;">
-        <button type="button" class="btn btn-cancel" onclick="document.getElementById('dialog-container').innerHTML = ''">Fermer</button>
+        <button type="button" class="btn btn-cancel" onclick="document.getElementById('dialog-container').innerHTML = ''">×</button>
     </footer>
     </form>
 
@@ -79,7 +79,7 @@
                     });
 
                     return `<li data-start-date="${event.start}"><a>
-                        <strong>${event.title}</strong> (${eventDate})
+                        <strong>${event.title}</strong> (Evénement du ${eventDate})
                     </a></li>`;
 
                 }).join('');
@@ -98,18 +98,26 @@
     dialog {
         width: 400px;
         padding: 20px;
+
     }
 
     #recherche {
         display: flex;
         flex-direction: column;
         margin-bottom: 10px;
-        margin-top: 10px;
+        margin-top: 20px;
         gap: 10px;
     }
 
+    #recherche input{
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
     #search-results {
-        max-height: 300px;
+        max-height: 220px;
         overflow-y: auto;
         margin-top: 10px;
         padding: 5px;
@@ -136,4 +144,21 @@
         color: inherit;
         display: block;
     }
+
+    .btn-cancel {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        width: 30px;
+        height: 30px;
+        color: black;
+        border: none;
+        cursor: pointer;
+        border-radius: 50%;
+    }
+
+    .btn-cancel:hover {
+        background-color: #e0e0e0;
+    }
+
 </style>

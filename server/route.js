@@ -33,7 +33,7 @@ export function createAccount(req, res) {
 	.then( (result) => {
 	    // Si on trouve l'utilisateur on indique que le compte existe déjà
 	    if (result.length == 1) {
-			res.redirect("/register?message=ce+nom+existe+deja") ;
+			res.redirect("/register?message=Ce+nom+existe+deja") ;
 	    }
 	    // Sinon on crée le compte
 	    else {

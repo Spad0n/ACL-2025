@@ -6,19 +6,22 @@
     <link rel="stylesheet" href="/css/modificationsCompte.css">
       </head>
       <body>
+	<div class="disco-spot"></div>
 	<h1> INFORMATIONS </h1>
 	<br>
-	<button onClick='retourAcceuil()'> Accueil </button>
+	<button onClick='retourAccueil()'> Accueil </button>
 	<br>
 	<form name="modificationsUtilisateur" action="/modifier/informations/utilisateur" method="POST">
 	  <div>
 	    <label for="username"> Nouveau username :  </label>
-	    <input type="text" name="username" id="username" value="<%= locals.user ?? ''%>"/>
+	    <input type="text" name="username" id="username" value="<%= locals.user ?? ''%>"/ required>
+	    <span id='userPerr'> <%= locals.nameError ?? '' %> </span>
 	  </div>
 	  <div>
 	    <label for="newPassword"> Nouveau mot de passe : </label>
 	    <input type="password" name="newPassword" id="newPassword" />
 	    <span id='newPerr' hidden> </span>
+	    <label> <%= locals.mdpError ?? '' %> </label>
 	  </div>
 	  
 	  <label> Pour appliquer les changements votre ancien mot de passe est obligatoire </label>
@@ -26,13 +29,9 @@
 	  <label for="oldPassword"> Ancien mot de passe : </label>
 	  <input type="password" name="oldPassword" id="oldPassword" required />
 	  <span id='oldPerr' hidden> </span>
-      
 	  <div>
 	    <input type="submit" value="Modifier" />
 	  </div>
-	  <label> <%= locals.nameError ?? '' %> </label>
-	  <br>
-	  <label> <%= locals.mdpError ?? '' %> </label>
 	</form>
 
 	<script>
@@ -93,10 +92,10 @@
 	      validerMotDePasse();
 	  });
           
-          function retourAcceuil() {
+          function retourAccueil() {
               window.location.href = '/';
           }
-	  
 	</script>
+	
       </body>
 </html>

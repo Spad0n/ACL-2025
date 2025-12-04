@@ -395,13 +395,21 @@ app.get('/dialog/recherche', (req, res) => {
 
 app.get('/events/search-events', async (req, res) => {
     const searchQuery = req.query.q;
+    const tokenSigne = req.cookies.accessToken;
+    let token;
+    try {
+        token = jwt.verify(tokenSigne, process.env.SECRET);
+    } catch (err) {
+        return res.status(401).json({ error: "Token invalide" });
+    }
+    const username = token.username;
 
     if (!searchQuery) {
         return res.json([]);
     }
 
     try {
-        const events = await filtrerEvenementNom(bdd, searchQuery, 2);
+        const events = await filtrerEvenementNom(bdd, username, searchQuery, 2);
         res.json(events);
 
     } catch (err) {

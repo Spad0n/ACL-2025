@@ -631,11 +631,11 @@ function retournerContenuTableEvenement(dataBase) {
 }
 
 // Rechercher un événement par nom
-function filtrerEvenementNom(dataBase, nomEvenement, maxDistance = 2) {
+function filtrerEvenementNom(dataBase, user, nomEvenement, maxDistance = 2) {
     return new Promise((res, rej) => {
-        const sql = `SELECT id, title, start FROM evenements`;
+        const sql = `SELECT id, title, start, id_agenda FROM evenements where id_agenda IN (SELECT id FROM agendas WHERE id_utilisateur = (SELECT id FROM utilisateurs WHERE username = ?))`;
 
-        dataBase.all(sql, [], (err, rows) => {
+        dataBase.all(sql, [user], (err, rows) => {
             if(err) return rej(err);
 
             const recherche = (nomEvenement || '').toLowerCase();

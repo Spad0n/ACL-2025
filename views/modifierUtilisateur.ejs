@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang='fr'>
+      <head>
+	<meta charset='utf-8'>
+	<title> Modification des informations </title>
+    <link rel="stylesheet" href="/css/modificationsCompte.css">
+      </head>
+      <body>
+	<div class="disco-spot"></div>
+	<h1> INFORMATIONS </h1>
+	<br>
+	<button onClick='retourAccueil()'> Accueil </button>
+	<br>
+	<form name="modificationsUtilisateur" action="/modifier/informations/utilisateur" method="POST">
+	  <div>
+	    <label for="username"> Nouveau username :  </label>
+	    <input type="text" name="username" id="username" value="<%= locals.user ?? ''%>"/ required>
+	    <span id='userPerr'> <%= locals.nameError ?? '' %> </span>
+	  </div>
+	  <div>
+	    <label for="newPassword"> Nouveau mot de passe : </label>
+	    <input type="password" name="newPassword" id="newPassword" />
+	    <span id='newPerr' hidden> </span>
+	    <label> <%= locals.mdpError ?? '' %> </label>
+	  </div>
+	  
+	  <label> Pour appliquer les changements votre ancien mot de passe est obligatoire </label>
+	  <br>
+	  <label for="oldPassword"> Ancien mot de passe : </label>
+	  <input type="password" name="oldPassword" id="oldPassword" required />
+	  <span id='oldPerr' hidden> </span>
+	  <div>
+	    <input type="submit" value="Modifier" />
+	  </div>
+	</form>
+
+	<script>
+          // Il faut pas envoyer tout de suite le formulaire.
+      	  // Il faut vérifier que l'utilisateur à bien donné le bon oldPassword.
+      	  // (C'est son mdp actuel oldPassword).
+      	  // Si oui alors on peut POST sur l'url.
+      	  // Sinon on avertit l'utilisateur que c'est pas le bon mdp.
+	  
+	  // Il faut récuperer automatiquement les informations du client, mot de passe, nom d'utilisateur et remplir automatiquement avec ces champs
+	  
+	  function validerMotDePasse() {
+	      const motDePasse = document.forms.modificationsUtilisateur.oldPassword.value ;
+	      const objetJson  = { mdp : motDePasse };
+	      fetch('/demande/motDePasse/utilisateur',
+		    { method: 'POST',
+		      headers: { 'Content-Type': 'application/json'},
+		      body: JSON.stringify(objetJson)
+		    })
+		  .then( serveur => serveur.json())
+		  .then( resServeur => {
+		      if (typeof resServeur === 'object') {
+			  
+			  // Le mot de passe donné est le bon
+			  if(resServeur.etat) {
+
+			      // on vérfie que le nouveau mot de passe fait bien + de 8 caractères.
+			      const nouveauMdp       = document.forms.modificationsUtilisateur.newPassword.value ;
+			      const nouveauMdpTaille = nouveauMdp.length ;
+
+			      if(nouveauMdpTaille == 0) {
+				  // on envoie -> il faudra géré coté serveur un mdp de taille 0.
+				  document.forms.modificationsUtilisateur.submit();
+			      }
+			      else if (nouveauMdpTaille < 8) {
+				  const span       = document.getElementById('newPerr');
+				  span.hidden      = false ;
+				  span.textContent = 'Le mot de passe doit contenir au moins 8 caractères !';
+			      }
+			      else {
+				  // on envoie au serveur pour traiter les données.
+				  document.forms.modificationsUtilisateur.submit();
+			      }
+			  }
+			  else {
+			      const span       = document.getElementById('oldPerr');
+			      span.hidden      = false ;
+			      span.textContent = resServeur.message;
+			  }	 
+		      }
+		  })
+		  .catch( erreur => console.error(erreur));
+	  }
+	  
+	  const formulaire = document.forms.modificationsUtilisateur;
+	  formulaire.addEventListener('submit', (e) => {
+	      e.preventDefault();
+	      validerMotDePasse();
+	  });
+          
+          function retourAccueil() {
+              window.location.href = '/';
+          }
+	</script>
+	
+      </body>
+</html>

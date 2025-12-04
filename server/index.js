@@ -50,22 +50,16 @@ app.get('/hello', (_req, res) => {
 });
 
 app.get('/', (req, res) => {
-    console.log(req.cookies.accessToken);
     if (req.cookies.accessToken !== undefined) {
-	app.use(express.static(path.join(__dirname, '../dist')));
-	res.sendFile(path.join(__dirname, "../dist/index.html"));
+        console.log('SERVEUR log : token de la session :', req.cookies.accessToken);
+        app.use(express.static(path.join(__dirname, '../dist')));
+        res.sendFile(path.join(__dirname, "../dist/index.html"));
     } else {
 	res.redirect("/login");
     }
 });
 
-app.get('/logout', (req, res) => {
-    res.clearCookie('accessToken', {
-	httpOnly: true,
-	secure: true,
-    });
-    res.redirect("/login");
-});
+app.get('/logout', routes.logout);
 
 app.get('/login', (req, res) => {
     const message = req.query.message;
@@ -434,7 +428,7 @@ app.get('/download/agenda/:agenda', (req, res) => {
     });
 });
 
-app.post('/importerExporter/agendaExporter', routes.callFrontEndDeporter);
+app.post('/importerExporter/agendaExporter', routes.callFrontEndExporter);
 
 app.post('/importerExporter/agendaImporter', routes.importerAgendaUtilisateur);
 
@@ -546,6 +540,19 @@ app.patch("/agendas/:id", async (req, res) => {
         res.status(500).json({ error: err.message});
     }
 });
+
+//=====================================
+//Modifier les informations utilisateur
+//=====================================
+
+// route pour accéder à la page de modification
+app.get('/compte/modifier/utilisateur', routes.afficherPageModification);
+
+// route pour l'envoie du formulaire avec les modifications
+app.post('/modifier/informations/utilisateur', routes.modificationUtilisateur);
+
+// route pour vérifier le mot de passe donné par l'utilisateur
+app.post('/demande/motDePasse/utilisateur', routes.demandeMdp);
 
 app.listen(PORT, "0.0.0.0", (_err) => {
     console.log(`Serveur lancé sur http://localhost:${PORT}`);

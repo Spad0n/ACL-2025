@@ -151,7 +151,7 @@ export default function headerView(model, dispatch) {
                     h('button.settings.logout-btn', {
                         on: { click: () => {
                             fetch('/logout', { method: 'GET', credentials: "include"})
-                                .then(() => window.location.href = '/login')
+                                .then(() => window.location.href = '/logout')
                                 .catch((error) => console.error('La déconnexion a échoué:', error));
                         }},
                         attrs: { 'data-tooltip': 'Logout', 'aria-label': 'Logout' }

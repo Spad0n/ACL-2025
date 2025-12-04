@@ -130,6 +130,51 @@ function fetchUtilisateur(dataBase, username, password) {
     }) ;
 }
 
+// Permet de mettre à jour le nom d'utilisateur
+function updateUsername(dataBase, oldUsername, newUsername) {
+    return new Promise( (resolve, reject) => {
+        const sql = `UPDATE utilisateurs SET username = ? WHERE username = ?`;
+        dataBase.run(sql, [newUsername, oldUsername], (err) => {
+            if(err) {
+                reject(err);
+            }
+            resolve('SERVEUR log : username mis à jour !');
+        });
+    });
+}
+
+// Permet de mettre à jour le mot de passe d'un 
+function updatePassword(dataBase, oldPassword, newPassword, id) {
+    return new Promise((resolve, reject) => {
+        const sql = `UPDATE utilisateurs SET password = ? WHERE password=? AND id=?`;
+
+        const oldPasswordHashed = createHash("sha256").update(oldPassword).digest("hex");
+        const newPasswordHashed = createHash("sha256").update(newPassword).digest("hex");
+        
+        dataBase.run(sql, [newPasswordHashed, oldPasswordHashed, id], (err) => {
+            if(err) {
+                reject(err);
+            }
+            resolve('SERVEUR log : password mis à jour !');
+        });
+    });
+}
+// +--------------------------------------------
+// | username : String
+// | Renvoie le haché du mot de passe de l'utilisateur
+// ---------------------------------------------
+function recupHacheUtilisateur(dataBase, username) {
+    return new Promise ( (res, rej) => {
+        const sql = `SELECT password FROM utilisateurs WHERE utilisateurs.username=?`;
+        dataBase.all(sql, [username], (err,rows) => {
+            if(err) {
+                rej(err);
+            }
+            res(rows);
+        });
+    });
+}
+
 // +--------------------------------------------
 // | username : String
 // | Renvoie l'id de l'utilisateur
@@ -723,9 +768,12 @@ export { bdd ,
          recupEvenementAgenda,
          recupIdUtilisateur,
          recupAgendaIdByName,
+         recupHacheUtilisateur,
          creerAgendaImporter,
          ajouterEvenementsAgendaImporte,
          recupTousAgendas,
          reassignerEvenementsEtSupprimerAgenda,
+         updateUsername,
+         updatePassword,
          filtrerEvenementNom
        };

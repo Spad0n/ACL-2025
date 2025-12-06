@@ -1,7 +1,9 @@
-<% if (notifications.length === 0) { %>
-    <p>Aucune notification.</p>
+<h3>Demandes de partage</h3>
+
+<% if (!notificationsDemande || notificationsDemande.length === 0) { %>
+    <p>Aucune demande.</p>
 <% } else { %>
-    <% notifications.forEach(n => { %>
+    <% notificationsDemande.forEach(n => { %>
         <div class="notif-item">
             <strong><%= n.envoyeur %></strong> souhaite partager l’agenda 
             <em><%= n.agenda_nom %></em>
@@ -19,3 +21,115 @@
         </div>
     <% }); %>
 <% } %>
+
+
+<h3>Réponses à vos demandes</h3>
+
+<% if (!notificationRefusAcceptation || notificationRefusAcceptation.length === 0) { %>
+    <p>Aucune nouvelle réponse.</p>
+<% } else { %>
+    <% notificationRefusAcceptation.forEach(r => { %>
+        <div class="notif-item" id="notif-<%= r.id %>">
+            <strong><%= r.type.toUpperCase() %></strong> – votre demande de partage pour l'agenda <strong><%= r.agenda_nom %></strong> à <strong><%= r.nom_utilisateur %></strong> a été pour 
+            <%= r.type === 'acceptation' ? "acceptée" : "refusée" %>
+
+            <div>
+                <button
+                    class="btn btn_primary"
+                    hx-post="/notification/supprimer"
+                    hx-vals='{"id": <%= r.id %>}'
+                    hx-target="#notif-<%= r.id %>"
+                    hx-swap="outerHTML"
+                >
+                    OK
+                </button>
+            </div>
+        </div>
+    <% }); %>
+<% } %>
+
+
+
+        <style>
+            /* ===== CONTAINER GENERAL ===== */
+.notif-item {
+  background-color: var(--black1);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: var(--box-shadow1);
+  border-left: 3px solid var(--primary2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--white2);
+  animation: fadeIn 180ms ease-out;
+}
+
+/* petit effet d'apparition */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* texte */
+.notif-item strong {
+  color: var(--white1);
+  font-size: 15px;
+}
+
+.notif-item em {
+  color: var(--primary2);
+  font-style: normal;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+/* ===== BOUTONS ===== */
+.notif-item div {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+
+  transition: background-color 150ms ease-in-out, opacity 120ms;
+  background-color: var(--black2);
+  color: var(--white2);
+}
+
+/* hover */
+.btn:hover {
+  background-color: var(--mediumgrey0);
+}
+
+/* bouton principal "Accepter" */
+.btn_primary {
+  background-color: var(--primary2);
+  color: var(--taskcolor);
+}
+
+.btn_primary:hover {
+  background-color: var(--primary1);
+}
+
+/* Désactivation éventuelle */
+.btn:disabled,
+.btn_primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+</style>
+

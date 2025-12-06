@@ -133,14 +133,19 @@ export default function headerView(model, dispatch) {
                     h('button.partage', {
                         on: { click: () => dispatch(Msg.OpenModal('partage')) },
                         attrs: { 'data-tooltip': 'Share', 'aria-label': 'Share' }
-                    }, [
-                        h('img', {
-                            attrs: {
-                                src: '/public/assets/icons/partager.png',
-                                alt: 'Partager'
-                            }
-                        })
-                     ]),
+                    }, [h('svg', { attrs: { viewBox: "0 0 24 24", width: "24px", height: "24px", fill: "var(--white2)" } }, [
+                                h('path', { attrs: { d: "M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.02-4.11A2.99 2.99 0 0018 7.91a3 3 0 10-3-3c0 .24.04.47.09.7L8.07 9.72A3.003 3.003 0 006 9a3 3 0 100 6c1.07 0 2.02-.56 2.55-1.41l6.91 4.03c-.05.19-.08.39-.08.6a3 3 0 103-3z" } })
+                            ])
+                        ]),
+
+                     // --- Bouton Notification --- 
+                    h('button.notification', {
+                        on: { click: () => dispatch(Msg.OpenModal('notification')) },
+                        attrs: { 'data-tooltip': 'Notifications', 'aria-label': 'Notifications' }
+                    }, [h('svg', { attrs: { viewBox: "0 0 24 24", width: "24px", height: "24px", fill: "var(--white2)" } }, [
+                                h('path', { attrs: { d: "M12 22a2 2 0 002-2h-4a2 2 0 002 2zm6-6v-5a6 6 0 00-5-5.91V4a1 1 0 10-2 0v1.09A6 6 0 006 11v5l-2 2v1h16v-1l-2-2z" } })
+                            ])
+                        ]),
                     
                     // --- Sélecteur de Vue ---
                     h('div.select-wrapper', [

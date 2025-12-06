@@ -130,6 +130,10 @@ export function update(msg, model) {
             return model;
         }
         else if (name === 'datepicker') {
+        }else if(name === 'notification'){
+            triggerHtmxDialog('/dialog/notification');
+            return model; 
+        }else if (name === 'datepicker') {
             const { date, position, target } = payload;
             const popupStyle = placePopup(256, 216, position); 
             

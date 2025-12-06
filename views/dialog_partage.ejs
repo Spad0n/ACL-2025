@@ -34,6 +34,10 @@
 
         function updateResults() {
           const query = searchInput.value.toLowerCase();
+          if(query.length === 0){
+            resultsDiv.innerHTML = "";
+            return;
+          }
           const filtered = utilisateurs.filter(u => u.username.toLowerCase().includes(query));
           resultsDiv.innerHTML = filtered.map(u => `<div class="result-item" data-username="${u.username}">${u.username}</div>`).join("");
 
@@ -67,9 +71,14 @@
     const result = await res.json();
 
     if (!res.ok) {
-        document.getElementById("message-erreur").innerText = result.error || "Erreur inconnue";
+        const errorBox = document.getElementById("message-erreur")
+        errorBox.innerText = result.error || "Erreur inconnue";
+        errorBox.classList.add("active");
         return;
     }
+
+    document.getElementById("message-erreur").innerText = "";
+    document.getElementById("message-erreur").classList.remove("active");
 
     document.getElementById("dialog-container").innerHTML = "";
 };
@@ -77,46 +86,178 @@
     </script>
 
     <style>
-      .user-list {
-        border: 1px solid #ccc;
-        max-height: 140px;
-        overflow-y: auto;
-        margin-bottom: 10px;
-      }
-      .result-item {
-        padding: 6px;
-        cursor: pointer;
-      }
-      .result-item:hover {
-        background: #efefef;
-      }
-      #select-agenda-partage {
-        background: white;
-        color: black;
-        border: 1px solid #ccc;
-        padding: 6px;
-        border-radius: 4px;
-      }
-      .btn {
-        padding: 8px 16px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-weight: 500;
-        border: none;
-        margin-right: 8px;
-      }
-      .btn-cancel {
-        background: #ddd;
-        color: #333;
-      }
-      .btn-primary {
-        background: #007bff;
-        color: white;
-      }
-      .btn-primary:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
+
+      /* ===== OVERLAY ===== */
+.entries__form {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: 100%;
+  max-width: 360px;
+  min-width: 280px;
+
+  height: auto;
+  max-height: min(520px, 90%);
+
+  background-color: var(--black1);
+  border: none;
+  border-radius: 8px;
+  box-shadow: var(--box-shadow1);
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  z-index: 1011;
+}
+
+.entries__form::backdrop {
+  background-color: rgba(0,0,0,0.4);
+}
+
+/* ===== FORM BODY ===== */
+.entries__form form {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  height: 100%;
+  overflow: hidden scroll;
+}
+
+/* ===== TITLE ===== */
+.entries__form h2 {
+  color: var(--taskcolor);
+  text-align: center;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+/* ===== LABEL ===== */
+.entries__form label {
+  color: var(--white2);
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+/* ===== INPUTS / SELECT ===== */
+.entries__form input[type="text"],
+.entries__form select {
+  margin-bottom: 14px;
+  background-color: var(--black3);
+  border: 2px solid transparent;
+  color: var(--white1);
+  border-radius: 3px;
+  font-size: 14px;
+  height: 42px;
+  padding: 0 8px;
+  line-height: 42px;
+  transition-duration: 250ms;
+  transition-property: border-color;
+  transition-timing-function: cubic-bezier(.33, 1, .68, 1);
+}
+
+.entries__form input:focus,
+.entries__form select:focus {
+  border-color: var(--mediumgrey2);
+}
+
+.entries__form input::placeholder {
+  color: var(--white2);
+}
+
+/* ===== ERROR MESSAGE ===== */
+#message-erreur {
+  display: none;
+  color: var(--red1);
+  font-size: 14px;
+  margin-bottom: 10px;
+  background-color: var(--black0);
+  border-left: 3px solid var(--red1);
+  padding: 6px 8px;
+}
+#message-erreur.active {
+  display: block;
+}
+
+
+/* ===== SEARCH RESULTS LIST ===== */
+.user-list {
+  width: 100%;
+  max-height: 140px;
+  overflow-y: auto;
+  border-radius: 4px;
+  background-color: var(--black2);
+  border: 1px solid var(--darkgrey1);
+  margin-bottom: 10px;
+}
+
+.result-item {
+  padding: 10px;
+  color: var(--white3);
+  cursor: pointer;
+  transition: background-color 150ms ease-in-out;
+}
+
+.result-item:hover {
+  background-color: var(--black3);
+}
+
+/* ===== FOOTER BUTTONS ===== */
+.entries__form footer {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  height: 48px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  border-radius: 0;
+  font-size: 14px;
+  transition: background-color 150ms ease-in-out;
+}
+
+/* cancel */
+.btn-cancel {
+  color: var(--white2);
+  background-color: var(--black0);
+}
+
+.btn-cancel:hover {
+  background-color: var(--darkgrey1);
+}
+
+/* submit */
+.btn-primary {
+  background-color: var(--black2);
+  color: var(--white1);
+}
+
+.btn-primary:hover {
+  background-color: var(--mediumgrey0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===== RESPONSIVE ===== */
+@media screen and (max-width: 640px) {
+  .entries__form {
+    inset: 0 !important;
+    margin: auto !important;
+    max-height: 80% !important;
+  }
+}
     </style>
 
   </form>

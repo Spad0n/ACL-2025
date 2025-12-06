@@ -21,8 +21,18 @@ import {
     renommerAgenda,
     recupTousAgendas,
     filtrerEvenementNom,
+    ajouterNotificationPartage, 
+    recupNotification, 
+    changerEtatNotificationAccepte, 
+    changerEtatNotificationRefuse,
+    supprimerAgendaPartage,
+    agendaPartagePour,
+    supprimerNotificationPartage,
+    ajouterNotification,
+    recupNotificationTypeRefusAcceptation
 } from './fonctionsBdd.js';
 import { tr } from 'date-fns/locale';
+import { error } from 'console';
 
 
 dotenv.config();
@@ -84,6 +94,7 @@ app.get('/events', async (req, res) => {
 
     const username = token.username;
     const id_utilisateurRows = await recupUtilisateurID(bdd, username);
+    console.log("------------------", id_utilisateurRows);
     const id_utilisateur = id_utilisateurRows[0].id;
 
     const sql = `SELECT e.* FROM evenements e
@@ -240,12 +251,21 @@ app.post("/categories/delete", async (req, res) => {
 
         // Sécurité : Vérifier que l'agenda appartient bien à l'utilisateur
         // et que ce n'est pas "Default"
-        const agendas = await recupAgendaUtilisateurConnecte(bdd, id_utilisateur);
+        const agendas = await recupTousAgendas(bdd, id_utilisateur);
         const targetAgenda = agendas.find(a => a.id.toString() === id.toString());
-
-        if (!targetAgenda) {
+        
+        const partage = await agendaPartagePour(bdd, id, id_utilisateur);
+        if (!targetAgenda && !partage) {
             return res.status(404).json({ error: "Agenda introuvable" });
         }
+
+        if(partage){
+            await supprimerAgendaPartage(bdd, id, id_utilisateur);
+            await supprimerNotificationPartage(bdd, id, id_utilisateur);
+            res.set('HX-Trigger', JSON.stringify({ categoryDeleted: name }));
+            return res.send('');
+        }
+
         if (targetAgenda.nom === 'Default') {
             return res.status(403).json({ error: "Impossible de supprimer l'agenda Default" });
         }
@@ -343,24 +363,72 @@ app.post("/agendas/partage", async (req, res) => {
 
         const id_utilisateurAquiPartage = idUsuarioPartage[0].id;
 
-        await ajouterAgendasPartages(
+        const type = 'demande';
+
+        await ajouterNotificationPartage(
             bdd,
-            id_agenda,
             id_utilisateur,
-            id_utilisateurAquiPartage
+            id_utilisateurAquiPartage,
+            id_agenda, 
+            type
         );
+        
 
         return res.json({ success: true });
 
     } catch (err) {
-        if(err.message === "Ce partage existe déjà"){
+        if(err.code === "PARTAGE_EXISTANT" || err.code === "PARTAGE_ACCEPTE" || err.code === "PARTAGE_REFUSE"){
             return res.status(409).json({error: err.message});
         }
         
         console.error("Erreur serveur :", err);
-        return res.status(500).json({ error: err.message });
+        return res.status(500).json({ error: err });
     }
 });
+
+app.get('/recupNotification', async (req, res) => {
+    try{
+            const tokenSigne = req.cookies.accessToken;
+            let token;
+            try {
+                token = jwt.verify(tokenSigne, process.env.SECRET);
+            } catch (err) {
+                return res.status(401).json({ error: "Token invalide" });
+            }
+                const username = token.username;
+            try {
+                const id_utilisateurRows = await recupUtilisateurID(bdd, username);
+
+                if (id_utilisateurRows.length === 0) {
+                    return res.status(404).json({ error: "Utilisateur introuvable" });
+                }
+
+                const id_utilisateur = id_utilisateurRows[0].id;
+                const notificationsDemande = await recupNotification(bdd, username);
+                const notificationRefusAcceptation = await recupNotificationTypeRefusAcceptation(bdd, id_utilisateur)
+
+                res.set('Cache-Control', 'no-store');
+                res.render('notification_liste', {notificationsDemande, notificationRefusAcceptation});
+            } 
+            catch (err){
+                res.status(500).json({ error: err.message});
+            }
+        }
+        catch(err){
+            res.status(500).json({ error: err.message})
+        }
+})
+
+app.post('/notification/supprimer', (req, res) => {
+    const { id } = req.body;
+
+    const sql = "DELETE FROM notificationpartage WHERE id = ?";
+    bdd.run(sql, [id], function(err){
+        if(err) return res.status(500).json( {error: err.message});
+        res.send("");
+    })
+})
+
 
 app.get('/recupUtilisateur', async (req, res) => {
     try{
@@ -411,6 +479,83 @@ app.get('/events/search-events', async (req, res) => {
         res.status(500).json({ error: "Erreur serveur" });
     }
 });
+
+app.get('/dialog/notification', (req, res) =>{
+    res.render("dialog_notification");
+});
+
+app.post('/notification/accepter', async (req,res) => {
+    try{
+        const tokenSigne = req.cookies.accessToken;
+        let token;
+        try {
+            token = jwt.verify(tokenSigne, process.env.SECRET);
+        } catch (err) {
+            return res.status(401).json({ error: "Token invalide" });
+        }
+        const username = token.username;
+
+        const id_notif = req.body.id;
+        if(!id_notif){
+             return res.status(400).json({ error: "ID manquant " });
+        }
+
+        const notifications = await recupNotification(bdd, username);
+        const notif = notifications.find(n => n.id == id_notif);
+        if (notifications.length === 0) {
+            return res.status(400).json({ error: "Aucune notification trouvée" });
+        }
+
+        const type = 'acceptation';
+        console.log("----id----",notif.id_agenda);
+        await ajouterNotification(bdd,  notif.id_envoi, notif.id_recoit, notif.id_agenda, type);
+        await ajouterAgendasPartages(bdd, notif.id_agenda, notif.id_envoi, notif.id_recoit);
+        await changerEtatNotificationAccepte(bdd, notif.id);
+
+
+        res.set('HX-Redirect', '/');
+        res.end(); 
+    }
+    catch(err){
+         res.status(500).json({ error: err.message});
+    }
+})
+
+app.post('/notification/refuser', async (req,res) => {
+try{
+        const tokenSigne = req.cookies.accessToken;
+        let token;
+        try {
+            token = jwt.verify(tokenSigne, process.env.SECRET);
+        } catch (err) {
+            return res.status(401).json({ error: "Token invalide" });
+        }
+        const username = token.username;
+
+        const id_notif = req.body.id;
+        if(!id_notif){
+             return res.status(400).json({ error: "ID manquant " });
+        }
+
+        const notifications = await recupNotification(bdd, username);
+        const notif = notifications.find(n => n.id == id_notif);
+        if (notifications.length === 0) {
+            return res.status(400).json({ error: "Aucune notification trouvée" });
+        }
+        const type = 'refus';
+        await changerEtatNotificationRefuse(bdd, notif.id);
+        await ajouterNotification(bdd, notif.id_envoi, notif.id_recoit, notif.id_agenda, type);
+
+        res.set('HX-Redirect', '/');
+        res.end();
+        
+    }
+    catch(err){
+         res.status(500).json({ error: err.message});
+    }
+})
+
+
 
 // +-------------------------------------------------------------------
 // | GESTION de la fonctionalité exporter/importer un agenda

@@ -41,6 +41,7 @@ function creerTableAgenda(dataBase) {
             couleur INTEGER DEFAULT 4286964, 
             id_utilisateur INTEGER, 
             FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id)
+            ON DELETE CASCADE
         )`;
         dataBase.run(sql, (err) => {
             if(err) rej(new Error("Erreur table agendas: " + err.message));
@@ -51,7 +52,7 @@ function creerTableAgenda(dataBase) {
 
 function creerTableAgendasPartages(dataBase){
     return new Promise( (res, rej) => {
-        const sql = ' CREATE TABLE IF NOT EXISTS agendaspartage(id INTEGER PRIMARY KEY, id_agenda INTEGER NOT NULL, id_user1 INTEGER, id_user2 INTEGER, FOREIGN KEY (id_agenda) REFERENCES agendas(id), FOREIGN KEY (id_user1) REFERENCES utilisateurs(id), FOREIGN KEY (id_user2) REFERENCES utilisateurs(id), UNIQUE(id_agenda, id_user2))';
+        const sql = ' CREATE TABLE IF NOT EXISTS agendaspartage(id INTEGER PRIMARY KEY, id_agenda INTEGER NOT NULL, id_user1 INTEGER, id_user2 INTEGER, FOREIGN KEY (id_agenda) REFERENCES agendas(id) ON DELETE CASCADE, FOREIGN KEY (id_user1) REFERENCES utilisateurs(id) ON DELETE CASCADE, FOREIGN KEY (id_user2) REFERENCES utilisateurs(id) ON DELETE CASCADE, UNIQUE(id_agenda, id_user2))';
         dataBase.run(sql, (err) => {
             if(err){
                 rej(new Error("Erreur lors de la création de la table agendaspartages"));
@@ -60,7 +61,31 @@ function creerTableAgendasPartages(dataBase){
                 res("Table agendaspartages OK");
             }
         });
-    })
+    }) ;
+}
+
+function creerTableNotificationPartage(dataBase){
+    return new Promise( (res, rej) => {
+        const sql = `CREATE TABLE IF NOT EXISTS notificationpartage(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                    id_envoi INTEGER NOT NULL, 
+                    id_recoit INTEGER NOT NULL,
+                    id_agenda INTEGER NOT NULL,
+                    etat TEXT NOT NULL DEFAULT 'attente' CHECK(etat IN ('attente', 'accepte', 'refuse')),
+                    type TEXT NOT NULL CHECK(type IN ('demande', 'acceptation', 'refus')),
+                    creation DATETIME DEFAULT CURRENT_TIMESTAMP, 
+                    FOREIGN KEY (id_envoi) REFERENCES utilisateurs(id) ON DELETE CASCADE, 
+                    FOREIGN KEY (id_recoit) REFERENCES utilisateurs(id) ON DELETE CASCADE,
+                    FOREIGN KEY (id_agenda) REFERENCES agendas(id) ON DELETE CASCADE)`;
+        dataBase.run(sql, (err) => {
+            if(err){
+                rej(new Error("Erreur lors de la création de la table notificationpartage"));
+            }
+            else{
+                res("Table notificationpartage OK")
+            }
+        });
+    });
 }
 
 function reassignerEvenementsEtSupprimerAgenda(dataBase, idAgendaASupprimer, idUtilisateur) {
@@ -90,6 +115,43 @@ function reassignerEvenementsEtSupprimerAgenda(dataBase, idAgendaASupprimer, idU
         });
     });
 }
+
+function agendaPartagePour(dataBase, id_agenda, id_utilisateurRecoit){
+    return new Promise((res, rej) => {
+    const sql = `SELECT * FROM agendaspartage WHERE id_agenda = ? AND id_user2 = ? `;
+    dataBase.get(sql, [id_agenda, id_utilisateurRecoit], (err, rows) =>{
+        if(err){
+            return rej(err);
+        }
+        res(rows);
+    });
+});
+}
+
+function supprimerAgendaPartage(dataBase, id_agenda, id_utilisateurRecoit){
+    return new Promise((res, rej) => {
+        const sql = `DELETE FROM agendaspartage WHERE id_agenda = ? AND id_user2 = ?`;
+        dataBase.run(sql, [id_agenda, id_utilisateurRecoit], function(err){
+            if(err){
+                return rej(err);
+            }
+            res();
+        });
+    });
+}
+
+function supprimerNotificationPartage(dataBase, id_agenda, id_utilisateurRecoit){
+    return new Promise((res, rej) => {
+        const sql = `DELETE FROM notificationpartage WHERE id_agenda = ? AND id_recoit = ?`;
+        dataBase.run(sql, [id_agenda, id_utilisateurRecoit], function(err){
+            if(err){
+                return rej(err);
+            }
+            res();
+        });
+    });
+}
+
 
 // Ouvre une connexion avec la BDD
 async function creerBdd(chemin) {
@@ -190,6 +252,59 @@ function recupIdUtilisateur(dataBase, username) {
 	});
     });
 }
+
+function recupNotification(dataBase, username) {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT 
+                n.id,
+                n.id_envoi,
+                n.id_recoit,
+                n.id_agenda,
+                n.etat,
+                n.creation,
+                u2.username AS envoyeur,
+                u.username AS receveur,
+                a.nom AS agenda_nom
+            FROM notificationpartage n
+            JOIN utilisateurs u ON n.id_recoit = u.id
+            JOIN utilisateurs u2 ON n.id_envoi = u2.id
+            JOIN agendas a ON n.id_agenda = a.id
+            WHERE n.etat = "attente"AND n.type = "demande" AND u.username = ?
+        `;
+
+        dataBase.all(sql, [username], (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+}
+
+function recupNotificationTypeRefusAcceptation(dataBase, id){
+    return new Promise((res, rej) => {
+        const sql = `SELECT n.*,
+                    u.username AS nom_utilisateur,
+                    a.nom AS agenda_nom
+                    FROM notificationpartage n
+                    JOIN utilisateurs u ON n.id_recoit = u.id
+                    JOIN agendas a ON n.id_agenda = a.id
+                    WHERE n.etat = "attente"
+                    AND (n.type = "refus" OR n.type = "acceptation")
+                    AND n.id_envoi = ?`;
+        dataBase.all(sql, [id], (err, rows) => {
+            if(err){
+                rej(err);
+            }
+            else{
+                res(rows);
+            }
+        });          
+    });
+}
+
+
+
+
 
 // +-----------------------------------------------------
 // | idUtilisateur : Entier
@@ -300,6 +415,18 @@ async function recupTousAgendas(bdd, id_utilisateur){
     return [...agendasUtilisateurConnecte, ...agendaspartageFormated];
 }
 
+function recupNomUtilisateur(dataBase, id){
+    return new Promise ((res, rej) => {
+         const sql = `SELECT username FROM utilisateurs WHERE id = ?`;
+
+         dataBase.get(sql, [id], (err, row) => {
+            if(err){
+                rej(err.message);
+            }
+            res(row.username);
+         });
+    });
+}
 
 
 // Permet d'ajouter un utilisateur dans la BDD
@@ -364,6 +491,118 @@ function ajouterAgendasPartages(dataBase, id_agenda, id_user1, id_user2){
         }
     });
 }
+
+
+
+function ajouterNotification(dataBase, id_envoi, id_recoit, id_agenda, type) {
+    return new Promise((res, rej) => {
+        const sql = `
+            INSERT INTO notificationpartage(id_envoi, id_recoit, id_agenda, type)
+            VALUES (?, ?, ?, ?)
+        `;
+        dataBase.run(sql, [id_envoi, id_recoit, id_agenda, type], function(err) {
+            if (err) return rej(err);
+            res("Notification ajoutée");
+        });
+    });
+}
+
+function ajouterNotificationPartage(dataBase, id_envoi, id_recoit, id_agenda, type) {
+    return new Promise(async (res, rej) => {
+        try{
+            const sqlCheckNotificationExisteDeja = 'SELECT * FROM notificationpartage WHERE id_agenda = ? AND id_recoit = ?'
+
+            const partageExiste = await new Promise( (res, rej) =>{
+            dataBase.all(sqlCheckNotificationExisteDeja, [id_agenda, id_recoit], (err, rows)=>{
+                if(err){
+                    rej(err)
+                }
+                res(rows);
+            });
+        });
+        if (partageExiste.length !== 0) {
+            const slqPartageEtat = `SELECT etat FROM notificationpartage WHERE id_agenda = ? AND id_recoit = ?`
+            try{
+                const etatPartage = await new Promise( (res, rej) => {
+                    dataBase.all(slqPartageEtat, [id_agenda, id_recoit],(err, rows) => {
+                        if(err){
+                            rej(err);
+                        }
+                        res(rows);
+                    });
+                });
+                if(etatPartage.length > 0){
+                    const etat = etatPartage[0].etat;
+                    if(etat === "accepte"){
+                        const erreur = new Error("Ce partage à été accepté");
+                        erreur.code = "PARTAGE_ACCEPTE";
+                        return rej(erreur);
+                    }
+                    else if(etat === "refuse"){
+                        const erreur = new Error("Ce partage à été refusé");
+                        erreur.code = "PARTAGE_REFUSE";
+                        return rej(erreur);
+                    }
+                    else{
+                        const username = await recupNomUtilisateur(dataBase, id_recoit);
+                        const erreur = new Error(`Ce partage est en attente d'une réponse de ${username}`);
+                        erreur.code = "PARTAGE_EXISTANT"; 
+                        return rej(erreur); 
+                    }
+                }
+                return;
+            }
+            catch(err){
+                rej(err);
+            }
+
+        }
+        const sql = `
+            INSERT INTO notificationpartage(id_envoi, id_recoit, id_agenda, type)
+            VALUES (?, ?, ?, ?)
+        `;
+
+        dataBase.run(sql, [id_envoi, id_recoit, id_agenda, type], function(err) {
+            if (err) {
+                return rej(err);
+            }
+
+            return res("Notification ajoutée");
+        });
+        }catch (err) {
+            rej(err);
+        }
+    });
+    
+}
+
+function changerEtatNotificationAccepte(dataBase, id){
+    return new Promise((res, rej) => {
+        const sql = ` UPDATE notificationpartage SET etat = "accepte" WHERE id = ?`;
+
+        dataBase.run(sql, [id], function(err) {
+            if(err){
+                return rej(err);
+            }
+            return res("Changement de l'état de la notififcation en accepte");
+        });
+    });
+}
+
+function changerEtatNotificationRefuse(dataBase, id){
+    return new Promise((res, rej) => {
+        const sql = ` UPDATE notificationpartage SET etat = "refuse" WHERE id = ?`;
+
+        dataBase.run(sql, [id], function(err) {
+            if(err){
+                return rej(err);
+            }
+            return res("Changement de l'état de la notififcation en refuse");
+        });
+    });
+}
+
+    
 
 async function ajouterEvenement(dataBase, token,objectEvenement, callback) {
    try{
@@ -554,7 +793,7 @@ function supprimerEvenement(dataBase, eventId, callback) {
 }
 
 function supprimerAgenda(dataBase, agendaId, callback) {
-    const sql = 'DELETE FROM agendas WHERE id = ?';
+    const sql = 'DELETE ON  FROM agendas WHERE id = ?';
     dataBase.run(sql, [agendaId], function(err) {
         if (err) {
             console.error("Erreur suppression agenda:", err.message);
@@ -734,6 +973,10 @@ async function initBdd(dataBase) {
     await creerTableAgendasPartages(dataBase)
         .then( res => console.log(res) )
         .catch( err => console.error(err) );
+
+    await creerTableNotificationPartage(dataBase)
+        .then( res => console.log(res) )
+        .catch( err => console.error(err) );
 }
 
 // ici bdd.db le chemin depend de l'endroit où la commande node a été excuté
@@ -742,6 +985,7 @@ await creerBdd("bdd.db")
     .then( (res) => {
         console.log("Connexion avec la BDD : OK");
         bdd = res ;
+        bdd.run('PRAGMA foreign_keys = ON;')
     })
     .catch( (err) => console.error(err));
 
@@ -775,5 +1019,15 @@ export { bdd ,
          reassignerEvenementsEtSupprimerAgenda,
          updateUsername,
          updatePassword,
-         filtrerEvenementNom
+         filtrerEvenementNom,
+         ajouterNotificationPartage, 
+         recupNotification, 
+         changerEtatNotificationAccepte, 
+         changerEtatNotificationRefuse,
+         recupNomUtilisateur,
+         supprimerAgendaPartage,
+         agendaPartagePour,
+         supprimerNotificationPartage,
+         ajouterNotification,
+         recupNotificationTypeRefusAcceptation
        };

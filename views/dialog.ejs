@@ -13,7 +13,7 @@ const icons = {
     <% if (action === "delete") { %>
         <form hx-post="/events/delete" hx-target="#dialog-container" hx-swap="innerHTML" class="entry-form">
             <div class="entries__form--body">
-                <div class="form--body__title"><h3 style="color:var(--white1)">Dellete ?</h3></div>
+                <div class="form--body__title"><h3 style="color:var(--white1)">Delete ?</h3></div>
                 <div class="form--body__description"><p style="color:var(--white2)">Confirm deletion of "<%= event.title %>"</p></div>
                 <input type="hidden" name="id" value="<%= event.id %>">
             </div>
@@ -32,7 +32,7 @@ const icons = {
         <input type="hidden" name="end" id="final-end">
         
         <!-- Ce champ caché recevra la couleur de l'agenda sélectionné via JS -->
-        <input type="hidden" name="color" id="final-color" value="#4285F4">
+        <!-- <input type="hidden" name="color" id="final-color" value="#4285F4"> -->
 
         <div class="entries__form--body">
             <div class="form--body__title form-body-single">
@@ -159,8 +159,8 @@ const icons = {
              finalStart: document.getElementById('final-start'),
              finalEnd: document.getElementById('final-end'),
              
-             agendaSelect: document.getElementById('agenda-select'),
-             finalColor: document.getElementById('final-color'),
+             //agendaSelect: document.getElementById('agenda-select'),
+             //finalColor: document.getElementById('final-color'),
              dotPreview: document.getElementById('agenda-preview-dot')
          };
 
@@ -173,16 +173,16 @@ const icons = {
          };
 
          // --- LOGIQUE COULEUR AGENDA ---
-         function updateColorFromAgenda() {
-             if (!els.agendaSelect || !els.finalColor) return;
-             const selectedOption = els.agendaSelect.options[els.agendaSelect.selectedIndex];
-             if (selectedOption) {
-                 const color = selectedOption.getAttribute('data-color');
-                 els.finalColor.value = color;
-                 if (els.dotPreview) els.dotPreview.style.backgroundColor = color;
-             }
-         }
-         if (els.agendaSelect) els.agendaSelect.addEventListener('change', updateColorFromAgenda);
+         //function updateColorFromAgenda() {
+         //    if (!els.agendaSelect || !els.finalColor) return;
+         //    const selectedOption = els.agendaSelect.options[els.agendaSelect.selectedIndex];
+         //    if (selectedOption) {
+         //        const color = selectedOption.getAttribute('data-color');
+         //        els.finalColor.value = color;
+         //        if (els.dotPreview) els.dotPreview.style.backgroundColor = color;
+         //    }
+         //}
+         //if (els.agendaSelect) els.agendaSelect.addEventListener('change', updateColorFromAgenda);
 
          // --- UI UPDATE ---
          function updateUI() {

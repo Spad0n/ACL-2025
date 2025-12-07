@@ -24,7 +24,7 @@ function creerTableUtilisateur(dataBase) {
 
 function creerTableEvenement(dataBase){
     return new Promise( (res,rej) => {
-        const sql = 'CREATE TABLE IF NOT EXISTS evenements(id INTEGER PRIMARY KEY, id_agenda INTEGER, title TEXT NOT NULL, start DATETIME NOT NULL, end DATETIME NOT NULL, description TEXT, couleur INTEGER, FOREIGN KEY (id_agenda) REFERENCES agendas(id))';
+        const sql = 'CREATE TABLE IF NOT EXISTS evenements(id INTEGER PRIMARY KEY, id_agenda INTEGER, title TEXT NOT NULL, start DATETIME NOT NULL, end DATETIME NOT NULL, description TEXT, FOREIGN KEY (id_agenda) REFERENCES agendas(id))';
         dataBase.run(sql, (err) => {
             rej(new Error("Erreur lors de la création de la table evenements"));
         });
@@ -619,13 +619,13 @@ async function ajouterEvenement(dataBase, token,objectEvenement, callback) {
     //}
     //const id_agendas = agendas[0].id;
    
-    const sql = 'INSERT INTO evenements(title, start, end, description, couleur, id_agenda) VALUES (?,?,?,?,?,?)';
+    const sql = 'INSERT INTO evenements(title, start, end, description, id_agenda) VALUES (?,?,?,?,?)';
     dataBase.run(sql, [
         objectEvenement.title,
         objectEvenement.start,
         objectEvenement.end,
         objectEvenement.description,
-        objectEvenement.color,
+        //objectEvenement.color,
         objectEvenement.id_agenda
     ], function(err) {
         if (err) {
@@ -740,13 +740,12 @@ async function recupEvenementsTag(dataBase, id_tag){
 // --------------------------------------------------------------------------
 function ajouterEvenementsAgendaImporte(dataBase, idAgenda, objetEvenement) {
     return new Promise( (resolve,reject) => {
-	const sql = 'INSERT INTO evenements(title, start, end, description, couleur, id_agenda) VALUES (?,?,?,?,?,?)';
+	const sql = 'INSERT INTO evenements(title, start, end, description, id_agenda) VALUES (?,?,?,?,?)';
 	dataBase.run(sql, [
             objetEvenement.title,
             objetEvenement.start,
             objetEvenement.end,
             objetEvenement.description,
-            objetEvenement.color,
             idAgenda
 	], (err) => {
 	    if(err) {
@@ -759,13 +758,12 @@ function ajouterEvenementsAgendaImporte(dataBase, idAgenda, objetEvenement) {
 
 
 function modifierEvenement(dataBase, objectEvenement, callback) {
-    const sql = 'UPDATE evenements SET title = ?, start = ?, end = ?, description = ?, couleur = ?, id_agenda = ? WHERE id = ?';
+    const sql = 'UPDATE evenements SET title = ?, start = ?, end = ?, description = ?, id_agenda = ? WHERE id = ?';
     dataBase.run(sql, [
         objectEvenement.title,
         objectEvenement.start,
         objectEvenement.end,
         objectEvenement.description,
-        objectEvenement.color,
         objectEvenement.id_agenda,
         objectEvenement.id
     ], function(err) {

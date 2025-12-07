@@ -118,7 +118,7 @@ app.get('/events', async (req, res) => {
 // Affichage du dialogue de création/édition
 app.get('/dialog/event-form', async (req, res) => {
     try {
-        const { action, date, id, title, description, color, start, end } = req.query;
+        const { action, date, id, title, description, start, end } = req.query;
 
         const token = req.cookies.accessToken;
         if (!token) return res.status(401).send("Utilisateur non connecté");
@@ -141,7 +141,7 @@ app.get('/dialog/event-form', async (req, res) => {
                 description: description || '',
                 start: start || null,
                 end: end || null,
-                color: color ? parseInt(color, 10) : 0xff0000,
+                //color: color ? parseInt(color, 10) : 0xff0000,
                 id_agenda: null 
             },
             agendas
@@ -157,7 +157,8 @@ app.get('/dialog/event-form', async (req, res) => {
 
 
 app.post('/events', (req, res) => {
-    const { id, title, description, color, start, end, id_agenda } = req.body;
+    //const { id, title, description, color, start, end, id_agenda } = req.body;
+    const { id, title, description, start, end, id_agenda } = req.body;
 
     const startDate = new Date(start);
     const endDate = new Date(end);
@@ -165,7 +166,7 @@ app.post('/events', (req, res) => {
     const savedEvent = {
         title: title,
         description: description,
-        color: parseInt(color.substring(1), 16),
+        //color: parseInt(color.substring(1), 16),
         start: startDate.toISOString(),
         end: endDate.toISOString(),
         id_agenda: parseInt(id_agenda, 10)

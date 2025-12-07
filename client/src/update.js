@@ -67,7 +67,6 @@ export function update(msg, model) {
             description: event.description,
             start: event.start, // Les dates sont déjà au format ISO string dans le modèle
             end: event.end,
-            color: event.color.toString(), // La couleur est un nombre, on la passe en string
         });
         const editUrl = `/dialog/event-form?${params.toString()}`;
         triggerHtmxDialog(editUrl);

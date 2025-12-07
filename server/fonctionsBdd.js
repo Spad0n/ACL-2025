@@ -956,6 +956,19 @@ function filtrerEvenementNom(dataBase, user, nomEvenement, maxDistance = 2) {
     });
 }
 
+function updateCouleurAgenda(dataBase, newCouleur, idAgenda) {
+    return new Promise( (res, rej) => {
+        const sql = `UPDATE agendas SET couleur=? WHERE id=?`;
+        dataBase.run(sql, [newCouleur, idAgenda], (err) => {
+            
+            if(err) {
+                rej('SERVEUR log : erreur MAJ couleur agenda');
+            }
+            res('SERVEUR log : couleur MAJ');
+        });
+    });
+}
+ 
 // Permet d'initialiser la BDD en créant la table utilisateur
 async function initBdd(dataBase) {
     await creerTableUtilisateur(dataBase)
@@ -1029,5 +1042,6 @@ export { bdd ,
          agendaPartagePour,
          supprimerNotificationPartage,
          ajouterNotification,
-         recupNotificationTypeRefusAcceptation
+         recupNotificationTypeRefusAcceptation,
+         updateCouleurAgenda
        };

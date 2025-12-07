@@ -17,6 +17,7 @@ import { bdd,
 	 recupAgendaIdByName,
          updateUsername,
 	 updatePassword,
+     updateCouleurAgenda
 	 
        } from "./fonctionsBdd.js";
 import jwt from "jsonwebtoken";
@@ -151,7 +152,7 @@ export function callFrontEndExporter(req, res) {
 						// console.log('SERVEUR log : événements : ', evnt);
 
 						// On crée le fichier
-						snapShotCreation(evnt, agenda, agd.id)
+						snapShotCreation(evnt, agenda, agd.id, agd.couleur)
 						    .then(success => {
 							res.json(success);
 						    })
@@ -206,7 +207,7 @@ export function sendFrontEndAgendaUtilisateur(req, res) {
 // +-----------------------------------
 // | Permet de créer le fichier snapshot
 // ------------------------------------
-function snapShotCreation(evenements, nomAgenda, idAgenda) {
+function snapShotCreation(evenements, nomAgenda, idAgenda, couleurAgenda) {
     setTimeout(() => console.log('SERVEUR log : snapShotCreation'));
 
     return new Promise( (resolve, reject) => {
@@ -214,8 +215,9 @@ function snapShotCreation(evenements, nomAgenda, idAgenda) {
 	// Propriété de l'objet : nom, id et des entiers (chaque entier correspond à l'id d'un événements)
 	const AGENDA = {};
 
-	AGENDA.nom = nomAgenda;
-	AGENDA.id  = idAgenda;
+	AGENDA.nom      = nomAgenda;
+	AGENDA.id       = idAgenda;
+    AGENDA.couleur  = couleurAgenda;
 	
 	for(const e of evenements) {
             console.log(e);
@@ -277,6 +279,12 @@ export function importerAgendaUtilisateur(req,res) {
 				.then( idAgenda => {
 				    if(idAgenda.length == 1) {
 					const realIdAgenda = idAgenda[0].id;
+                   
+                    // on lui met sa petite couleur
+                    updateCouleurAgenda(bdd, agenda.couleur, realIdAgenda)
+                        .then( couleurVal => console.log(couleurVal))
+                        .catch(errCoul => console.error(errCoul));
+
 					for (const [key, value] of Object.entries(agenda)) {
 					    // les clefs pour les evenements est un entier
 					    // on va regarder si on peut la convertir en entier

@@ -13,7 +13,7 @@ const sqlite3 = sqlite3pkg.verbose();
 // Permet de créer la table UTILISATEURS dans le fichier bdd.db
 function creerTableUtilisateur(dataBase) {
     return new Promise( (res,rej) => {
-        const sql = `CREATE TABLE IF NOT EXISTS utilisateurs(id INTEGER PRIMARY KEY, username, password)`;
+        const sql = `CREATE TABLE IF NOT EXISTS utilisateurs(id INTEGER PRIMARY KEY, username, password, language Text)`;
         dataBase.run(sql, (err) => {
             rej(new Error("Erreur lors de la création de la table utilisateurs"));
         }) ;
@@ -259,9 +259,9 @@ async function recupTousAgendas(bdd, id_utilisateur){
 // Permet d'ajouter un utilisateur dans la BDD
 function ajouterUtilisateur(dataBase, objetUtilisateur) {
     return new Promise( (res,rej) => {
-        const sql = `INSERT INTO utilisateurs(username, password) VALUES (?,?)` ;
+        const sql = `INSERT INTO utilisateurs(username, password, language) VALUES (?,?,?)` ;
         
-        dataBase.run(sql, [objetUtilisateur.username, objetUtilisateur.password], function(err) {
+        dataBase.run(sql, [objetUtilisateur.username, objetUtilisateur.password, objetUtilisateur.language], function(err) {
             if (err) {
 		        rej(err.message);
             }
@@ -538,6 +538,36 @@ function retournerContenuTableEvenement(dataBase) {
     }) ;
 }
 
+function modifLanguage(dataBase, username, language) {
+    return new Promise((resolve, reject) => {
+        const sql = 'UPDATE utilisateurs SET language = ? WHERE username = ?';
+        dataBase.run(sql, [language, username], function(err) {
+            if (err) {
+                reject(err.message);
+            } else if (this.changes === 0) {
+                reject(new Error("Aucun utilisateur trouvé avec ce username"));
+            } else {
+                resolve({ success : true});
+            }
+        });
+    });
+}
+
+function recupLangue(dataBase, username) {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT language FROM utilisateurs WHERE username = ?';
+        dataBase.get(sql, [username], (err, row) => {
+            if (err) {
+                reject(err.message);
+            } else if (!row) {
+                reject(new Error("Aucun utilisateur trouvé avec ce username"));
+            } else {
+                resolve(row.language);
+            }
+        });
+    });
+}
+
 // Permet d'initialiser la BDD en créant la table utilisateur
 async function initBdd(dataBase) {
     await creerTableUtilisateur(dataBase)
@@ -593,4 +623,6 @@ export { bdd ,
          ajouterEvenementsAgendaImporte,
          recupTousAgendas,
          reassignerEvenementsEtSupprimerAgenda,
+         modifLanguage,
+         recupLangue
        };

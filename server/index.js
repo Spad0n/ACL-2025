@@ -20,6 +20,8 @@ import {
     supprimerAgenda,
     renommerAgenda,
     recupTousAgendas,
+    modifLanguage,
+    recupLangue
 } from './fonctionsBdd.js';
 import { tr } from 'date-fns/locale';
 
@@ -516,6 +518,24 @@ app.patch("/agendas/:id", async (req, res) => {
         console.error(err);
         res.status(500).json({ error: err.message});
     }
+});
+
+app.post("/setLanguage/:lang", (req, res) => {
+    const { lang } = req.params;
+    const tokenSigne = req.cookies.accessToken;
+    const tokkenSansSigne = jwt.verify(tokenSigne, process.env.SECRET);
+    const username = tokkenSansSigne.username;
+    modifLanguage(bdd, username, lang);
+    res.set('HX-Trigger', JSON.stringify({ languageChanged: lang }));
+    res.send('');
+});
+
+app.post("/getLanguage", async (req, res) => {
+    const tokenSigne = req.cookies.accessToken;
+    const tokkenSansSigne = jwt.verify(tokenSigne, process.env.SECRET);
+    const username = tokkenSansSigne.username;
+    const lang = await recupLangue(bdd, username);
+    res.json({ language: lang });
 });
 
 app.listen(PORT, "0.0.0.0", (_err) => {

@@ -1,5 +1,6 @@
 import { h } from 'snabbdom';
 import { Msg } from '../messages';
+import { translate } from '../langue/langue.js';
 
 /**
  * @typedef {import('../model').Model} Model
@@ -19,9 +20,9 @@ import { Msg } from '../messages';
  */
 function renderThemeOptions(model, dispatch) {
     const themes = [
-        { value: 'dark', label: 'Dark', className: 'theme-option-dark' },
-        { value: 'light', label: 'Light', className: 'theme-option-light' },
-        { value: 'contrast', label: 'High Contrast', className: 'theme-option-contrast' }
+        { value: 'dark', label: translate(model.settings.language, 'settings.theme.dark'), className: 'theme-option-dark' },
+        { value: 'light', label: translate(model.settings.language, 'settings.theme.light'), className: 'theme-option-light' },
+        { value: 'contrast', label: translate(model.settings.language, 'settings.theme.contrast'), className: 'theme-option-contrast' }
     ];
 
     return h('div.sub-menu--item__actions.theme-actions', themes.map(theme =>
@@ -39,6 +40,42 @@ function renderThemeOptions(model, dispatch) {
                 }
             }),
             h('span', theme.label)
+        ])
+    ));
+}
+
+/**
+ * Rend les options de sélection de la langue.
+ * @private
+ * @param {Model} model - L'état de l'application.
+ * @param {function(Message): void} dispatch - La fonction de dispatch.
+ * @returns {import('snabbdom').VNode}
+ */
+function renderLanguageOptions(model, dispatch) {
+    const languages = [
+        { value: 'en', label: translate(model.settings.language, 'settings.languageOptions.english') },
+        { value: 'fr', label: translate(model.settings.language, 'settings.languageOptions.french') }
+    ];
+
+    return h('div.sub-menu--item__actions.language-actions', languages.map(language =>
+        h('label.language-option', {
+            class: { selected: model.settings.language === language.value },
+            on: { click: () => {
+                console.log(`Language changed to: ${language.value}`);
+                dispatch(Msg.SetLanguage(language.value));
+                fetch(`/setLanguage/${language.value}`, { method: 'POST' });
+            }}
+        }, [
+            h('input.language-radio__input', {
+                props: {
+                    type: 'radio',
+                    name: 'languageoption',
+                    value: language.value,
+                    checked: model.settings.language === language.value
+                },
+                on: { click: (e) => e.stopPropagation() }
+            }),
+            h('span', language.label)
         ])
     ));
 }
@@ -63,7 +100,7 @@ export default function settingsView(model, dispatch) {
         h('aside.sidebar-sub-menu', [
             // --- En-tête de la modale ---
             h('div.sub-menu__header', [
-                h('div.sub-menu--title', 'Settings & Data'),
+                h('div.sub-menu--title', translate(model.settings.language, 'settings.title')),
                 h('div.close-sub-menu', { on: { click: () => dispatch(Msg.CloseAllModals()) } }, '×')
             ]),
             // --- Corps de la modale ---
@@ -72,21 +109,27 @@ export default function settingsView(model, dispatch) {
 
                     // --- Section Données (Import/Export) ---
                     h('div.sub-menu--item', [
-                        h('div.sub-menu--item__title', 'Calendar Data (JSON)'),
-                        h('div.sub-menu--item__description', 'Download a backup or import from a file. Importing will overwrite existing data.'),
+                        h('div.sub-menu--item__title', translate(model.settings.language, 'settings.calendarData')),
+                        h('div.sub-menu--item__description', translate(model.settings.language, 'settings.calendarDescription')),
                         h('div.sub-menu--item__actions', [
                             h('div.sm-download-json', [
                                 h('button.sm-json-btn.down-json', { on: { click: () => {
                                     window.location.href = '/importerExporter/agenda';
-                                } } }, 'Import or Export Agenda')
+                                } } }, translate(model.settings.language, 'settings.importExport'))
                             ])
                         ])
                     ]),
                     
                     // --- Section Thème ---
                     h('div.sub-menu--item.smi-theme-actions', [
-                        h('div.sub-menu--item__title', 'App Theme'),
+                        h('div.sub-menu--item__title', translate(model.settings.language, 'settings.appTheme')),
                         renderThemeOptions(model, dispatch)
+                    ]),
+
+                    // --- Section Langue ---
+                    h('div.sub-menu--item.smi-language-actions', [
+                        h('div.sub-menu--item__title', translate(model.settings.language, 'settings.language')),
+                        renderLanguageOptions(model, dispatch)
                     ]),
                 ])
             ])

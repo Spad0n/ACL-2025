@@ -1,23 +1,11 @@
 import { h } from 'snabbdom';
 import { Msg } from '../messages';
+import { translate } from '../langue/langue.js';
 
 /**
  * @typedef {import('../model').Model} Model
  * @typedef {import('../messages').Message} Message
  */
-
-/**
- * La liste des vues disponibles avec leurs raccourcis clavier.
- * @private
- * @type {Array<{key: string, name: string, value: 'day'|'week'|'month'|'year'|'list'}>}
- */
-const views = [
-    { key: 'D', name: 'Day', value: 'day' },
-    { key: 'W', name: 'Week', value: 'week' },
-    { key: 'M', name: 'Month', value: 'month' },
-    { key: 'Y', name: 'Year', value: 'year' },
-    { key: 'L', name: 'Schedule', value: 'list' },
-];
 
 /**
  * Rend le composant de sélection de la vue.
@@ -29,6 +17,14 @@ const views = [
  * @returns {import('snabbdom').VNode | null} Le VNode représentant le sélecteur de vue, ou null.
  */
 export default function viewSelectorView(model, dispatch) {
+    const views = [
+        { key: translate(model.settings.language, 'views.keys.day'), name: translate(model.settings.language, 'views.day'), value: 'day' },
+        { key: translate(model.settings.language, 'views.keys.week'), name: translate(model.settings.language, 'views.week'), value: 'week' },
+        { key: translate(model.settings.language, 'views.keys.month'), name: translate(model.settings.language, 'views.month'), value: 'month' },
+        { key: translate(model.settings.language, 'views.keys.year'), name: translate(model.settings.language, 'views.year'), value: 'year' },
+        { key: translate(model.settings.language, 'views.keys.list'), name: translate(model.settings.language, 'views.list'), value: 'list' },
+    ];
+
     // Si le sélecteur ne doit pas être ouvert, on ne rend rien.
     if (!model.ui.viewSelectorOpen) {
         return null;

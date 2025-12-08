@@ -40,6 +40,7 @@ export function createAccount(req, res) {
 		const user = {
 		    username,
 		    password: createHash("sha256").update(password).digest("hex"),
+			language: 'en'
 		};
 		return ajouterUtilisateur(bdd,user)
 		    .then(id_utilisateur => creerAgendaDefautUtilisateur(bdd, id_utilisateur))

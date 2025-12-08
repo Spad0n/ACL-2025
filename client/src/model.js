@@ -86,7 +86,7 @@ import { startOfDay, format, addMinutes, addHours, setHours, subDays, addDays } 
  * Renvoie le modèle (état) initial de l'application.
  * @returns {Model} Le modèle initial complet.
  */
-export function getInitialModel() {
+export function getInitialModel(language) {
 const today = startOfDay(new Date());
 
     return {
@@ -102,7 +102,8 @@ const today = startOfDay(new Date());
         // --- Préférences utilisateur ---
         settings: {
             theme: 'dark',
-            sidebarCollapsed: false
+            sidebarCollapsed: false,
+            language: language
         },
 
         // --- État de l'UI (transitoire, non persisté) ---

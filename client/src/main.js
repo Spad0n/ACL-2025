@@ -79,7 +79,11 @@ export function triggerHtmxPost(url, data) {
  * La fonction principale qui démarre l'application.
  */
 (async () => {
-    let model = getInitialModel();
+    const lang = await fetch('/getLanguage', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => data.language)
+        .catch(() => 'en');
+    let model = getInitialModel(lang);
     let vnode = document.getElementById('app');
 
     // 1. Chargement initial des données

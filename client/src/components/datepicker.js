@@ -17,14 +17,25 @@ import {
     isToday
 } from 'date-fns';
 import { Msg } from '../messages';
+import { fr, enUS } from 'date-fns/locale';
 
 /**
  * @typedef {import('../model').Model} Model
  * @typedef {import('../messages').Message} Message
  */
 
+function getLocale(language) {
+    switch (language) {
+        case 'fr':
+            return fr;
+        case 'en':
+            return enUS;
+        default:
+            return enUS;
+    }
+}
+
 // Constantes pour les jours et mois
-const weekdays = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 const monthsIndices = Array.from({ length: 12 }, (_, i) => i);
 
 //==================================================================================
@@ -37,7 +48,7 @@ const monthsIndices = Array.from({ length: 12 }, (_, i) => i);
  * @param {function(Message): void} dispatch - La fonction de dispatch.
  * @returns {import('snabbdom').VNode}
  */
-function renderChangeDateModal(displayDate, dispatch) {
+function renderChangeDateModal(displayDate, dispatch, locale) {
     return h('aside.datepicker-change-date', [
         // Bouton fermer
         h('aside.close-change-date', {
@@ -79,7 +90,7 @@ function renderChangeDateModal(displayDate, dispatch) {
                         dispatch(Msg.DatepickerToggleChangeDate(false));
                     } 
                 }
-            }, format(new Date(0, monthIndex), 'MMMM'))
+            }, format(new Date(0, monthIndex), 'MMMM', { locale }))
         ))
     ]);
 }
@@ -137,11 +148,17 @@ export default function datepickerView(model, dispatch) {
     }
 
     // Déterminer quelle date est considérée comme "sélectionnée" en fonction de la cible
+    const locale = getLocale(model.settings.language);
+    
+    const weekdays = Array.from({ length: 7 }, (_, i) =>
+        format(new Date(1970, 0, i + 4), 'EEEEEE', { locale: getLocale(model.settings.language) })
+    );
+
     let selectedDate = model.currentDate;
 
     // Calcul de la grille du calendrier
-    const calendarStart = startOfWeek(startOfMonth(displayDate));
-    const calendarEnd = endOfWeek(endOfMonth(displayDate));
+    const calendarStart = startOfWeek(startOfMonth(displayDate), { locale });
+    const calendarEnd = endOfWeek(endOfMonth(displayDate), { locale });
     const calendarDates = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
     // Optimisation : Créer un Set des événements pour un accès O(1)
@@ -160,7 +177,7 @@ export default function datepickerView(model, dispatch) {
             h('div.datepicker__header', [
                 h('button.datepicker-title', {
                     on: { click: (e) => { e.stopPropagation(); dispatch(Msg.DatepickerToggleChangeDate(true)); } }
-                }, format(displayDate, 'MMMM yyyy')),
+                }, format(displayDate, 'MMMM yyyy', { locale })),
                 h('div.datepicker-nav', [
                     h('button.datepicker-nav--prev', {
                         on: { click: (e) => { e.stopPropagation(); dispatch(Msg.DatepickerSetDisplayDate(subMonths(displayDate, 1))); } }
@@ -192,7 +209,7 @@ export default function datepickerView(model, dispatch) {
             ]),
             
             // Modale de changement rapide (s'affiche par-dessus le corps si active)
-            isChangingDate ? renderChangeDateModal(displayDate, dispatch) : null
+            isChangingDate ? renderChangeDateModal(displayDate, dispatch, locale) : null
         ])
     ]);
 }

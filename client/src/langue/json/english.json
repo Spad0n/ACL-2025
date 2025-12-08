@@ -1,0 +1,61 @@
+{
+    "settings": {
+        "title": "Settings & Data",
+        "calendarData": "Calendar Data (JSON)",
+        "calendarDescription": "Download a backup or import from a file. Importing will overwrite existing data.",
+        "importExport": "Import or Export Agenda",
+        "appTheme": "App Theme",
+        "theme": {
+          "dark": "Dark",
+          "light": "Light",
+          "contrast": "High Contrast"
+        },
+        "language": "Language",
+        "languageOptions": {
+          "english": "English",
+          "french": "French"
+        }
+    },
+
+    "header": {
+      "mainMenu": "Main Menu",
+      "title": "Calendar",
+      "today": "Today",
+      "todayTooltip": "Today",
+      "previous": "Previous period",
+      "next": "Next period",
+      "settings": "Settings",
+      "share": "Share",
+      "logout": "Logout",
+      "datetimeContent": "Select a date",
+      "selectView": "Select a view"
+    },
+
+    "languageSelector": {
+      "selectLanguage": "Select language",
+      "button": "English",
+      "options": {
+        "en": "English",
+        "fr": "French"
+      }
+    },
+
+    "headerView": {
+      "listView": "Schedule"
+    },
+    
+    "views": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year",
+      "list": "Schedule",
+      "keys": {
+        "day": "D",
+        "week": "W",
+        "month": "M",
+        "year": "Y",
+        "list": "S"
+      }
+    }
+}

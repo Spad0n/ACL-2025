@@ -1,0 +1,61 @@
+{
+    "settings": {
+        "title": "Paramètres & Données",
+        "calendarData": "Données du Calendrier (JSON)",
+        "calendarDescription": "Téléchargez une sauvegarde ou importez depuis un fichier. L'importation écrasera les données existantes.",
+        "importExport": "Importer ou Exporter l'Agenda",
+        "appTheme": "Thème de l'application",
+        "theme": {
+          "dark": "Sombre",
+          "light": "Clair",
+          "contrast": "Contraste Élevé"
+        },
+        "language": "Langue",
+        "languageOptions": {
+          "english": "Anglais",
+          "french": "Français"
+        }
+    },
+
+    "header": {
+      "mainMenu": "Menu Principal",
+      "title": "Calendrier",
+      "today": "Aujourd'hui",
+      "todayTooltip": "Aujourd'hui",
+      "previous": "Période précédente",
+      "next": "Période suivante",
+      "settings": "Paramètres",
+      "share": "Partager",
+      "logout": "Déconnexion",
+      "datetimeContent": "Sélectionner une date",
+      "selectView": "Sélectionner une vue"
+    },
+
+    "languageSelector": {
+      "selectLanguage": "Choisir la langue",
+      "button": "Français",
+      "options": {
+        "en": "Anglais",
+        "fr": "Français"
+      }
+    },
+
+    "headerView": {
+      "listView": "Planning"
+    },
+    
+    "views": {
+      "day": "Jour",
+      "week": "Semaine",
+      "month": "Mois",
+      "year": "Année",
+      "list": "Planning",
+      "keys": {
+        "day": "J",
+        "week": "S",
+        "month": "M",
+        "year": "A",
+        "list": "P"
+      }
+    }
+}

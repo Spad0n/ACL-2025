@@ -215,6 +215,9 @@ export function update(msg, model) {
     case 'TOGGLE_VIEW_SELECTOR': {
         return { ...model, ui: { ...model.ui, viewSelectorOpen: msg.payload } };
     }
+    case 'SET_LANGUAGE': {
+        return { ...model, settings: {...model.settings, language: msg.payload} };
+    }
     case 'FORM_OPEN_CREATE': {
         const { date, minuteOfDay } = msg.payload;
         const startDate = setMinutes(setHours(startOfDay(date), 0), minuteOfDay);

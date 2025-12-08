@@ -97,6 +97,16 @@ export const Msg = {
     }),
     
     /**
+     * Change la langue de l'application.
+     * @param {string} lang - Le nouvelle langue.
+     * @returns {Message}
+     */
+    SetLanguage: (lang) => ({
+        type: 'SET_LANGUAGE',
+        payload: lang
+    }),
+    
+    /**
      * Supprime un événement.
      * @param {string} entryId - L'ID de l'événement à supprimer.
      * @returns {Message}

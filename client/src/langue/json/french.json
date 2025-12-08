@@ -57,5 +57,11 @@
         "year": "A",
         "list": "P"
       }
+    },
+
+    "sidebar": {
+      "create": "Créer",
+      "settings" : "Paramètres & Données",
+      "myCalendars": "Mes Calendriers"
     }
 }

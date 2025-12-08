@@ -13,6 +13,8 @@ import {
     subMonths
 } from 'date-fns';
 import { Msg } from '../messages';
+import { fr, enUS } from 'date-fns/locale';
+import { translate } from '../langue/langue.js';
 
 /**
  * @typedef {import('../model').Model} Model
@@ -30,13 +32,28 @@ import { Msg } from '../messages';
  * @param {function(Message): void} dispatch - La fonction pour dispatcher les messages.
  * @returns {import('snabbdom').VNode}
  */
+
+function getLocale(language) {
+    switch (language) {
+        case 'fr':
+            return fr;
+        case 'en':
+            return enUS;
+        default:
+            return enUS;
+    }
+}
+
 function renderDatepicker(model, dispatch) {
     const { currentDate } = model;
-    const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const locale = getLocale(model.settings.language);
+    const weekdays = Array.from({ length: 7 }, (_, i) =>
+        format(new Date(1970, 0, i + 4), 'EEEEEE', { locale })
+    );
     
     // Obtient les jours à afficher pour le mois en cours
-    const calendarStart = startOfWeek(startOfMonth(currentDate));
-    const calendarEnd = endOfWeek(endOfMonth(currentDate));
+    const calendarStart = startOfWeek(startOfMonth(currentDate), { locale, weekStartsOn: 0 });
+    const calendarEnd = endOfWeek(endOfMonth(currentDate), { locale, weekStartsOn: 0 });
     const calendarDates = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
     
     // Crée un Set des jours ayant des événements pour une recherche rapide
@@ -94,7 +111,7 @@ function renderCategories(model, dispatch) {
     return h('div.sb__categories', [
         h('div.sb__categories--header', [
             h('div.sbch-col__one', /* ... */ [
-                h('div.sbch-title', 'My calendars'),
+                h('div.sbch-title', translate(model.settings.language, 'sidebar.myCalendars')),
             ]),
             h('div.sbch-plus', { on: { click: () => dispatch(Msg.AddCategory()) } }, '+')
         ]),
@@ -155,11 +172,11 @@ export default function sidebarView(model, dispatch) {
                          h('path', { attrs: { fill: "#EA4335", d: "M20 16V6h-4v14z" } }),
                     ])
                 ]),
-                h('span.sb-toggle-form-btn__content', 'Create')
+                h('span.sb-toggle-form-btn__content', translate(model.settings.language, 'sidebar.create'))
             ]),
             h('button.sb-data-btn', {
                 on: { click: () => dispatch(Msg.OpenModal('settings')) },
-                attrs: { 'aria-label': 'Settings & Data' }
+                attrs: { 'aria-label': translate(model.settings.language, 'sidebar.settings') }
             }, '...') // Simplifié, pourrait être un SVG
         ]),
         

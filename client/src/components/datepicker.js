@@ -157,8 +157,8 @@ export default function datepickerView(model, dispatch) {
     let selectedDate = model.currentDate;
 
     // Calcul de la grille du calendrier
-    const calendarStart = startOfWeek(startOfMonth(displayDate), { locale });
-    const calendarEnd = endOfWeek(endOfMonth(displayDate), { locale });
+    const calendarStart = startOfWeek(startOfMonth(displayDate), { locale, weekStartsOn: 0 });
+    const calendarEnd = endOfWeek(endOfMonth(displayDate), { locale, weekStartsOn: 0 });
     const calendarDates = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
     // Optimisation : Créer un Set des événements pour un accès O(1)

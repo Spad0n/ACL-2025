@@ -1,6 +1,6 @@
 import { h } from 'snabbdom';
 import { Msg } from '../messages';
-import { translate } from '../langue/langue.js';
+import { translate } from '../../../server/langue/langue.js';
 
 /**
  * @typedef {import('../model').Model} Model

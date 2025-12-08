@@ -12,11 +12,24 @@ import {
 import { Msg } from '../messages';
 import { hextorgba } from '../utils';
 import { calculateLayout } from './layoutUtils';
+import { fr, enUS } from 'date-fns/locale';
+import { translate } from '../../../server/langue/langue.js';
 
 /**
  * @typedef {import('../model').Model} Model
  * @typedef {import('../messages').Message} Message
  */
+
+function getLocale(language) {
+    switch (language) {
+        case 'fr':
+            return fr;
+        case 'en':
+            return enUS;
+        default:
+            return enUS;
+    }
+}
 
 // Constante pour le calcul des positions (partagée avec week.js)
 const TOTAL_MINUTES_IN_DAY = 24 * 60;
@@ -83,6 +96,7 @@ function isMultiDayOrAllDay(entry) {
  */
 export default function dayView(model, dispatch) {
     const { currentDate } = model;
+    const locale = getLocale(model.settings.language);
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
     const activeCategories = new Set(
@@ -113,13 +127,13 @@ export default function dayView(model, dispatch) {
         // --- En-tête du jour ---
         h('div.dayview--header', [
             h('div.dayview--header-day', [
-                h('div.dayview--header-day__title', format(currentDate, 'EEE', { locale: localeFR }).toUpperCase()),
+                h('div.dayview--header-day__title', format(currentDate, 'EEE', { locale }).toUpperCase()),
                 h('div.dayview--header-day__number', { 
                     class: { 'dayview--header-day__number--today': isToday(currentDate) } 
                 }, format(currentDate, 'd'))
             ]),
             h('div.dv-info-day-wrapper', [
-                h('div.dayview--header-day__info', `${dayEntries.length} event(s)`)
+                h('div.dayview--header-day__info', `${dayEntries.length} ${translate(model.settings.language, 'day.events')}`)
             ])
         ]),
         

@@ -7,11 +7,23 @@ import { getWeekViewDates, localeFR } from '../dateUtils';
 import { Msg } from '../messages';
 import { hextorgba } from '../utils';
 import { calculateLayout } from './layoutUtils';
+import { fr, enUS } from 'date-fns/locale';
 
 /**
  * @typedef {import('../model').Model} Model
  * @typedef {import('../messages').Message} Message
  */
+
+function getLocale(language) {
+    switch (language) {
+        case 'fr':
+            return fr;
+        case 'en':
+            return enUS;
+        default:
+            return enUS;
+    }
+}
 
 // Constante pour le calcul des positions
 const TOTAL_MINUTES_IN_DAY = 24 * 60;
@@ -105,6 +117,7 @@ function isMultiDayOrAllDay(entry) {
  */
 export default function weekView(model, dispatch) {
     const { currentDate } = model;
+    const locale = getLocale(model.settings.language);
     const weekDates = getWeekViewDates(currentDate);
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -145,8 +158,8 @@ export default function weekView(model, dispatch) {
         h('div.weekview__top', [
             h('div'),
             h('div.weekview--header', weekDates.map(day =>
-                h('div.weekview--header-day', { key: format(day, 'yyyy-MM-dd') }, [
-                    h('span.weekview--header-day__title', format(day, 'EEE', { locale: localeFR }).toUpperCase()),
+                h('div.weekview--header-day', { key: format(day, 'yyyy-MM-dd', { locale }) }, [
+                    h('span.weekview--header-day__title', format(day, 'EEE', { locale }).toUpperCase()),
                     h('button.weekview--header-day__number', {
                         class: { 'wvh--today': isToday(day), 'wvh--selected': isSameDay(day, currentDate) },
                         on: { click: () => { dispatch(Msg.SetDate(day)); dispatch(Msg.SetView('day')); } }

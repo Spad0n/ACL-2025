@@ -11,11 +11,23 @@ import {
     localeFR
 } from '../dateUtils';
 import { Msg } from '../messages';
+import { fr, enUS } from 'date-fns/locale';
 
 /**
  * @typedef {import('../model').Model} Model
  * @typedef {import('../messages').Message} Message
  */
+
+function getLocale(language) {
+    switch (language) {
+        case 'fr':
+            return fr;
+        case 'en':
+            return enUS;
+        default:
+            return enUS;
+    }
+}
 
 /**
  * Rend la grille d'un seul mois pour la vue annuelle.
@@ -27,7 +39,11 @@ import { Msg } from '../messages';
  * @returns {import('snabbdom').VNode}
  */
 function renderMonthGrid(monthDate, model, yearEntriesSet, dispatch) {
-    const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const locale = getLocale(model.settings.language);
+    const weekdays = Array.from({ length: 7 }, (_, i) =>
+        format(new Date(1970, 0, i + 4), 'EEEEEE', { locale })
+        .charAt(0).toUpperCase() + format(new Date(1970, 0, i + 4), 'EEEEEE', { locale }).slice(1).toLowerCase()
+    );
     const monthStart = startOfMonth(monthDate);
     const daysInMonth = getDaysInMonth(monthDate);
     // getDay() est 0 pour Dimanche, 1 pour Lundi, etc.
@@ -77,7 +93,8 @@ function renderMonthGrid(monthDate, model, yearEntriesSet, dispatch) {
             h('div.yv-monthcell__header--rowone', {
                 class: { 'yvmht-current': isSameMonth(monthDate, new Date()) },
                 on: { click: handleMonthClick }
-            }, format(monthDate, 'MMMM', { locale: localeFR })),
+            }, format(monthDate, 'MMMM', { locale })
+                .charAt(0).toUpperCase() + format(monthDate, 'MMMM', { locale }).slice(1).toLowerCase()),
             h('div.yv-monthcell__header--weekdays', weekdays.map(day => h('div', day)))
         ]),
         h('div.yv-monthcell__body', allCells)

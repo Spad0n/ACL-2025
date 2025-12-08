@@ -1,11 +1,24 @@
 import { h } from 'snabbdom';
 import { format, isSameDay, isToday, isSameMonth, getMonthViewDates } from '../dateUtils';
 import { Msg } from '../messages';
+import { fr, enUS } from 'date-fns/locale';
 
 /**
  * @typedef {import('../model').Model} Model
  * @typedef {import('../messages').Message} Message
  */
+
+
+function getLocale(language) {
+    switch (language) {
+        case 'fr':
+            return fr;
+        case 'en':
+            return enUS;
+        default:
+            return enUS;
+    }
+}
 
 /**
  * Rend un seul événement dans une cellule de jour.
@@ -105,7 +118,11 @@ function renderCell(date, model, entriesByDate, dispatch) {
 export default function monthView(model, dispatch) {
     const { currentDate } = model;
     const dates = getMonthViewDates(currentDate);
-    const weekdays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    const locale = getLocale(model.settings.language);
+    const weekdays = Array.from({ length: 7 }, (_, i) =>
+        format(new Date(1970, 0, i + 4), 'EEEEEE', { locale })
+        .charAt(0).toUpperCase() + format(new Date(1970, 0, i + 4), 'EEEEEE', { locale }).slice(1).toLowerCase()
+    );
 
     const activeCategories = new Set(
         Object.keys(model.categories).filter(key => model.categories[key].active)

@@ -63,5 +63,13 @@
         "create": "Create",
         "settings" : "Settings & Data",
         "myCalendars": "My Calendars"
+    },
+
+    "listView": {
+      "noEvents": "No upcoming events"
+    },
+
+    "day": {
+      "events": "event(s)"
     }
 }

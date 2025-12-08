@@ -14,7 +14,7 @@ import {
 } from 'date-fns';
 import { Msg } from '../messages';
 import { fr, enUS } from 'date-fns/locale';
-import { translate } from '../langue/langue.js';
+import { translate } from '../../../server/langue/langue.js';
 
 /**
  * @typedef {import('../model').Model} Model
@@ -62,7 +62,7 @@ function renderDatepicker(model, dispatch) {
     return h('div.datepicker-sidebar', [
         h('div.sb-datepicker__content', [
             h('div.sbdatepicker__header', [
-                h('button.sbdatepicker-title', format(currentDate, 'MMMM yyyy')), // Le clic pourrait ouvrir un sélecteur de mois/année plus tard
+                h('button.sbdatepicker-title', format(currentDate, 'MMMM yyyy', { locale }).charAt(0).toUpperCase() + format(currentDate, 'MMMM yyyy', { locale }).slice(1).toLowerCase()), // Le clic pourrait ouvrir un sélecteur de mois/année plus tard
                 h('div.sbdatepicker-nav', [
                     h('button.sbdatepicker-nav--prev', { on: { click: () => dispatch(Msg.SetDate(subMonths(currentDate, 1))) } }, '‹'),
                     h('button.sbdatepicker-nav--next', { on: { click: () => dispatch(Msg.SetDate(addMonths(currentDate, 1))) } }, '›')

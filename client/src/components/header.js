@@ -1,7 +1,7 @@
 import { h } from 'snabbdom';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { Msg } from '../messages';
-import { translate } from '../langue/langue.js';
+import { translate } from '../../../server/langue/langue.js';
 import { fr, enUS } from 'date-fns/locale';
 
 /**
@@ -39,7 +39,8 @@ export default function headerView(model, dispatch) {
         const locale = getLocale(model.settings.language);
         switch (currentView) {
             case 'day':
-                return format(currentDate, 'MMMM d, yyyy', { locale });
+                return format(currentDate, 'MMMM d, yyyy', { locale })
+                .charAt(0).toUpperCase() + format(currentDate, 'MMMM d, yyyy', { locale }).slice(1).toLowerCase();
             case 'week': {
                 const start = startOfWeek(currentDate, { locale });
                 const end = endOfWeek(currentDate, { locale });
@@ -47,15 +48,15 @@ export default function headerView(model, dispatch) {
                 if (start.getMonth() !== end.getMonth()) {
                     return `${format(start, 'MMM d', { locale })} - ${format(end, 'MMM d, yyyy', { locale })}`;
                 }
-                return `${format(start, 'MMMM d', { locale })} - ${end.getDate()}, ${end.getFullYear()}`;
+                return `${format(start, 'MMMM d', { locale }).charAt(0).toUpperCase() + format(start, 'MMMM d', { locale }).slice(1).toLowerCase()} - ${end.getDate()}, ${end.getFullYear()}`;
             }
             case 'year':
-                return format(currentDate, 'yyyy', { locale });
+                return format(currentDate, 'yyyy', { locale }).charAt(0).toUpperCase() + format(currentDate, 'yyyy', { locale }).slice(1).toLowerCase();
             case 'list':
                 return translate(model.settings.language, 'headerView.listView');
             case 'month':
             default:
-                return format(currentDate, 'MMMM yyyy', { locale });
+                return format(currentDate, 'MMMM yyyy', { locale }).charAt(0).toUpperCase() + format(currentDate, 'MMMM yyyy', { locale }).slice(1).toLowerCase();
         }
     })();
     

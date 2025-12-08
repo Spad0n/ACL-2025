@@ -63,5 +63,13 @@
       "create": "Créer",
       "settings" : "Paramètres & Données",
       "myCalendars": "Mes Calendriers"
+    },
+
+    "listView": {
+      "noEvents": "Aucun événement à venir"
+    },
+
+    "day": {
+      "events": "événement(s)"
     }
 }

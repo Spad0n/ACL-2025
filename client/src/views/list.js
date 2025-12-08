@@ -6,11 +6,24 @@ import {
     localeFR
 } from '../dateUtils';
 import { Msg } from '../messages';
+import { translate } from '../../../server/langue/langue.js';
+import { fr, enUS } from 'date-fns/locale';
 
 /**
  * @typedef {import('../model').Model} Model
  * @typedef {import('../messages').Message} Message
  */
+
+function getLocale(language) {
+    switch (language) {
+        case 'fr':
+            return fr;
+        case 'en':
+            return enUS
+        default:
+            return enUS;
+    }
+}
 
 /**
  * Rend une seule ligne d'événement dans la liste.
@@ -42,6 +55,7 @@ function renderRowGroupCell(entry, model, dispatch) {
  */
 function renderRowGroup(dateString, entries, model, dispatch, isFirst) {
     const date = new Date(dateString);
+    const locale = getLocale(model.settings.language);
     
     // Cliquer sur l'en-tête du jour navigue vers la vue journalière de cette date
     const handleHeaderClick = () => {
@@ -57,7 +71,7 @@ function renderRowGroup(dateString, entries, model, dispatch, isFirst) {
             }, format(date, 'd')),
             h('div.rowgroup--header__monthdow', {
                 class: { 'top-monthdow': isFirst }
-            }, format(date, 'MMM, EEE', { locale: localeFR }).toUpperCase())
+            }, format(date, 'MMM, EEE', { locale }).toUpperCase())
         ]),
         h('div.rowgroup-content', entries.map(entry => renderRowGroupCell(entry, model, dispatch)))
     ]);
@@ -88,7 +102,7 @@ export default function listView(model, dispatch) {
     // Si pas d'événements, afficher un message
     if (upcomingEntries.length === 0) {
         return h('div.listview.empty-list', [
-            h('h2.empty-list-title', 'No upcoming events')
+            h('h2.empty-list-title', translate(model.settings.language, 'listView.noEvents')),
         ]);
     }
     

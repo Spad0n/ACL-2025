@@ -1,15 +1,15 @@
 <dialog id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
 <form id="event-form">
-        <h1>Recherche</h1>
-        <p>
+        <h1 style="color:var(--white3)">Recherche</h1>
+        <p style="color:var(--white3)">
             Recherchez des événements par titre. Cliquez sur un résultat pour
             naviguer directement à la date de l'événement.
         </p>
         <div id="recherche">
-            <label for="query">Termes de recherche</label>
+            <label for="query" style="color:var(--white3)">Termes de recherche</label>
             <input type="text" id="query" name="query" required autocomplete="off">
         </div>
-        <div id="search-results"></div>
+        <div id="search-results" style="color:var(--white3)"></div>
     <footer style="margin-top: 10px;">
         <button type="button" class="btn btn-cancel" onclick="document.getElementById('active-dialog').close()">×</button>
     </footer>

@@ -24,28 +24,49 @@
     </form>
 
     <div id="boutons">
-        <button id="inscriptionBouton" onclick="window.location.href='/register';">S'inscrire</button>
+        <button id="inscriptionBouton" onclick="redirect();">S'inscrire</button>
     </div>
 </div>
 <script>
-   const titre = document.getElementById("pageTitre");
-   const username = document.getElementById("pageUsername");
-   const mdp = document.getElementById("pageMdp");
-   const bouton = document.getElementById("pageSwitch");
+    document.addEventListener('DOMContentLoaded', () => {
+        const titre = document.getElementById("pageTitre");
+        const username = document.getElementById("pageUsername");
+        const mdp = document.getElementById("pageMdp");
+        const bouton = document.getElementById("pageSwitch");
+        const langue = localStorage.getItem("langue");
 
-   bouton.addEventListener("click", () => {
-        if(bouton.textContent == "ENG"){
-            titre.textContent = "Welcome at Boogeyman";
-            username.textContent = "Username";
-            mdp.textContent = "Password";
-            document.getElementById("connexionBouton").value = "Login";
-            document.getElementById("inscriptionBouton").textContent = "Register";
-            bouton.textContent = "FR";
+        function appliquerLangue(langue){
+            if(langue === "ENG"){
+                titre.textContent = "Welcome at Boogeyman";
+                username.textContent = "Username";
+                mdp.textContent = "Password";
+
+                document.getElementById("connexionBouton").value = "Login";
+                document.getElementById("inscriptionBouton").textContent = "Register";
+                bouton.textContent = "FR";
+            }
+            else if(langue === "FR"){
+                titre.textContent ="Bienvenue chez le CROQUEMITAINE ";
+                username.textContent = "Nom d'utilisateur";
+                mdp.textContent = "Mot de passe";
+
+                document.getElementById("connexionBouton").value = "Se Connecter";
+                document.getElementById("inscriptionBouton").textContent = "S'inscrire";
+                bouton.textContent = "ENG"
+            }
+            localStorage.setItem("langue", langue);
         }
-       else{
-            window.location.href = '/login';
-       }
-   });
+        const langueStockee = localStorage.getItem("langue") || "FR";
+        appliquerLangue(langueStockee);
+
+        bouton.addEventListener("click", () => {
+            const nouvelleLangue = (localStorage.getItem("langue") === "FR") ? "ENG" : "FR";
+            appliquerLangue(nouvelleLangue);
+        });
+    });
+   function redirect(){
+        window.location.href = "/register";
+   }
 </script>
 </body>
 </html>

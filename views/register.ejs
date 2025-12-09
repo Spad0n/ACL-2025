@@ -70,33 +70,53 @@
         <input id="connexionBouton" type="submit" value="Créer le compte" />
     </form>
     <div id="boutons">
-        <button id="inscriptionBouton" onclick="window.location.href='/login';">Se connecter</button>
+        <button id="inscriptionBouton" onclick="redirect();">Se connecter</button>
     </div>
 </div>
 
 <script>
-    const bouton = document.getElementById("pageSwitch");
-    const username = document.getElementById("pageUsername");
-    const password = document.getElementById("password");
-    const confirmPassword = document.getElementById("confirmPassword");
-    const titre = document.getElementById("pageTitre");
+    document.addEventListener('DOMContentLoaded', () => {
+        const bouton = document.getElementById("pageSwitch");
+        const username = document.getElementById("pageUsername");
+        const password = document.getElementById("password");
+        const confirmPassword = document.getElementById("confirmPassword");
+        const titre = document.getElementById("pageTitre");
+       
+        function appliquerLangue(langue){
+            if(langue === "ENG"){
+                titre.textContent = "Welcome at Boogeyman";
+                username.textContent = "Enter the username";
+                password.textContent = "Enter the password";
+                confirmPassword.textContent = "Confirm password"
 
-    bouton.addEventListener("click", () => {
-        if(bouton.textContent == "ENG"){
-            titre.textContent = "Welcome at Boogeyman";
-            username.textContent = "Enter the username";
-            password.textContent = "Enter the password";
-            confirmPassword.textContent = "Confirm password"
+                document.getElementById("connexionBouton").value = "Create account";
+                document.getElementById("inscriptionBouton").textContent = "Login";
+                bouton.textContent = "FR";
+            }
+            else if(langue === "FR"){
+                titre.textContent ="Bienvenue chez le CROQUEMITAINE ";
+                username.textContent = "Entrez le nom d'utilisateur";
+                password.textContent = "Entrez le mot de passe";
+                confirmPassword.textContent = "Confirmez le mot de passe"
 
-            boutonConnexion = document.getElementById("connexionBouton").value = "Create account";
-            document.getElementById("inscriptionBouton").textContent = "Login";
-            bouton.textContent = "FR";
+                document.getElementById("connexionBouton").value = "Créer le compte";
+                document.getElementById("inscriptionBouton").textContent = "Se connecter";
+                bouton.textContent = "ENG"
+            }
+            localStorage.setItem("langue", langue);
         }
-    else{
-            window.location.href = '/register';
-    }
-});
+        const langueStockee = localStorage.getItem("langue") || "FR";
+        appliquerLangue(langueStockee);
 
+        bouton.addEventListener("click", () => {
+            const nouvelleLangue = (localStorage.getItem("langue") === "FR") ? "ENG" : "FR";
+            appliquerLangue(nouvelleLangue);
+        });
+    });
+
+   function redirect(){
+        window.location.href = "/login";
+   }
 </script>
 
 </body>

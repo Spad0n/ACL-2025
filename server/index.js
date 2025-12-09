@@ -96,7 +96,6 @@ app.get('/events', async (req, res) => {
 
     const username = token.username;
     const id_utilisateurRows = await recupUtilisateurID(bdd, username);
-    console.log("------------------", id_utilisateurRows);
     const id_utilisateur = id_utilisateurRows[0].id;
 
     const sql = `SELECT e.* FROM evenements e
@@ -408,10 +407,11 @@ app.get('/recupNotification', async (req, res) => {
 
                 const id_utilisateur = id_utilisateurRows[0].id;
                 const notificationsDemande = await recupNotification(bdd, username);
-                const notificationRefusAcceptation = await recupNotificationTypeRefusAcceptation(bdd, id_utilisateur)
+                const notificationRefusAcceptation = await recupNotificationTypeRefusAcceptation(bdd, id_utilisateur);
 
+                const userLang = await recupLangue(bdd, username);
                 res.set('Cache-Control', 'no-store');
-                res.render('notification_liste', {notificationsDemande, notificationRefusAcceptation});
+                res.render('notification_liste', {notificationsDemande, notificationRefusAcceptation, userLang});
             } 
             catch (err){
                 res.status(500).json({ error: err.message});
@@ -483,8 +483,18 @@ app.get('/events/search-events', async (req, res) => {
     }
 });
 
-app.get('/dialog/notification', (req, res) =>{
-    res.render("dialog_notification");
+app.get('/dialog/notification', async(req, res) =>{
+    const tokenSigne = req.cookies.accessToken;
+    let token;
+    try {
+        token = jwt.verify(tokenSigne, process.env.SECRET);
+    } catch (err) {
+        return res.status(401).json({ error: "Token invalide" });
+    }
+    const username = token.username;
+
+    const userLang = await recupLangue(bdd, username);
+    res.render("dialog_notification", {userLang});
 });
 
 app.post('/notification/accepter', async (req,res) => {
@@ -510,7 +520,6 @@ app.post('/notification/accepter', async (req,res) => {
         }
 
         const type = 'acceptation';
-        console.log("----id----",notif.id_agenda);
         await ajouterNotification(bdd,  notif.id_envoi, notif.id_recoit, notif.id_agenda, type);
         await ajouterAgendasPartages(bdd, notif.id_agenda, notif.id_envoi, notif.id_recoit);
         await changerEtatNotificationAccepte(bdd, notif.id);

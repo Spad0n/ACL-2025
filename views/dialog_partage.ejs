@@ -21,7 +21,38 @@
     </footer>
 
     <script>
+
+      function applyLanguageToDialog(lang) {
+      const dialog = document.getElementById('active-dialog');
+      const title = dialog.querySelector('h2');
+      const labels = dialog.querySelectorAll('label');
+      const shareBtn = dialog.querySelector('#confirmer-partage');
+      const cancelBtn = dialog.querySelector('.btn-cancel');
+      const searchInput = dialog.querySelector('#rechercher-utilisateur');
+
+      if(lang === 'en'){
+          title.textContent = 'Share a calendar';
+          labels[0].textContent = 'Choose a calendar:';
+          labels[1].textContent = 'Share with:';
+          shareBtn.textContent = 'Share';
+          cancelBtn.textContent = 'Cancel';
+          searchInput.placeholder = 'Search for a user...';
+      } else {
+          title.textContent = 'Partager un agenda';
+          labels[0].textContent = 'Choisir un agenda :';
+          labels[1].textContent = 'Partager avec :';
+          shareBtn.textContent = 'Partager';
+          cancelBtn.textContent = 'Annuler';
+          searchInput.placeholder = 'Rechercher un utilisateur...';
+      }
+    }
       (async function() {
+        const langue = await fetch("/getLangue", {method: 'POST'});
+        const langueJson = await langue.json();
+        const L = langueJson.language || "fr";
+
+        applyLanguageToDialog(L);
+
         const agendas = await fetch("/agendas").then(r => r.json());
         const agendaSelect = document.getElementById("select-agenda-partage");
         agendaSelect.innerHTML = agendas.map(a => `<option value="${a.id}">${a.name}</option>`).join("");

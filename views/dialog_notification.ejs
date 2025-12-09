@@ -1,5 +1,9 @@
+<script>
+  const userLang = '<%= userLang %>'; 
+</script>
+
 <dialog id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
-    <h2>Notifications de partage</h2>
+    <h2 id="titre">Notifications de partage</h2>
 
     <div id="liste-notifications" hx-get="/recupNotification" hx-trigger="load" hx-target="#liste-notifications">
         <p>Chargement...</p>    
@@ -7,6 +11,16 @@
 
      <button type="button" class="btn btn-cancel" onclick="document.getElementById('dialog-container').innerHTML = ''">Annuler</button>
 </div>
+
+<script>
+  const isEn = userLang === 'en'; 
+  
+  if(isEn){
+    document.getElementById("titre").textContent = "Sharing notifications";
+    document.querySelector('.btn-cancel').textContent = 'Cancel';
+    document.querySelector('#liste-notifications p').textContent = 'Loading...'; 
+  }
+</script>
 
 <style>
 

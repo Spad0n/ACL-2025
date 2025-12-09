@@ -2,39 +2,57 @@
 <html lang='fr'>
       <head>
 	<meta charset='utf-8'>
-	<title> Modification des informations </title>
-    <link rel="stylesheet" href="/css/modificationsCompte.css">
+	<title id='pageTitle' > Modification des informations </title>
+    <link rel="stylesheet" href="/css/modifierUtilisateur.css">
       </head>
-      <body>
-	<div class="disco-spot"></div>
-	<h1> INFORMATIONS </h1>
-	<br>
-	<button onClick='retourAccueil()'> Accueil </button>
-	<br>
-	<form name="modificationsUtilisateur" action="/modifier/informations/utilisateur" method="POST">
-	  <div>
-	    <label for="username"> Nouveau username :  </label>
-	    <input type="text" name="username" id="username" value="<%= locals.user ?? ''%>"/ required>
-	    <span id='userPerr'> <%= locals.nameError ?? '' %> </span>
-	  </div>
-	  <div>
-	    <label for="newPassword"> Nouveau mot de passe : </label>
-	    <input type="password" name="newPassword" id="newPassword" />
-	    <span id='newPerr' hidden> </span>
-	    <label> <%= locals.mdpError ?? '' %> </label>
-	  </div>
-	  
-	  <label> Pour appliquer les changements votre ancien mot de passe est obligatoire </label>
-	  <br>
-	  <label for="oldPassword"> Ancien mot de passe : </label>
-	  <input type="password" name="oldPassword" id="oldPassword" required />
-	  <span id='oldPerr' hidden> </span>
-	  <div>
-	    <input type="submit" value="Modifier" />
-	  </div>
-	</form>
 
-	<script>
+<body>
+  <h1 id='pageH1' >INFORMATIONS</h1>
+
+  <button id="boutonRetour" onClick='retourAccueil()'>Accueil</button>
+
+  <form name="modificationsUtilisateur"
+        action="/modifier/informations/utilisateur"
+        method="POST"
+        class="form-container">
+
+    <div class="form-group">
+      <label id='pageUsername' for="username">Nouveau username :</label>
+      <input type="text" name="username" id="username" 
+             value="<%= locals.user ?? ''%>" required>
+      <span id="userPerr"><%= locals.nameError ?? '' %></span>
+    </div>
+
+    <div class="form-group">
+      <label id='pagePwd' for="newPassword">Nouveau mot de passe :</label>
+      <input type="password" name="newPassword" id="newPassword">
+      <span id="newPerr" hidden></span>
+      <label class="error-label"><%= locals.mdpError ?? '' %></label>
+    </div>
+
+    <label id='pageOldPwd' for="oldPassword">Ancien mot de passe :</label>
+    <input type="password" name="oldPassword" id="oldPassword" required>
+    <span id="oldPerr" hidden></span>
+
+    <div class="form-submit">
+      <input id='pageSbmt' type="submit" value="Modifier" class="submit-btn">
+    </div>
+
+  </form>
+<script>
+    // TRADUCTION
+    const LG = localStorage.getItem('language');
+
+    if(LG == 'en') {
+        document.getElementById('pageUsername').textContent = "New username :";
+        document.getElementById('pagePwd').textContent      = "New password :";
+        document.getElementById('pageH1').textContent       = "INFORMATION";
+        document.getElementById('boutonRetour').textContent = "Back to agenda";
+        document.getElementById('pageOldPwd').textContent   = "Current password :";
+        document.getElementById('pageSbmt').value           = "Apply change(s)";
+        document.getElementById('pageTitle').textContent    = "Updating personal information";
+    }
+
           // Il faut pas envoyer tout de suite le formulaire.
       	  // Il faut vérifier que l'utilisateur à bien donné le bon oldPassword.
       	  // (C'est son mdp actuel oldPassword).
@@ -95,6 +113,23 @@
           function retourAccueil() {
               window.location.href = '/';
           }
+
+function applyTheme(theme) {
+    const body = document.body;
+
+    // Retire d'abord toutes les classes possibles
+    body.classList.remove("light-mode", "contrast-mode");
+
+    if (theme === "light") {
+        body.classList.add("light-mode");
+    }
+    // Si "dark" → ne rien ajouter, c'est ton thème par défaut
+}
+
+    // Charger le thème sauvegardé
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    applyTheme(savedTheme);
+
 	</script>
 	
       </body>

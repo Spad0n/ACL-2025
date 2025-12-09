@@ -1,12 +1,21 @@
 <dialog id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
 <form id="event-form">
-        <h1>Recherche</h1>
+        <h1>
+            <%=
+            translate(langue, 'search.search');
+            %>
+        </h1>
         <p>
-            Recherchez des événements par titre. Cliquez sur un résultat pour
-            naviguer directement à la date de l'événement.
+            <%=
+            translate(langue, 'search.description');
+            %>
         </p>
         <div id="recherche">
-            <label for="query">Termes de recherche</label>
+            <label for="query">
+                <%=
+                translate(langue, 'search.keywords');
+                %>
+            </label>
             <input type="text" id="query" name="query" required autocomplete="off">
         </div>
         <div id="search-results"></div>
@@ -17,6 +26,7 @@
 
     <script>
         (function() {
+            const langue = '<%= langue %>';
             const dialog_recherche = document.getElementById('active-dialog');
             const dialogContainer = document.getElementById('dialog-container');
             const queryInput = dialog_recherche.querySelector('#query');
@@ -102,7 +112,10 @@
 
             function displayResults(events) {
                 if (events.length === 0) {
+                    if (langue === 'fr')
                     resultsContainer.innerHTML = '<p>Aucun événement trouvé.</p>';
+                    else
+                    resultsContainer.innerHTML = '<p>No events found.</p>';
                     return;
                 }
 

@@ -1,5 +1,5 @@
-import en from './json/english.json';
-import fr from './json/french.json';
+import en from './json/english.json' with { type: 'json' };
+import fr from './json/french.json' with { type: 'json' };
 
 const langues = { en, fr };
 

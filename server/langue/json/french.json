@@ -73,5 +73,11 @@
 
     "day": {
       "events": "événement(s)"
+    },
+
+    "search": {
+        "search": "Rechercher",
+        "description": "Recherchez des événements par titre. Cliquez sur un résultat pour\n naviguer directement à la date de l'événement.",
+        "keywords": "Termes de recherche"
     }
 }

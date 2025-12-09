@@ -35,6 +35,7 @@ import {
 } from './fonctionsBdd.js';
 import { tr } from 'date-fns/locale';
 import { error } from 'console';
+import {translate} from "./langue/langue.js";
 
 
 dotenv.config();
@@ -454,8 +455,27 @@ app.get('/dialog/partage', (req, res) => {
     res.render("dialog_partage");
 });
 
-app.get('/dialog/recherche', (req, res) => {
-    res.render("recherche");
+app.get('/dialog/recherche', async (req, res) => {
+    const tokenSigne = req.cookies.accessToken;
+    let token;
+    let langue;
+    try {
+        token = jwt.verify(tokenSigne, process.env.SECRET);
+    } catch (err) {
+        return res.status(401).json({error: "Token invalide"});
+    }
+    const username = token.username;
+    try {
+        langue = await recupLangue(bdd, username);
+
+        if (langue.length === 0) {
+            return res.status(404).json({error: "Utilisateur introuvable"});
+        }
+
+    } catch (err) {
+
+    }
+    res.render("recherche", {langue , translate});
 });
 
 app.get('/events/search-events', async (req, res) => {

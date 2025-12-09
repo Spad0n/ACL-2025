@@ -16,7 +16,8 @@
           "french": "Français"
         },
         "userData" : "Modifier les informations du compte",
-        "userDescription": "Changer le mot de passe ou le nom d'utilisateur"
+        "userDescription": "Changer le mot de passe ou le nom d'utilisateur",
+        "espaceUser" : "Espace compte"
     },
 
     "header": {
@@ -30,7 +31,9 @@
       "share": "Partager",
       "logout": "Déconnexion",
       "datetimeContent": "Sélectionner une date",
-      "selectView": "Sélectionner une vue"
+      "selectView": "Sélectionner une vue",
+      "recherche": "Rechercher un événement",
+      "notifications": "Notifications"
     },
 
     "languageSelector": {

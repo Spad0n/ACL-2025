@@ -16,7 +16,8 @@
           "french": "French"
         },
         "userData" : "Edit account information",
-        "userDescription": "Change password or username"
+        "userDescription": "Change password or username",
+        "espaceUser" : "Account space"
     },
 
     "header": {
@@ -30,7 +31,9 @@
       "share": "Share",
       "logout": "Logout",
       "datetimeContent": "Select a date",
-      "selectView": "Select a view"
+      "selectView": "Select a view",
+      "recherche": "Search for an event",
+      "notifications": "Notifications"
     },
 
     "languageSelector": {

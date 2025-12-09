@@ -124,7 +124,7 @@ export default function settingsView(model, dispatch) {
                             h('div.sm-download-json', [
                                 h('button.sm-json-btn.down-json', { on: { click: () => {
                                     window.location.href = '/compte/modifier/utilisateur';
-                                } } }, 'Espace compte')
+                                } } }, translate(model.settings.language, 'settings.espaceUser') )
                             ])
                         ])
                     ]),

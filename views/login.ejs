@@ -11,23 +11,42 @@
 <body>
 
 <div id="conteneur" class="actif">
-    <h1>Bienvenue chez le<br>CROQUEMITAINE</h1>
+    <button id="pageSwitch">ENG</button>
+    <h1 id="pageTitre">Bienvenue chez le<br>CROQUEMITAINE</h1>
 
     <form name="formLogIn" method="post" class="connexion" action="/logUser">
-        <label for="username">Nom d'utilisateur</label>
+        <label id="pageUsername" for="username">Nom d'utilisateur</label>
         <input type="text" id="username" name="username" required><br><br>
         <label><%= locals.message ?? '' %></label>
-        <label for="password">Mot de passe</label>
+        <label id="pageMdp" for="password">Mot de passe</label>
         <input type="password" id="password" name="password" required><br><br>
         <input id="connexionBouton" type="submit" value="Se connecter">
     </form>
 
     <div id="boutons">
-        <p>ou</p> 
         <button id="inscriptionBouton" onclick="window.location.href='/register';">S'inscrire</button>
     </div>
 </div>
+<script>
+   const titre = document.getElementById("pageTitre");
+   const username = document.getElementById("pageUsername");
+   const mdp = document.getElementById("pageMdp");
+   const bouton = document.getElementById("pageSwitch");
 
+   bouton.addEventListener("click", () => {
+        if(bouton.textContent == "ENG"){
+            titre.textContent = "Welcome at Boogeyman";
+            username.textContent = "Username";
+            mdp.textContent = "Password";
+            document.getElementById("connexionBouton").value = "Login";
+            document.getElementById("inscriptionBouton").textContent = "Register";
+            bouton.textContent = "FR";
+        }
+       else{
+            window.location.href = '/login';
+       }
+   });
+</script>
 </body>
 </html>
 

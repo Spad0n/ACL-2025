@@ -21,9 +21,20 @@ import {
     renommerAgenda,
     recupTousAgendas,
     modifLanguage,
-    recupLangue
+    recupLangue,
+    filtrerEvenementNom,
+    ajouterNotificationPartage, 
+    recupNotification, 
+    changerEtatNotificationAccepte, 
+    changerEtatNotificationRefuse,
+    supprimerAgendaPartage,
+    agendaPartagePour,
+    supprimerNotificationPartage,
+    ajouterNotification,
+    recupNotificationTypeRefusAcceptation
 } from './fonctionsBdd.js';
 import { tr } from 'date-fns/locale';
+import { error } from 'console';
 
 
 dotenv.config();
@@ -51,22 +62,16 @@ app.get('/hello', (_req, res) => {
 });
 
 app.get('/', (req, res) => {
-    console.log(req.cookies.accessToken);
     if (req.cookies.accessToken !== undefined) {
-	app.use(express.static(path.join(__dirname, '../dist')));
-	res.sendFile(path.join(__dirname, "../dist/index.html"));
+        console.log('SERVEUR log : token de la session :', req.cookies.accessToken);
+        app.use(express.static(path.join(__dirname, '../dist')));
+        res.sendFile(path.join(__dirname, "../dist/index.html"));
     } else {
 	res.redirect("/login");
     }
 });
 
-app.get('/logout', (req, res) => {
-    res.clearCookie('accessToken', {
-	httpOnly: true,
-	secure: true,
-    });
-    res.redirect("/login");
-});
+app.get('/logout', routes.logout);
 
 app.get('/login', (req, res) => {
     const message = req.query.message;
@@ -91,6 +96,7 @@ app.get('/events', async (req, res) => {
 
     const username = token.username;
     const id_utilisateurRows = await recupUtilisateurID(bdd, username);
+    console.log("------------------", id_utilisateurRows);
     const id_utilisateur = id_utilisateurRows[0].id;
 
     const sql = `SELECT e.* FROM evenements e
@@ -114,7 +120,7 @@ app.get('/events', async (req, res) => {
 // Affichage du dialogue de création/édition
 app.get('/dialog/event-form', async (req, res) => {
     try {
-        const { action, date, id, title, description, color, start, end } = req.query;
+        const { action, date, id, title, description, start, end } = req.query;
 
         const token = req.cookies.accessToken;
         if (!token) return res.status(401).send("Utilisateur non connecté");
@@ -137,7 +143,7 @@ app.get('/dialog/event-form', async (req, res) => {
                 description: description || '',
                 start: start || null,
                 end: end || null,
-                color: color ? parseInt(color, 10) : 0xff0000,
+                //color: color ? parseInt(color, 10) : 0xff0000,
                 id_agenda: null 
             },
             agendas
@@ -153,7 +159,8 @@ app.get('/dialog/event-form', async (req, res) => {
 
 
 app.post('/events', (req, res) => {
-    const { id, title, description, color, start, end, id_agenda } = req.body;
+    //const { id, title, description, color, start, end, id_agenda } = req.body;
+    const { id, title, description, start, end, id_agenda } = req.body;
 
     const startDate = new Date(start);
     const endDate = new Date(end);
@@ -161,7 +168,7 @@ app.post('/events', (req, res) => {
     const savedEvent = {
         title: title,
         description: description,
-        color: parseInt(color.substring(1), 16),
+        //color: parseInt(color.substring(1), 16),
         start: startDate.toISOString(),
         end: endDate.toISOString(),
         id_agenda: parseInt(id_agenda, 10)
@@ -247,12 +254,21 @@ app.post("/categories/delete", async (req, res) => {
 
         // Sécurité : Vérifier que l'agenda appartient bien à l'utilisateur
         // et que ce n'est pas "Default"
-        const agendas = await recupAgendaUtilisateurConnecte(bdd, id_utilisateur);
+        const agendas = await recupTousAgendas(bdd, id_utilisateur);
         const targetAgenda = agendas.find(a => a.id.toString() === id.toString());
-
-        if (!targetAgenda) {
+        
+        const partage = await agendaPartagePour(bdd, id, id_utilisateur);
+        if (!targetAgenda && !partage) {
             return res.status(404).json({ error: "Agenda introuvable" });
         }
+
+        if(partage){
+            await supprimerAgendaPartage(bdd, id, id_utilisateur);
+            await supprimerNotificationPartage(bdd, id, id_utilisateur);
+            res.set('HX-Trigger', JSON.stringify({ categoryDeleted: name }));
+            return res.send('');
+        }
+
         if (targetAgenda.nom === 'Default') {
             return res.status(403).json({ error: "Impossible de supprimer l'agenda Default" });
         }
@@ -350,24 +366,72 @@ app.post("/agendas/partage", async (req, res) => {
 
         const id_utilisateurAquiPartage = idUsuarioPartage[0].id;
 
-        await ajouterAgendasPartages(
+        const type = 'demande';
+
+        await ajouterNotificationPartage(
             bdd,
-            id_agenda,
             id_utilisateur,
-            id_utilisateurAquiPartage
+            id_utilisateurAquiPartage,
+            id_agenda, 
+            type
         );
+        
 
         return res.json({ success: true });
 
     } catch (err) {
-        if(err.message === "Ce partage existe déjà"){
+        if(err.code === "PARTAGE_EXISTANT" || err.code === "PARTAGE_ACCEPTE" || err.code === "PARTAGE_REFUSE"){
             return res.status(409).json({error: err.message});
         }
         
         console.error("Erreur serveur :", err);
-        return res.status(500).json({ error: err.message });
+        return res.status(500).json({ error: err });
     }
 });
+
+app.get('/recupNotification', async (req, res) => {
+    try{
+            const tokenSigne = req.cookies.accessToken;
+            let token;
+            try {
+                token = jwt.verify(tokenSigne, process.env.SECRET);
+            } catch (err) {
+                return res.status(401).json({ error: "Token invalide" });
+            }
+                const username = token.username;
+            try {
+                const id_utilisateurRows = await recupUtilisateurID(bdd, username);
+
+                if (id_utilisateurRows.length === 0) {
+                    return res.status(404).json({ error: "Utilisateur introuvable" });
+                }
+
+                const id_utilisateur = id_utilisateurRows[0].id;
+                const notificationsDemande = await recupNotification(bdd, username);
+                const notificationRefusAcceptation = await recupNotificationTypeRefusAcceptation(bdd, id_utilisateur)
+
+                res.set('Cache-Control', 'no-store');
+                res.render('notification_liste', {notificationsDemande, notificationRefusAcceptation});
+            } 
+            catch (err){
+                res.status(500).json({ error: err.message});
+            }
+        }
+        catch(err){
+            res.status(500).json({ error: err.message})
+        }
+})
+
+app.post('/notification/supprimer', (req, res) => {
+    const { id } = req.body;
+
+    const sql = "DELETE FROM notificationpartage WHERE id = ?";
+    bdd.run(sql, [id], function(err){
+        if(err) return res.status(500).json( {error: err.message});
+        res.send("");
+    })
+})
+
 
 app.get('/recupUtilisateur', async (req, res) => {
     try{
@@ -388,7 +452,112 @@ app.get('/recupUtilisateur', async (req, res) => {
 
 app.get('/dialog/partage', (req, res) => {
     res.render("dialog_partage");
+});
+
+app.get('/dialog/recherche', (req, res) => {
+    res.render("recherche");
+});
+
+app.get('/events/search-events', async (req, res) => {
+    const searchQuery = req.query.q;
+    const tokenSigne = req.cookies.accessToken;
+    let token;
+    try {
+        token = jwt.verify(tokenSigne, process.env.SECRET);
+    } catch (err) {
+        return res.status(401).json({ error: "Token invalide" });
+    }
+    const username = token.username;
+
+    if (!searchQuery) {
+        return res.json([]);
+    }
+
+    try {
+        const events = await filtrerEvenementNom(bdd, username, searchQuery, 2);
+        res.json(events);
+
+    } catch (err) {
+        console.error("Erreur lors de la recherche d'événements :", err);
+        res.status(500).json({ error: "Erreur serveur" });
+    }
+});
+
+app.get('/dialog/notification', (req, res) =>{
+    res.render("dialog_notification");
+});
+
+app.post('/notification/accepter', async (req,res) => {
+    try{
+        const tokenSigne = req.cookies.accessToken;
+        let token;
+        try {
+            token = jwt.verify(tokenSigne, process.env.SECRET);
+        } catch (err) {
+            return res.status(401).json({ error: "Token invalide" });
+        }
+        const username = token.username;
+
+        const id_notif = req.body.id;
+        if(!id_notif){
+             return res.status(400).json({ error: "ID manquant " });
+        }
+
+        const notifications = await recupNotification(bdd, username);
+        const notif = notifications.find(n => n.id == id_notif);
+        if (notifications.length === 0) {
+            return res.status(400).json({ error: "Aucune notification trouvée" });
+        }
+
+        const type = 'acceptation';
+        console.log("----id----",notif.id_agenda);
+        await ajouterNotification(bdd,  notif.id_envoi, notif.id_recoit, notif.id_agenda, type);
+        await ajouterAgendasPartages(bdd, notif.id_agenda, notif.id_envoi, notif.id_recoit);
+        await changerEtatNotificationAccepte(bdd, notif.id);
+
+
+        res.set('HX-Redirect', '/');
+        res.end(); 
+    }
+    catch(err){
+         res.status(500).json({ error: err.message});
+    }
 })
+
+app.post('/notification/refuser', async (req,res) => {
+try{
+        const tokenSigne = req.cookies.accessToken;
+        let token;
+        try {
+            token = jwt.verify(tokenSigne, process.env.SECRET);
+        } catch (err) {
+            return res.status(401).json({ error: "Token invalide" });
+        }
+        const username = token.username;
+
+        const id_notif = req.body.id;
+        if(!id_notif){
+             return res.status(400).json({ error: "ID manquant " });
+        }
+
+        const notifications = await recupNotification(bdd, username);
+        const notif = notifications.find(n => n.id == id_notif);
+        if (notifications.length === 0) {
+            return res.status(400).json({ error: "Aucune notification trouvée" });
+        }
+        const type = 'refus';
+        await changerEtatNotificationRefuse(bdd, notif.id);
+        await ajouterNotification(bdd, notif.id_envoi, notif.id_recoit, notif.id_agenda, type);
+
+        res.set('HX-Redirect', '/');
+        res.end();
+        
+    }
+    catch(err){
+         res.status(500).json({ error: err.message});
+    }
+})
+
 
 
 // +-------------------------------------------------------------------
@@ -407,7 +576,7 @@ app.get('/download/agenda/:agenda', (req, res) => {
     });
 });
 
-app.post('/importerExporter/agendaExporter', routes.callFrontEndDeporter);
+app.post('/importerExporter/agendaExporter', routes.callFrontEndExporter);
 
 app.post('/importerExporter/agendaImporter', routes.importerAgendaUtilisateur);
 
@@ -537,6 +706,19 @@ app.post("/getLanguage", async (req, res) => {
     const lang = await recupLangue(bdd, username);
     res.json({ language: lang });
 });
+
+//=====================================
+//Modifier les informations utilisateur
+//=====================================
+
+// route pour accéder à la page de modification
+app.get('/compte/modifier/utilisateur', routes.afficherPageModification);
+
+// route pour l'envoie du formulaire avec les modifications
+app.post('/modifier/informations/utilisateur', routes.modificationUtilisateur);
+
+// route pour vérifier le mot de passe donné par l'utilisateur
+app.post('/demande/motDePasse/utilisateur', routes.demandeMdp);
 
 app.listen(PORT, "0.0.0.0", (_err) => {
     console.log(`Serveur lancé sur http://localhost:${PORT}`);

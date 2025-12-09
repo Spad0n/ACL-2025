@@ -3,12 +3,46 @@
     <head>
       <meta charset="utf-8">
       <link rel="stylesheet" href="/css/importerexporter.css">
-        <title> Importation/Déportation </title>
+        <title> Importation/Exportation </title>
     </head>
 
     <body>
+      <div class='container'>
+		<button id="boutonRetour"> Accueil </button>
+	<label> PAGE IMPORTATION/EXPORTATION </label>
+
+      </div>
+      <div class='container'>
+	<label> Guide d'utilisation : </label>
+	<br>
+        Sur cette page, vous pouvez importer ou bien exporter un fichier agenda.
+        Ce fichier doit uniquement avoir été exporté/créé par notre page ici présente dans le cadre d'une importation.
+	Si vous essayez d'importer un agenda que vous possédez déjà, il ne sera pas importé pour ne pas écraser par erreur.
+	Vous devez donc supprimer l'agenda et après l'importer si c'est l'action souhaitée (le remplacer).
+      </div> 
+
+      <div class='container'>
+	<label> Ici vous pouvez choisir un agenda à importer : </label>
+	<input type="file" id="fileOpen" accept=".json">
+	<button id="fileButton1" name="fileButton1"> Importer </button>
+	<span id='messageImporte' hidden> Agenda importé avec succès ! </span>
+      </div class='container'>
+	
+      <div class='container'>
+        <label for='selectionAgendaDeporter'> Choisir un agenda à exporter : </label>
+        <select id="selectionAgendaDeporter">
+          <% data.forEach(item => { %>
+          <option value="<%= item.id %>">
+            <%= item.nom %>
+          </option>
+          <% }) %>
+        </select>
+	<button id="fileButton2" name="fileButton2"> Exporter </button>
+      </div>
+	
         <script>
-          function deporter(agendaName) {
+	  
+          function exporter(agendaName) {
 	      const obj = { agenda: agendaName};
 	      // On va envoyer au serveur la selection de l'utilisateur.
 	      fetch('/importerExporter/agendaExporter', {
@@ -31,74 +65,59 @@
 	    }
 	  
             // on ajoute l'ecouteur sur le bouton quand le DOM est lodaed
-            document.addEventListener('DOMContentLoaded', () => {
-                 document.getElementById('fileButton2')
-                    .addEventListener('click', () => {
+          document.addEventListener('DOMContentLoaded', () => {
+	      document.getElementById('boutonRetour')
+		  .addEventListener('click', () => { window.location.href = '/'; });
+              document.getElementById('fileButton2')
+                  .addEventListener('click', () => {
+		      
+		      // On récupère le nom de l'agenda dans le DOM
+		      const select         = document.getElementById('selectionAgendaDeporter');
+		      const agendaTxt      = select.options[select.selectedIndex].text;
+		      
+		      // fonction défini au dessus
+                      exporter(agendaTxt);
+                  });
+	      
+	      document.getElementById('fileButton1')
+		  .addEventListener('click', () => {
+		      // On récupère le fichier du client
+		      const fichierJson = document.getElementById('fileOpen').files[0];
+		      
+		      if(!fichierJson) {
+			  console.log('fichier est null');
+		      }
+		      else {
+			  
+			  // On va le convertir en objet et l'envoyer au serveur
+			  const fr  = new FileReader();
+			  fr.onload = (e) => {
+			      
+			      const agendaObj = JSON.parse(e.target.result);
 
-			// On récupère le nom de l'agenda dans le DOM
-			const select         = document.getElementById('selectionAgendaDeporter');
-			const agendaTxt      = select.options[select.selectedIndex].text;
-
-			// fonction défini au dessus
-                        deporter(agendaTxt);
-                    });
-
-		document.getElementById('fileButton1')
-		    .addEventListener('click', () => {
-			// On récupère le fichier du client
-			const fichierJson = document.getElementById('fileOpen').files[0];
-
-			if(!fichierJson) {
-			    console.log('fichier est null');
-			}
-			else {
-
-			    // On va le convertir en objet et l'envoyer au serveur
-			    const fr  = new FileReader();
-			    fr.onload = (e) => {
-				
-				const agendaObj = JSON.parse(e.target.result);
-				// console.log('Objet converti : ', agendaObj);
-
-				fetch('/importerExporter/agendaImporter',{
-				    method: "POST",
-				    headers: {
-					"Content-Type": "application/json"
-				    },
-				    body: JSON.stringify(agendaObj)
-				})
-				    .then( response => console.log('agenda importé!'))
-				    .catch(error => console.error(error));
-			    };
-
-			    // (permet d'appeler la méthode onload au dessus)
-			    fr.readAsText(fichierJson);
-			}
-		    });
-            });
-          
+			      console.log('Objet converti : ', agendaObj);
+			      fetch('/importerExporter/agendaImporter',{ method: "POST", headers: { "Content-Type": "application/json" },body: JSON.stringify(agendaObj)} )
+				  .then( rep => rep.json() )
+				  .then( objetJson => {
+				      if (typeof objetJson === 'object') {
+					  if(objetJson.etat) {
+					      document.getElementById('messageImporte').hidden      = false;
+					      document.getElementById('messageImporte').textContent = objetJson.message;
+					  }
+					  else {
+					      document.getElementById('messageImporte').hidden      = false;
+					      document.getElementById('messageImporte').textContent = objetJson.message;
+					  }
+				      }
+				  })
+				  .catch(error => console.error(error));
+			  };
+			  
+			  // (permet d'appeler la méthode onload au dessus)
+			  fr.readAsText(fichierJson);
+		      }
+		  });
+          });
         </script>
-	
-        <div class='container'>
-            Sur cette page, vous pouvez importer ou bien exporter un fichier agenda.
-            Ce fichier doit uniquement avoir été exporté/créé par notre page ici présente dans le cadre d'une importation. 
-        </div> 
-        <div class='container'>
-	  Ici vous pouvez choisir un agenda à importer.
-	  <input type="file" id="fileOpen" accept=".json">
-	  <button id="fileButton1" name="fileButton1"> Importer </button>
-        </div class='container'>
-	
-        <div class='container'>
-            <label for='selectionAgendaDeporter'> Choisir un agenda à exporter : </label>
-            <select id="selectionAgendaDeporter">
-                <% data.forEach(item => { %>
-                <option value="<%= item.id %>">
-                    <%= item.nom %>
-                </option>
-                <% }) %>
-            </select>
-	    <button id="fileButton2" name="fileButton2"> Exporter </button>
-        </div>
     </body>
 </html>

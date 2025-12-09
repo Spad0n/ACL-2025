@@ -1,3 +1,5 @@
+"use strict";
+
 import { createHash } from "crypto"; 
 import { createJWT } from "./outils/jwt.js";
 import { bdd,
@@ -11,8 +13,11 @@ import { bdd,
 	 recupAgendaUtilisateurConnecte,
 	 recupEvenementAgenda,
 	 recupIdUtilisateur,
+         recupHacheUtilisateur,
 	 recupAgendaIdByName,
-	 
+         updateUsername,
+	 updatePassword,
+     updateCouleurAgenda
 	 
        } from "./fonctionsBdd.js";
 import jwt from "jsonwebtoken";
@@ -33,7 +38,7 @@ export function createAccount(req, res) {
 	.then( (result) => {
 	    // Si on trouve l'utilisateur on indique que le compte existe déjà
 	    if (result.length == 1) {
-			res.redirect("/register?message=ce+nom+existe+deja") ;
+			res.redirect("/register?message=Ce+nom+existe+deja") ;
 	    }
 	    // Sinon on crée le compte
 	    else {
@@ -111,7 +116,7 @@ function recupTokenClient(req,res) {
 // +-------------------------------------------
 // | -> permet de créer le snapshot que le client demande
 // --------------------------------------------
-export function callFrontEndDeporter(req, res) {
+export function callFrontEndExporter(req, res) {
     setTimeout(() => console.log('SERVEUR log : callFrontEndDeporter'));
 
     // On récupère le nom de l'agenda que l'utilisateur veut déporter
@@ -148,7 +153,7 @@ export function callFrontEndDeporter(req, res) {
 						// console.log('SERVEUR log : événements : ', evnt);
 
 						// On crée le fichier
-						snapShotCreation(evnt, agenda, agd.id)
+						snapShotCreation(evnt, agenda, agd.id, agd.couleur)
 						    .then(success => {
 							res.json(success);
 						    })
@@ -203,7 +208,7 @@ export function sendFrontEndAgendaUtilisateur(req, res) {
 // +-----------------------------------
 // | Permet de créer le fichier snapshot
 // ------------------------------------
-function snapShotCreation(evenements, nomAgenda, idAgenda) {
+function snapShotCreation(evenements, nomAgenda, idAgenda, couleurAgenda) {
     setTimeout(() => console.log('SERVEUR log : snapShotCreation'));
 
     return new Promise( (resolve, reject) => {
@@ -211,10 +216,12 @@ function snapShotCreation(evenements, nomAgenda, idAgenda) {
 	// Propriété de l'objet : nom, id et des entiers (chaque entier correspond à l'id d'un événements)
 	const AGENDA = {};
 
-	AGENDA.nom = nomAgenda;
-	AGENDA.id  = idAgenda;
+	AGENDA.nom      = nomAgenda;
+	AGENDA.id       = idAgenda;
+    AGENDA.couleur  = couleurAgenda;
 	
 	for(const e of evenements) {
+            console.log(e);
 	    AGENDA[e.id] = e ;
 	}
 
@@ -273,6 +280,12 @@ export function importerAgendaUtilisateur(req,res) {
 				.then( idAgenda => {
 				    if(idAgenda.length == 1) {
 					const realIdAgenda = idAgenda[0].id;
+                   
+                    // on lui met sa petite couleur
+                    updateCouleurAgenda(bdd, agenda.couleur, realIdAgenda)
+                        .then( couleurVal => console.log(couleurVal))
+                        .catch(errCoul => console.error(errCoul));
+
 					for (const [key, value] of Object.entries(agenda)) {
 					    // les clefs pour les evenements est un entier
 					    // on va regarder si on peut la convertir en entier
@@ -285,6 +298,7 @@ export function importerAgendaUtilisateur(req,res) {
 						    .catch(error => console.error(erreur));
 					    }
 					}
+                                        res.json({etat: true, message: "Agenda importé avec succès !"});
 				    }
 				})
 				.catch(error => console.error(error));
@@ -292,9 +306,204 @@ export function importerAgendaUtilisateur(req,res) {
 			.catch(error => {
 			    console.error(error);
 			    // il faut informer le client qu'il a déjà cet agenda.
+                            res.json({etat: false, message: "Agenda non importé, vous le possédez déjà !"});
 			});
 		}
 	    })
 	    .catch(error => console.error(error));
     }
 }
+
+export async function modificationUtilisateur(request, response) {
+    // Si on est dans cette fonction, c'est que l'utilisateur à bien donné le bon mot de passe actuel.
+    // On peut donc lancer la procédure de modification des informations.
+    const pseudo = recupTokenClient(request, response);
+
+
+    // INFORMATIONS IMPORTANTES :
+    // le newPassword est prérempli avec le haché de l'ancien
+    // le username est aussi prérempli avec sa valeur actuel
+    // le oldPassword n'arrive pas haché !!!! peut poser des problèmes de sécurité
+
+    if(pseudo !== -1) {
+
+        const objERREUR = {user: pseudo} ;
+        let aErreur   = false ;
+
+        const {username, newPassword, oldPassword} = request.body ;
+
+        console.log('SERVEUR log : modification username : ', username);
+        console.log('SERVEUR log : modification mot de passe : ', newPassword);
+        console.log('SERVEUR log : mot de passe actuel : ', oldPassword);
+
+        if(username != pseudo) {
+            try {
+                const id1 = await recupIdUtilisateur(bdd, username);
+                
+                if(id1.length == 0) {
+                    const resUpdate = await updateUsername(bdd, pseudo, username);
+                    console.log(resUpdate);
+                }
+                else {
+                    // ajout de l'erreur dans l'objet erreur
+                    objERREUR.nameError =  'Ce nom d\'utilisateur est déjà affecté !';
+                    aErreur = true ; 
+                }
+            }
+            catch(erreur) {
+                console.error(erreur) ;
+            }
+        }
+
+        if(newPassword.length >= 8) {
+            if(newPassword != oldPassword) {
+                try {
+                    const id2 = await recupIdUtilisateur(bdd,username);
+
+                    if(id2.length > 0) {
+                        const realId  = id2[0].id ;
+                        const updateP = await updatePassword(bdd, oldPassword, newPassword, realId);
+                    }
+                    else {
+                        objERREUR.mdpError = 'Merci de vous reconnectez votre token a expiré !';
+                        aErreur = true ;
+                    }
+                }
+                catch(erreur) {
+                    console.error(erreur);
+                }
+            }
+        }
+
+        if(aErreur) {
+            response.render('modifierUtilisateur' , objERREUR);
+        }
+        else {
+            // pas de soucis on le deco. 
+            logout(request, response);
+        }
+    }
+
+    /*
+    if(pseudo !== -1) {
+        console.log('SERVEUR log : demande de modification par utilisateur : ', pseudo);
+        // console.log(request.body);
+        const {username, newPassword, oldPassword} = request.body;
+        // si username != pseudo => l'utilisateur veut changer son nom d'utilisateur.
+        // il faut vérifier que username n'est pas déjà présent dans la BDD. Si non alors mettre à jour.
+
+        console.log('SERVEUR log : modification username : ', username);
+        console.log('SERVEUR log : modification mot de passe : ', newPassword);
+        console.log('SERVEUR log : mot de passe actuel : ', oldPassword);
+        
+        if(pseudo != username) {
+            recupIdUtilisateur(bdd, username)
+                .then( resultat => {
+                    // si rien n'est trouvé, on peut lui assigné son nouveau username
+                    if(resultat.length == 0) {
+                        updateUsername(bdd, pseudo, username)
+                            .then( bddRes => {
+                                // username mis à jour. 
+                                console.log(bddRes); 
+                            })
+                            .catch(erreur => console.error(erreur));
+                    }
+                    else {
+                        // on lui indique que ce n'est pas possible.
+                        response.render('modifierUtilisateur',{ nameError: 'ce nom d\'utilisateur est déjà affecté !'});
+                    }
+                })
+                .catch(erreur => console.error(erreur));
+        }
+        
+        // si newPassword != oldPassword  => l'utilisateur veut changer son mot de passe.
+        // dans ce cas, il faut vérifier qu'il a bien donné le bon ancien mot de passe.
+        // si le mdp n'est pas > 8, cela signifie qu'il ne peut/veut pas changer son mdp.
+        if(newPassword.length >= 8) {
+            if( newPassword != oldPassword ) {
+                recupIdUtilisateur(bdd, username)
+                    .then( bddRes => {
+                        if(bddRes.length > 0) {
+                            const id = bddRes[0].id;
+                            updatePassword(bdd, oldPassword, newPassword, id)
+                                .then( resultat => {
+                                    console.log(resultat);
+                                })
+                                .catch(erreur => console.error(erreur));
+                        }
+                        else {
+                            response.render('modifierUtilisateur',
+                                            {mdpError: 'Merci de vous reconnectez votre token a expiré !'});
+                        }
+                    })
+                    .catch(erreur => console.error(erreur));
+            }
+        }
+        // on déconnecte l'utilisateur
+        // setTimeout(() => logout(request, response));
+    }
+    else {
+        // utilisateur inconnu ?
+        response.redirect('/login');
+        }
+   */
+}
+
+// +-----------------------------------------------------------------
+// | Lors de la modification des informations,
+// | le client doit utiliser son mot de passe actuel pour valider.
+// | Cette fonction permet de vérifier si il a bien donné le bon mdp.
+// ------------------------------------------------------------------
+export function demandeMdp(request, response) {
+    const { mdp }  = request.body ;
+    const username = recupTokenClient(request, response);
+
+    if(username !== -1) {
+        console.log('SERVEUR log : demandeMdp : ', username);
+        fetchUtilisateur(bdd, username, mdp)
+            .then( resultat => {
+
+                // On l'a trouvé, il a donné le bon mdp.
+                if(resultat.length == 1) {
+                    response.json({etat: true});
+                }
+                // si on l'a pas trouvé
+                else {
+                    response.json({etat: false, message: 'Mot de passe faux !'});
+                }
+            })
+            .catch(error => console.error(error));
+    }
+    else {
+        // utilisateur inconnu ? 
+    }
+}
+
+// +---------------------------------------------------------
+// | Affiche la vue pour modifier les informations du compte
+// ----------------------------------------------------------
+export function afficherPageModification(request , response) {
+
+    // récupération du nom d'utilisateur
+    const username = recupTokenClient(request, response);
+
+    if(username !== -1) {
+        
+        console.log('SERVEUR log : demande page modification du client : ', username);
+        // ici on va récupérer des informations pour pré-remplir le formulaire du client.
+        response.render('modifierUtilisateur', {user: username});
+    }
+    else {
+        // utilisateur inconnu ? 
+    }
+}
+
+// Permet de déconnecter le client
+export function logout(req, res) {
+    res.cookie("accessToken", "", {
+        expires: new Date(0),
+        httpOnly: true
+    });
+    res.redirect("/");
+}
+

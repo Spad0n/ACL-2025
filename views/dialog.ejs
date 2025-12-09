@@ -8,12 +8,12 @@ const icons = {
 };
 %>
 
-<dialog open id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
+<dialog id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
     
     <% if (action === "delete") { %>
         <form hx-post="/events/delete" hx-target="#dialog-container" hx-swap="innerHTML" class="entry-form">
             <div class="entries__form--body">
-                <div class="form--body__title"><h3 style="color:var(--white1)">Dellete ?</h3></div>
+                <div class="form--body__title"><h3 style="color:var(--white1)">Delete ?</h3></div>
                 <div class="form--body__description"><p style="color:var(--white2)">Confirm deletion of "<%= event.title %>"</p></div>
                 <input type="hidden" name="id" value="<%= event.id %>">
             </div>
@@ -32,7 +32,7 @@ const icons = {
         <input type="hidden" name="end" id="final-end">
         
         <!-- Ce champ caché recevra la couleur de l'agenda sélectionné via JS -->
-        <input type="hidden" name="color" id="final-color" value="#4285F4">
+        <!-- <input type="hidden" name="color" id="final-color" value="#4285F4"> -->
 
         <div class="entries__form--body">
             <div class="form--body__title form-body-single">
@@ -61,7 +61,7 @@ const icons = {
             </div>
 
             <!-- AGENDA SELECTION -->
-            <div style="padding: 0 4px 12px 0;">
+            <div style="padding: 0 4px 12px 0px;">
                 <label for="agenda" style="color:var(--white3); font-size:12px; display:block; margin-bottom:4px;">Calendar</label>
                 
                 <!-- On ajoute data-color sur chaque option -->
@@ -87,7 +87,7 @@ const icons = {
 
         <div class="entries__form--footer">
             <% if (action === "edit") { %>
-                <button type="button" class="form--footer__button-cancel" style="border-color: var(--red2); color: var(--red1); width: auto; margin-right: auto;"
+                <button type="button" class="form--footer__button-cancel" style="border-color: var(--red2); color: var(--red1); width: auto; margin-right: auto; margin-left:15px ;padding: 5px;"
                     hx-get="/dialog/event-form?action=delete&id=<%= event.id %>&title=<%= event.title %>"
                     hx-target="#dialog-container" hx-swap="innerHTML">Delete</button>
             <% } %>
@@ -159,8 +159,8 @@ const icons = {
              finalStart: document.getElementById('final-start'),
              finalEnd: document.getElementById('final-end'),
              
-             agendaSelect: document.getElementById('agenda-select'),
-             finalColor: document.getElementById('final-color'),
+             //agendaSelect: document.getElementById('agenda-select'),
+             //finalColor: document.getElementById('final-color'),
              dotPreview: document.getElementById('agenda-preview-dot')
          };
 
@@ -173,16 +173,16 @@ const icons = {
          };
 
          // --- LOGIQUE COULEUR AGENDA ---
-         function updateColorFromAgenda() {
-             if (!els.agendaSelect || !els.finalColor) return;
-             const selectedOption = els.agendaSelect.options[els.agendaSelect.selectedIndex];
-             if (selectedOption) {
-                 const color = selectedOption.getAttribute('data-color');
-                 els.finalColor.value = color;
-                 if (els.dotPreview) els.dotPreview.style.backgroundColor = color;
-             }
-         }
-         if (els.agendaSelect) els.agendaSelect.addEventListener('change', updateColorFromAgenda);
+         //function updateColorFromAgenda() {
+         //    if (!els.agendaSelect || !els.finalColor) return;
+         //    const selectedOption = els.agendaSelect.options[els.agendaSelect.selectedIndex];
+         //    if (selectedOption) {
+         //        const color = selectedOption.getAttribute('data-color');
+         //        els.finalColor.value = color;
+         //        if (els.dotPreview) els.dotPreview.style.backgroundColor = color;
+         //    }
+         //}
+         //if (els.agendaSelect) els.agendaSelect.addEventListener('change', updateColorFromAgenda);
 
          // --- UI UPDATE ---
          function updateUI() {
@@ -382,6 +382,17 @@ const icons = {
          updateUI(); 
          updateColorFromAgenda();
 
+         const dialog = document.getElementById('active-dialog');
+         if (dialog) {
+             dialog.showModal();
+         }
+
      })();
     </script>
 </dialog>
+<style>
+    dialog::backdrop {
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(2px);
+    }
+</style>

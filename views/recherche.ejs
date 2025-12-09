@@ -1,0 +1,202 @@
+<dialog id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
+<form id="event-form">
+        <h1>Recherche</h1>
+        <p>
+            Recherchez des événements par titre. Cliquez sur un résultat pour
+            naviguer directement à la date de l'événement.
+        </p>
+        <div id="recherche">
+            <label for="query">Termes de recherche</label>
+            <input type="text" id="query" name="query" required autocomplete="off">
+        </div>
+        <div id="search-results"></div>
+    <footer style="margin-top: 10px;">
+        <button type="button" class="btn btn-cancel" onclick="document.getElementById('active-dialog').close()">×</button>
+    </footer>
+    </form>
+
+    <script>
+        (function() {
+            const dialog_recherche = document.getElementById('active-dialog');
+            const dialogContainer = document.getElementById('dialog-container');
+            const queryInput = dialog_recherche.querySelector('#query');
+            const resultsContainer = dialog_recherche.querySelector('#search-results');
+            const cancelButton = document.getElementById('btn-cancel-dialog');
+
+            if (dialog_recherche && dialogContainer) {
+                dialog_recherche.addEventListener('close', () => {
+                    dialogContainer.innerHTML = '';
+                });
+
+                dialog_recherche.showModal();
+            }
+
+            if (cancelButton) {
+                cancelButton.addEventListener('click', () => {
+                    dialog_recherche.close();
+                });
+            }
+
+            resultsContainer.addEventListener('click', (e) => {
+                const clickedLi = e.target.closest('li[data-start-date]');
+
+                if (clickedLi) {
+                    const startDate = clickedLi.getAttribute('data-start-date');
+                    const appEvent = new CustomEvent('dispatchApp', {
+                        detail: { type: 'SET_DATE', payload: startDate }
+                    });
+                    document.body.dispatchEvent(appEvent);
+
+                    if (dialog_recherche) {
+                        dialog_recherche.close();
+                    } else {
+                        document.getElementById('dialog-container').innerHTML = '';
+                    }
+                }
+            });
+
+            function delayStg(func, delay) {
+                let timeoutId;
+                return function(...args) {
+                    clearTimeout(timeoutId);
+                    timeoutId = setTimeout(() => {
+                        func.apply(this, args);
+                    }, delay);
+                };
+            }
+            const performSearch = async (query) => {
+                if (query.length < 2) {
+                    resultsContainer.innerHTML = '';
+                    return;
+                }
+                try {
+                    const response = await fetch(`/events/search-events?q=${encodeURIComponent(query)}`);
+                    if (!response.ok) throw new Error('Erreur serveur');
+
+                    const events = await response.json();
+                    displayResults(events);
+                } catch (error) {
+                    console.error('Erreur:', error);
+                    resultsContainer.innerHTML = '<p>Erreur lors de la recherche.</p>';
+                }
+            };
+
+            const delayedSearch = delayStg(performSearch, 300);
+            queryInput.addEventListener('input', (e) => {
+                delayedSearch(e.target.value);
+            });
+
+            resultsContainer.addEventListener('click', (e) => {
+                const clickedLi = e.target.closest('li[data-start-date]');
+
+                if (clickedLi) {
+                    const startDate = clickedLi.getAttribute('data-start-date');
+                    const appEvent = new CustomEvent('dispatchApp', {
+                        detail: { type: 'SET_DATE', payload: startDate }
+                    });
+                    document.body.dispatchEvent(appEvent);
+                    document.getElementById('dialog-container').innerHTML = '';
+                }
+            });
+
+
+            function displayResults(events) {
+                if (events.length === 0) {
+                    resultsContainer.innerHTML = '<p>Aucun événement trouvé.</p>';
+                    return;
+                }
+
+                const resultsHtml = events.map(event => {
+                    const eventDate = new Date(event.start).toLocaleDateString('fr-FR', {
+                        day: 'numeric', month: 'long', year: 'numeric'
+                    });
+
+                    return `<li data-start-date="${event.start}"><a>
+                        <strong>${event.title}</strong> (Evénement du ${eventDate})
+                    </a></li>`;
+
+                }).join('');
+
+                resultsContainer.innerHTML = `<ul>${resultsHtml}</ul>`;
+            }
+        })();
+
+
+    </script>
+
+</dialog>
+
+<style>
+
+    dialog {
+        width: 400px;
+        padding: 20px;
+
+    }
+
+    dialog::backdrop {
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(2px);
+    }
+
+    #recherche {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 10px;
+        margin-top: 20px;
+        gap: 10px;
+    }
+
+    #recherche input{
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    #search-results {
+        max-height: 220px;
+        overflow-y: auto;
+        margin-top: 10px;
+        padding: 5px;
+    }
+
+    #search-results ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    #search-results li {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+    }
+
+    #search-results li:hover {
+        background-color: #e0e0e0;
+    }
+
+    #search-results li a {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .btn-cancel {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        width: 30px;
+        height: 30px;
+        color: black;
+        border: none;
+        cursor: pointer;
+        border-radius: 50%;
+    }
+
+    .btn-cancel:hover {
+        background-color: #e0e0e0;
+    }
+
+</style>

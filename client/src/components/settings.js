@@ -117,6 +117,15 @@ export default function settingsView(model, dispatch) {
                                     window.location.href = '/importerExporter/agenda';
                                 } } }, translate(model.settings.language, 'settings.importExport'))
                             ])
+                        ]),
+                        h('div.sub-menu--item__title', translate(model.settings.language, 'settings.userData')),
+                        h('div.sub-menu--item__description', translate(model.settings.language, 'settings.userDescription')),
+                        h('div.sub-menu--item__actions', [
+                            h('div.sm-download-json', [
+                                h('button.sm-json-btn.down-json', { on: { click: () => {
+                                    window.location.href = '/compte/modifier/utilisateur';
+                                } } }, 'Espace compte')
+                            ])
                         ])
                     ]),
                     

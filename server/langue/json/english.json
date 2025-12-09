@@ -14,7 +14,9 @@
         "languageOptions": {
           "english": "English",
           "french": "French"
-        }
+        },
+        "userData" : "Edit account information",
+        "userDescription": "Change password or username"
     },
 
     "header": {

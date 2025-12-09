@@ -1,46 +1,114 @@
+/* ---- RESET ---- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Roboto", sans-serif;
+}
+
+/* ---- BACKGROUND CAMOUFLAGE ---- */
 body {
-  font-family: Arial, sans-serif;
-  background: #f4f4f4;
+  background: 
+    url(""), /* texture camouflage */
+    linear-gradient(#4b5320, #2f3a10);
+  background-blend-mode: multiply;
+  background-size: 600px, cover;
+  color: #e2e2d0;
   padding: 40px;
+  min-height: 100vh;
 }
 
-div {
-  margin-bottom: 18px;
+/* ---- TITRE ---- */
+h1 {
+  text-align: center;
+  font-size: 3rem;
+  letter-spacing: 6px;
+  font-weight: 900;
+  color: #dcdcbb;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #000, 4px 4px 0 #3a3a3a;
+  margin-bottom: 40px;
 }
 
-input[type=file], select {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background: #fff;
-  width: 100%;
+/* ---- FORMULAIRE ---- */
+form {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 25px;
+  background: rgba(20, 25, 10, 0.85);
+  border: 2px solid #3d4422;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.6);
 }
 
-button {
-  background: #1976d2;
-  color: #fff;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #125ca3;
-}
-
+/* ---- LABELS ---- */
 label {
+  display: block;
+  font-size: 1.1rem;
   font-weight: bold;
   margin-bottom: 6px;
-  display: inline-block;
+  color: #d2d2b0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
-.container {
-  background: #fff;
-  padding: 25px;
-  max-width: 600px;
-  margin: auto;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+/* ---- CHAMPS ---- */
+input[type="text"],
+input[type="password"] {
+  width: 85%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  border: 2px solid #5a5f3b;
+  background: #2b3315;
+  color: #e0e0c0;
+  font-size: 1rem;
+  outline: none;
+  transition: 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+  border-color: #9aa86f;
+  background: #363f1e;
+  box-shadow: 0 0 8px rgba(154,168,111,0.6);
+}
+
+/* ---- BOUTONS ---- */
+button,
+input[type="submit"] {
+  padding: 12px 25px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(#5a5f3b, #3a3f24);
+  color: #e2e2d0;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border: 2px solid #2a2e17;
+  transition: 0.3s;
+}
+
+button:hover,
+input[type="submit"]:hover {
+  background: linear-gradient(#70774a, #4a512d);
+  border-color: #8c9966;
+  transform: scale(1.05);
+}
+
+button:active,
+input[type="submit"]:active {
+  transform: scale(0.95);
+  background: #191f0c;
+}
+
+/* ---- ERREURS ---- */
+span, label.error {
+  color: #ff6b6b;
+  font-weight: bold;
+  text-shadow: 1px 1px 0 #000;
 }
 

@@ -274,6 +274,7 @@
 .menu,
 .settings,
 .partage,
+.notification,
 .h-search,
 .h-kb--shortcuts {
   align-items: center;
@@ -284,7 +285,8 @@
 
 .h-search,
 .settings,
-.partage {
+.partage,
+.notification {
   border-radius: 50%;
   height: 32px;
   justify-content: center;
@@ -298,7 +300,8 @@
 
 .h-search::after,
 .settings::after,
-.partage::after {
+.partage::after,
+.notification::after {
   align-items: center;
   background-color: var(--mediumgrey2);
   border-radius: 4px;
@@ -330,9 +333,11 @@
 .h-search:hover::after,
 .settings:hover::after,
 .partage:hover::after,
+.notification:hover::after,
 .h-search:focus-visible::after,
 .settings:focus-visible::after,
-.partage:focus-visible::after {
+.partage:focus-visible::after,
+.notification:focus-visible::after {
   opacity: 1;
   z-index: 2000;
 }
@@ -452,6 +457,11 @@
     width: 20px;
   }
 
+  .notification svg {
+    height: 20px;
+    width: 20px;
+  }
+
   .select-wrapper {
     margin: 0 6px
   }
@@ -482,6 +492,10 @@
   }
 
   .partage{
+    display: flex;
+  }
+
+  .notification{
     display: flex;
   }
 }

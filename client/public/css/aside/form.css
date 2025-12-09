@@ -57,7 +57,7 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden scroll;
-  padding: 8px 16px 4px 0;
+  padding: 20px;
   width: 100%;
   user-select: none;
 }
@@ -74,9 +74,8 @@
 .form--body__title {
   align-items: center;
   display: flex;
-  margin-left: auto;
   padding: 4px;
-  width: calc(100% - 48px)
+  width: 100%
 }
 
 .form--body__title {

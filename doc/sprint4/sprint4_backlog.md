@@ -29,6 +29,13 @@
 
 ### 4. Changement de langue du site  
 **Responsables :** Rohan Cornette + autres  
-
 **Tâches :**  
 - Ajout du choix de langue (Français / Anglais) pour le front  
+
+---
+
+### 5. Modifier les informations utilisateurs
+**Responsable :** André Léo
+**Tâches :**
+- Créer une page accessible depuis l'onglet settings.
+- Créer les fonctions de mise à jour de la base de données.

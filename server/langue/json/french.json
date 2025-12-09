@@ -14,7 +14,9 @@
         "languageOptions": {
           "english": "Anglais",
           "french": "Français"
-        }
+        },
+        "userData" : "Modifier les informations du compte",
+        "userDescription": "Changer le mot de passe ou le nom d'utilisateur"
     },
 
     "header": {

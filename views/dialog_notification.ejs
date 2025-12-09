@@ -1,0 +1,204 @@
+<dialog id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
+    <h2>Notifications de partage</h2>
+
+    <div id="liste-notifications" hx-get="/recupNotification" hx-trigger="load" hx-target="#liste-notifications">
+        <p>Chargement...</p>    
+    </div>
+
+     <button type="button" class="btn btn-cancel" onclick="document.getElementById('dialog-container').innerHTML = ''">Annuler</button>
+</div>
+
+<style>
+
+    /* ====== DIALOG NOTIFICATIONS ====== */
+.entries__form {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+
+  width: 100%;
+  max-width: 360px;
+  min-width: 280px;
+
+  height: auto;
+  max-height: min(520px, 90%);
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+
+  background-color: var(--black1);
+  border-radius: 8px;
+  box-shadow: var(--box-shadow1);
+  padding: 0;
+  border: none;
+
+  z-index: 1011;
+}
+
+.entries__form::backdrop {
+  background-color: rgba(0,0,0,0.4);
+}
+
+/* ===== TITLE ===== */
+.entries__form h2 {
+  margin: 0;
+  padding: 12px;
+  text-align: center;
+  color: var(--taskcolor);
+  font-size: 17px;
+  border-bottom: 1px solid var(--darkgrey1);
+}
+
+/* ===== LISTE DES NOTIFICATIONS ===== */
+#liste-notifications {
+  padding: 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ===== NOTIF ITEM ===== */
+.notif-item {
+  background-color: var(--black1);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-left: 3px solid var(--primary2);
+  box-shadow: var(--box-shadow1);
+
+  color: var(--white2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  animation: fadeIn 180ms ease-out;
+}
+
+.notif-item strong {
+  color: var(--white1);
+  font-size: 15px;
+}
+
+.notif-item em {
+  color: var(--primary2);
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* bouton container */
+.notif-item div {
+  display: flex;
+  gap: 8px;
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background-color: var(--black2);
+  color: var(--white2);
+
+  transition: background-color 150ms ease-in-out, opacity 120ms;
+}
+
+.btn:hover {
+  background-color: var(--mediumgrey0);
+}
+
+/* cancel button within dialog */
+.btn-cancel {
+  width: 100%;
+  height: 40px;
+  border-radius: 0 0 8px 8px;
+  background-color: var(--black0);
+  color: var(--white2);
+  margin-top: auto;
+}
+
+.btn-cancel:hover {
+  background-color: var(--mediumgrey0);
+}
+
+/* ===== ANIMATION ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== SCROLLBAR ===== */
+#liste-notifications::-webkit-scrollbar {
+  width: 6px;
+}
+
+#liste-notifications::-webkit-scrollbar-track {
+  background: var(--black2);
+  border-radius: 3px;
+}
+
+#liste-notifications::-webkit-scrollbar-thumb {
+  background: var(--darkgrey1);
+  border-radius: 3px;
+}
+
+#liste-notifications::-webkit-scrollbar-thumb:hover {
+  background: var(--mediumgrey0);
+}
+
+/* ===== ELEMENTS DES NOTIFS ===== */
+.notif-item p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--white2);
+}
+
+/* Boutons accepter/refuser dans une notif */
+.notif-item .btn {
+  flex: 1;
+  height: 32px;
+  border-radius: 4px;
+}
+
+.notif-item .btn-accept {
+  background-color: var(--primary2);
+  color: var(--black0);
+}
+
+.notif-item .btn-accept:hover {
+  background-color: var(--primary1);
+}
+
+.notif-item .btn-refuse {
+  background-color: var(--black2);
+  color: var(--white2);
+}
+
+.notif-item .btn-refuse:hover {
+  background-color: var(--mediumgrey0);
+}
+
+#active-dialog::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: -1;
+}
+
+
+</style>

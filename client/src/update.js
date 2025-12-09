@@ -67,7 +67,6 @@ export function update(msg, model) {
             description: event.description,
             start: event.start, // Les dates sont déjà au format ISO string dans le modèle
             end: event.end,
-            color: event.color.toString(), // La couleur est un nombre, on la passe en string
         });
         const editUrl = `/dialog/event-form?${params.toString()}`;
         triggerHtmxDialog(editUrl);
@@ -124,6 +123,15 @@ export function update(msg, model) {
         }else if (name === 'partage'){
             triggerHtmxDialog('/dialog/partage');
             return model;
+        }
+        else if (name === 'recherche') {
+            triggerHtmxDialog('/dialog/recherche');
+            return model;
+        }
+        else if (name === 'datepicker') {
+        }else if(name === 'notification'){
+            triggerHtmxDialog('/dialog/notification');
+            return model; 
         }else if (name === 'datepicker') {
             const { date, position, target } = payload;
             const popupStyle = placePopup(256, 216, position); 

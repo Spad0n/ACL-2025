@@ -20,6 +20,10 @@ function getLocale(language) {
     }
 }
 
+const rechercheIcon = h('svg', { attrs: { focusable: "false", viewBox: "0 0 24 24", width: "24px", height: "24px", fill: "var(--white2)" } }, [
+    h('path', { attrs: { d: "M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C8.01 14 6 11.99 6 9.5S8.01 5 10.5 5 15 7.01 15 9.5 12.99 14 10.5 14z" } })
+]);
+
 const logoutIcon = h('svg', { attrs: { focusable: "false", viewBox: "0 0 24 24", width: "24px", height: "24px", fill: "var(--white2)" } }, [
     h('path', { attrs: { d: "M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" } })
 ]);
@@ -118,6 +122,11 @@ export default function headerView(model, dispatch) {
                 ]),
                 
                 h('div.h-col-3', [
+                    // --- Bouton Recherche ---
+                    h('button.h-search', {
+                        on: { click: () => dispatch(Msg.OpenModal('recherche')) },
+                        attrs: { 'data-tooltip': 'Rechercher un événement', 'aria-label': 'Rechercher un événement' }
+                    }, [rechercheIcon]),
                     // --- Bouton Paramètres ---
                     h('button.settings', {
                         on: { click: () => dispatch(Msg.OpenModal('settings')) },
@@ -132,15 +141,20 @@ export default function headerView(model, dispatch) {
                     // --- Bouton pour partager un événements ---
                     h('button.partage', {
                         on: { click: () => dispatch(Msg.OpenModal('partage')) },
-                        attrs: { 'data-tooltip': translate(model.settings.language, 'header.share'), 'aria-label': translate(model.settings.language, 'header.share') }
-                    }, [
-                        h('img', {
-                            attrs: {
-                                src: '/public/assets/icons/partager.png',
-                                alt: translate(model.settings.language, 'header.share')
-                            }
-                        })
-                     ]),
+                        attrs: { 'data-tooltip': 'Share', 'aria-label': 'Share' }
+                    }, [h('svg', { attrs: { viewBox: "0 0 24 24", width: "24px", height: "24px", fill: "var(--white2)" } }, [
+                                h('path', { attrs: { d: "M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.02-4.11A2.99 2.99 0 0018 7.91a3 3 0 10-3-3c0 .24.04.47.09.7L8.07 9.72A3.003 3.003 0 006 9a3 3 0 100 6c1.07 0 2.02-.56 2.55-1.41l6.91 4.03c-.05.19-.08.39-.08.6a3 3 0 103-3z" } })
+                            ])
+                        ]),
+
+                     // --- Bouton Notification --- 
+                    h('button.notification', {
+                        on: { click: () => dispatch(Msg.OpenModal('notification')) },
+                        attrs: { 'data-tooltip': 'Notifications', 'aria-label': 'Notifications' }
+                    }, [h('svg', { attrs: { viewBox: "0 0 24 24", width: "24px", height: "24px", fill: "var(--white2)" } }, [
+                                h('path', { attrs: { d: "M12 22a2 2 0 002-2h-4a2 2 0 002 2zm6-6v-5a6 6 0 00-5-5.91V4a1 1 0 10-2 0v1.09A6 6 0 006 11v5l-2 2v1h16v-1l-2-2z" } })
+                            ])
+                        ]),
                     
                     // --- Sélecteur de Vue ---
                     h('div.select-wrapper', [
@@ -152,7 +166,7 @@ export default function headerView(model, dispatch) {
                     h('button.settings.logout-btn', {
                         on: { click: () => {
                             fetch('/logout', { method: 'GET', credentials: "include"})
-                                .then(() => window.location.href = '/login')
+                                .then(() => window.location.href = '/logout')
                                 .catch((error) => console.error('La déconnexion a échoué:', error));
                         }},
                         attrs: { 'data-tooltip': translate(model.settings.language, 'header.logout'), 'aria-label': translate(model.settings.language, 'header.logout') }

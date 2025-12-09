@@ -23,7 +23,6 @@
 
 **Tâches :**  
 - Amélioration de la recherche actuelle avec des résultats de proximité  
-- Ajout de tags aux événements pour filtrer la recherche  
 
 ---
 

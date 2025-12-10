@@ -2,7 +2,7 @@ import { h } from 'snabbdom';
 import { format, isSameDay, isToday, isSameMonth, getMonthViewDates } from '../dateUtils';
 import { Msg } from '../messages';
 import { getVisibleEvents } from '../eventUtils';
-import { startOfDay, endOfDay } from 'date-fns';
+import { startOfDay, endOfDay, eachDayOfInterval } from 'date-fns';
 
 /**
  * @typedef {import('../model').Model} Model
@@ -99,14 +99,41 @@ export default function monthView(model, dispatch) {
 
     const visibleEntries = getVisibleEvents(model.entries, viewStart, viewEnd, model.categories);
 
-    const entriesByDate = visibleEntries.reduce((acc, entry) => {
-        const dateKey = format(new Date(entry.start), 'yyyy-MM-dd');
-        if (!acc.has(dateKey)) {
-            acc.set(dateKey, []);
-        }
-        acc.get(dateKey).push(entry);
-        return acc;
-    }, new Map());
+    const entriesByDate = new Map();
+
+    visibleEntries.forEach(entry => {
+        const start = startOfDay(entry.start);
+        const end = endOfDay(entry.end);
+
+        // Si la fin est avant le début (données corrompues), on ignore ou on corrige
+        if (end < start) return;
+
+        // Génère tous les jours entre le début et la fin de l'événement
+        const daysInterval = eachDayOfInterval({ start, end });
+
+        daysInterval.forEach(day => {
+            const dateKey = format(day, 'yyyy-MM-dd');
+            
+            // On ajoute l'événement à ce jour spécifique
+            if (!entriesByDate.has(dateKey)) {
+                entriesByDate.set(dateKey, []);
+            }
+            // On vérifie les doublons par sécurité (optionnel mais propre)
+            const currentList = entriesByDate.get(dateKey);
+            if (!currentList.some(e => e.id === entry.id)) {
+                currentList.push(entry);
+            }
+        });
+    });
+
+    //const entriesByDate = visibleEntries.reduce((acc, entry) => {
+    //    const dateKey = format(new Date(entry.start), 'yyyy-MM-dd');
+    //    if (!acc.has(dateKey)) {
+    //        acc.set(dateKey, []);
+    //    }
+    //    acc.get(dateKey).push(entry);
+    //    return acc;
+    //}, new Map());
 
     const weekdays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
     const isFiveWeeks = dates.length <= 35;

@@ -155,7 +155,7 @@ app.get('/events', async (req, res) => {
 // Affichage du dialogue de création/édition
 app.get('/dialog/event-form', async (req, res) => {
     try {
-        const { action, date, id, title, description, start, end, rrule } = req.query;
+        const { action, date, id, title, description, start, end, rrule, id_agenda } = req.query;
 
         const token = req.cookies.accessToken;
         if (!token) return res.status(401).send("Utilisateur non connecté");
@@ -179,7 +179,7 @@ app.get('/dialog/event-form', async (req, res) => {
                 start: start || null,
                 end: end || null,
                 //color: color ? parseInt(color, 10) : 0xff0000,
-                id_agenda: null,
+                id_agenda: id_agenda ? parseInt(id_agenda, 10) : null,
                 rrule: rrule || ''
             },
             agendas

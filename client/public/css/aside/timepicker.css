@@ -10,8 +10,8 @@
 }
 
 .timepicker {
-  position: absolute;
-  z-index: 1020;
+  position: fixed;
+  z-index: 2000;
   width: 180px;
   background-color: var(--black1);
   box-shadow: var(--box-shadow3);

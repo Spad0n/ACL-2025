@@ -90,28 +90,50 @@ export function triggerHtmxPost(url, data) {
     try {
         console.log("Tentative de récupération des données...");
         
-        // On charge d'abord les agendas (catégories) car on en a besoin pour mapper les événements
-        model.categories = await fetchAgendasFromBDD();
+        const [agendas, serverEvents, settingsRes] = await Promise.all([
+            fetchAgendasFromBDD(),
+            fetch('/events').then(r => r.json()),
+            fetch('/settings').then(r => r.json())
+        ]);
 
-        const response = await fetch('/events');
-        const serverEvents = await response.json();
+        model.categories = agendas;
+        model.settings = {
+            ...model.settings,
+            ...settingsRes,
+        };
 
-        const hydratedEntries = serverEvents.map(entry => {
-            // On trouve le nom de la catégorie via l'ID agenda
-            // Si non trouvé, on fallback sur "Personnel" ou la première dispo
-            const categoryName = Object.keys(model.categories).find(name => model.categories[name].id === entry.id_agenda) || "Default";
-            
-            return {
-                id: entry.id.toString(),
-                title: entry.title,
-                description: entry.description || '',
-                start: new Date(entry.start),
-                end: new Date(entry.end),
-                category: categoryName
-            }
-        });
+        localStorage.setItem('theme', model.settings.theme);
 
-        model.entries = hydratedEntries;
+        model.entries = serverEvents.map(e => ({
+            ...e,
+            id: e.id.toString(),
+            start: new Date(e.start),
+            end: new Date(e.end),
+            // On s'assure d'avoir la couleur/catégorie
+            category: Object.keys(model.categories).find(name => model.categories[name].id === e.id_agenda) || "Default"
+        }));
+
+        //model.categories = await fetchAgendasFromBDD();
+
+        //const response = await fetch('/events');
+        //const serverEvents = await response.json();
+
+        //const hydratedEntries = serverEvents.map(entry => {
+        //    // On trouve le nom de la catégorie via l'ID agenda
+        //    // Si non trouvé, on fallback sur "Personnel" ou la première dispo
+        //    const categoryName = Object.keys(model.categories).find(name => model.categories[name].id === entry.id_agenda) || "Default";
+        //    
+        //    return {
+        //        id: entry.id.toString(),
+        //        title: entry.title,
+        //        description: entry.description || '',
+        //        start: new Date(entry.start),
+        //        end: new Date(entry.end),
+        //        category: categoryName
+        //    }
+        //});
+
+        //model.entries = hydratedEntries;
         
     } catch (err) {
         console.error("Erreur lors de l'initialisation:", err);
@@ -156,22 +178,15 @@ export function triggerHtmxPost(url, data) {
     // ÉCOUTEURS D'ÉVÉNEMENTS HTMX (Mise à jour sans recharger)
     // =========================================================
 
-    // 1. SAUVEGARDE D'UN ÉVÉNEMENT (Création ou Modification)
     document.body.addEventListener('eventSaved', (evt) => {
-        // CORRECTION ICI : On vérifie .value OU .detail directement
         const savedEventRaw = evt.detail.value || evt.detail; 
         
-        console.log("HTMX Signal Brut (Save):", savedEventRaw);
-
-        if (!savedEventRaw || !savedEventRaw.start) {
-            console.warn("Données d'événement incomplètes reçues, rechargement conseillé.");
-            return;
-        }
+        if (!savedEventRaw || !savedEventRaw.start) return;
 
         const categoryEntry = Object.entries(model.categories).find(([key, val]) => val.id == savedEventRaw.id_agenda);
-        if(!categoryEntry) return;
-
-        const [categoryName, categoryObj] = categoryEntry;
+        
+        const categoryName = categoryEntry ? categoryEntry[0] : 'Default';
+        const categoryColor = categoryEntry ? categoryEntry[1].color : '#333';
 
         const savedEvent = {
             ...savedEventRaw,
@@ -180,11 +195,11 @@ export function triggerHtmxPost(url, data) {
             end: new Date(savedEventRaw.end),
             description: savedEventRaw.description || '',
             category: categoryName,
-            color: categoryObj.color
+            color: categoryColor,
+            rrule: savedEventRaw.rrule 
         };
 
-        console.log("Mise à jour du modèle avec :", savedEvent);
-        dispatch(Msg.SaveEntry(savedEvent)); // Met à jour le modèle Snabbdom
+        dispatch(Msg.SaveEntry(savedEvent)); 
         dispatch(Msg.CloseAllModals());
     });
 

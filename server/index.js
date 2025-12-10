@@ -31,7 +31,9 @@ import {
     agendaPartagePour,
     supprimerNotificationPartage,
     ajouterNotification,
-    recupNotificationTypeRefusAcceptation
+    recupNotificationTypeRefusAcceptation,
+    getSettings,
+    saveSettings,
 } from './fonctionsBdd.js';
 import { tr } from 'date-fns/locale';
 import { error } from 'console';
@@ -85,6 +87,41 @@ app.post("/account/new", routes.createAccount);
 
 app.post("/logUser", routes.login);
 
+app.get('/settings', async (req, res) => {
+    try {
+        const tokenSigne = req.cookies.accessToken;
+        if (!tokenSigne) return res.json({}); // Pas connecté = params par défaut
+
+        const token = jwt.verify(tokenSigne, process.env.SECRET);
+        const userRows = await recupUtilisateurID(bdd, token.username);
+        
+        if (userRows.length === 0) return res.status(404).json({});
+        
+        const settings = await getSettings(bdd, userRows[0].id);
+        res.json(settings);
+    } catch (err) {
+        console.error("Erreur chargement settings:", err);
+        res.status(500).json({}); // Fallback
+    }
+});
+
+app.post('/settings', async (req, res) => {
+    try {
+        const tokenSigne = req.cookies.accessToken;
+        if (!tokenSigne) return res.status(401).send();
+
+        const token = jwt.verify(tokenSigne, process.env.SECRET);
+        const userRows = await recupUtilisateurID(bdd, token.username);
+        
+        if (userRows.length > 0) {
+            await saveSettings(bdd, userRows[0].id, req.body);
+            res.json({ success: true });
+        }
+    } catch (err) {
+        console.error("Erreur sauvegarde settings:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 app.get('/events', async (req, res) => {
     const tokenSigne = req.cookies.accessToken;
@@ -120,7 +157,7 @@ app.get('/events', async (req, res) => {
 // Affichage du dialogue de création/édition
 app.get('/dialog/event-form', async (req, res) => {
     try {
-        const { action, date, id, title, description, start, end } = req.query;
+        const { action, date, id, title, description, start, end, rrule, id_agenda } = req.query;
 
         const token = req.cookies.accessToken;
         if (!token) return res.status(401).send("Utilisateur non connecté");
@@ -144,7 +181,8 @@ app.get('/dialog/event-form', async (req, res) => {
                 start: start || null,
                 end: end || null,
                 //color: color ? parseInt(color, 10) : 0xff0000,
-                id_agenda: null 
+                id_agenda: id_agenda ? parseInt(id_agenda, 10) : null,
+                rrule: rrule || ''
             },
             agendas
         };
@@ -160,7 +198,7 @@ app.get('/dialog/event-form', async (req, res) => {
 
 app.post('/events', (req, res) => {
     //const { id, title, description, color, start, end, id_agenda } = req.body;
-    const { id, title, description, start, end, id_agenda } = req.body;
+    const { id, title, description, start, end, id_agenda, rrule } = req.body;
 
     const startDate = new Date(start);
     const endDate = new Date(end);
@@ -171,7 +209,8 @@ app.post('/events', (req, res) => {
         //color: parseInt(color.substring(1), 16),
         start: startDate.toISOString(),
         end: endDate.toISOString(),
-        id_agenda: parseInt(id_agenda, 10)
+        id_agenda: parseInt(id_agenda, 10),
+        rrule: rrule === '' ? null : rrule
     };
 
     // On ajoute dans la base

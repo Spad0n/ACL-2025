@@ -63,6 +63,7 @@ function renderLanguageOptions(model, dispatch) {
             on: { click: () => {
                 console.log(`Language changed to: ${language.value}`);
                 dispatch(Msg.SetLanguage(language.value));
+                localStorage.setItem('language', language.value);
                 fetch(`/setLanguage/${language.value}`, { method: 'POST' });
             }}
         }, [

@@ -1,5 +1,5 @@
 <script>
-  const userLang = '<%= userLang %>'; 
+  window.userLang = '<%= userLang %>';
 </script>
 
 <dialog id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
@@ -13,7 +13,7 @@
 </div>
 
 <script>
-  const isEn = userLang === 'en'; 
+  window.isEn = window.userLang === 'en';
   
   if(isEn){
     document.getElementById("titre").textContent = "Sharing notifications";

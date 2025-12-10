@@ -12,6 +12,7 @@ import {
 import { Msg } from '../messages';
 import { hextorgba } from '../utils';
 import { calculateLayout } from './layoutUtils';
+import { getVisibleEvents } from '../eventUtils';
 
 /**
  * @typedef {import('../model').Model} Model
@@ -85,21 +86,17 @@ export default function dayView(model, dispatch) {
     const { currentDate } = model;
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
-    const activeCategories = new Set(
-        Object.keys(model.categories).filter(key => model.categories[key].active)
-    );
-    const visibleEntries = model.entries.filter(entry => activeCategories.has(entry.category));
-    
-    // Filtrer les événements pour le jour courant
-    const dayStart = startOfDay(currentDate);
-    const dayEnd = endOfDay(currentDate);
-    const dayEntries = visibleEntries.filter(entry => entry.start < dayEnd && entry.end > dayStart);
+    // 1. Définir la fenêtre de vue (Le jour courant uniquement)
+    const viewStart = startOfDay(currentDate);
+    const viewEnd = endOfDay(currentDate);
 
-    // Séparer les événements "toute la journée" des événements programmés
+    // 2. Calcul dynamique des événements visibles
+    const dayEntries = getVisibleEvents(model.entries, viewStart, viewEnd, model.categories);
+
+    // 3. Séparation
     const allDayEntries = dayEntries.filter(isMultiDayOrAllDay);
     const timedEntries = dayEntries.filter(e => !allDayEntries.includes(e));
     
-    // Calculer les superpositions pour les événements programmés
     const entryPositions = calculateLayout(timedEntries);
 
     const handleGridClick = (e) => {
@@ -110,7 +107,6 @@ export default function dayView(model, dispatch) {
     };
 
     return h('div.calendar__dayview', [
-        // --- En-tête du jour ---
         h('div.dayview--header', [
             h('div.dayview--header-day', [
                 h('div.dayview--header-day__title', format(currentDate, 'EEE', { locale: localeFR }).toUpperCase()),
@@ -123,26 +119,22 @@ export default function dayView(model, dispatch) {
             ])
         ]),
         
-        // --- Zone des événements "toute la journée" ---
         h('div.dv-ontop-row2', [
             h('div.dv-gmt', `UTC${format(new Date(), 'xxx')}`),
             h('div.dayview--ontop-container', allDayEntries.map(entry =>
                 h('div.dayview--ontop__grid-item', {
                     key: entry.id,
-                    style: { backgroundColor: model.categories[entry.category]?.color || '#333' },
+                    style: { backgroundColor: entry.color || '#333' },
                     on: { click: (e) => { e.stopPropagation(); dispatch(Msg.OpenModal('entryOptions', { entryId: entry.id, position: e.target.getBoundingClientRect() })); } }
                 }, entry.title)
             ))
         ]),
         
-        // --- Grille horaire principale ---
         h('div.dayview__grid', [
             h('div.dayview__grid--wrapper', [
-                // Colonne des heures
                 h('div.dayview--side-grid', hours.map(hour => 
                     h('span.dv-sidegrid--cell', hour > 0 ? format(new Date(0, 0, 0, hour), 'h a') : '')
                 )),
-                // Grille principale où sont positionnés les événements
                 h('div.dayview--main-grid', { on: { click: handleGridClick } },
                     timedEntries.map(entry => renderTimedEntry(entry, model, dispatch, entryPositions.get(entry.id)))
                 )

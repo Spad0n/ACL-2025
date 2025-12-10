@@ -8,6 +8,10 @@ const icons = {
 };
 %>
 
+<div id="manual-backdrop" 
+     style="position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1010; backdrop-filter: blur(2px);">
+</div>
+
 <dialog id="active-dialog" class="entries__form" style="position: fixed; inset: 0; margin: auto; z-index: 1011;">
     
     <% if (action === "delete") { %>
@@ -85,6 +89,31 @@ const icons = {
             </div>
         </div>
 
+        <div class="form-recurrence-section">
+          <!-- Checkbox activation -->
+          <div class="recurrence-toggle-wrapper">
+            <input type="checkbox" id="recurrence-check" class="recurrence-checkbox" <%= event.rrule ? 'checked' : '' %>>
+            <label for="recurrence-check" class="recurrence-label">Répéter cet événement</label>
+          </div>
+
+          <!-- Options (Masqué par défaut via JS/CSS) -->
+          <div id="recurrence-options" class="recurrence-options-container" style="display: none;">
+            <label class="form-label">Fréquence</label>
+            <div class="custom-select-wrapper">
+              <select id="rec-freq" class="form-select">
+                <option value="DAILY">Tous les jours</option>
+                <option value="WEEKLY" selected>Toutes les semaines</option>
+                <option value="MONTHLY">Tous les mois</option>
+                <option value="YEARLY">Tous les ans</option>
+              </select>
+              <!-- Petite flèche custom CSS (optionnel, sinon utilise celle du navigateur) -->
+              <div class="select-arrow"></div> 
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" name="rrule" id="final-rrule" value="<%= event.rrule || '' %>">
+
         <div class="entries__form--footer">
             <% if (action === "edit") { %>
                 <button type="button" class="form--footer__button-cancel" style="border-color: var(--red2); color: var(--red1); width: auto; margin-right: auto; margin-left:15px ;padding: 5px;"
@@ -115,7 +144,7 @@ const icons = {
     <aside id="custom-timepicker" class="timepicker hide-datepicker" style="position: absolute; z-index: 2000; display: none;">
       <div class="timepicker-times__container" id="tp-list"></div>
     </aside>
-    <div id="popup-overlay" style="position: fixed; top:0; left:0; width:100%; height:100%; z-index:1049; display:none;"></div>
+    <div id="popup-overlay" style="position: fixed; top:0; left:0; width:100%; height:100%; z-index:1999; display:none;"></div>
     <!-- FIN POPUPS -->
 
     <% } %>
@@ -123,7 +152,16 @@ const icons = {
     <script>
      (function() {
          const form = document.getElementById('main-form');
-         if (!form) return; 
+         if (!form) return;
+
+         // --- NETTOYAGE PRÉVENTIF ---
+         // Si des anciens pickers traînent dans le body suite à une fermeture précédente, on les vire
+         ['custom-datepicker', 'custom-timepicker', 'popup-overlay'].forEach(id => {
+             const oldEl = document.getElementById(id);
+             if (oldEl && oldEl.parentElement === document.body) {
+                 oldEl.remove();
+             }
+         });
 
          // --- STATE ---
          const rawStart = "<%= event.start || new Date().toISOString() %>";
@@ -132,7 +170,6 @@ const icons = {
          let startDate = new Date(rawStart);
          let endDate = new Date(rawEnd);
          
-         // Sécurité si dates invalides
          if (isNaN(startDate.getTime())) startDate = new Date();
          if (isNaN(endDate.getTime())) endDate = new Date(startDate.getTime() + 3600000);
 
@@ -159,10 +196,21 @@ const icons = {
              finalStart: document.getElementById('final-start'),
              finalEnd: document.getElementById('final-end'),
              
-             //agendaSelect: document.getElementById('agenda-select'),
-             //finalColor: document.getElementById('final-color'),
-             dotPreview: document.getElementById('agenda-preview-dot')
+             dotPreview: document.getElementById('agenda-preview-dot'),
+             agendaSelect: document.getElementById('agenda-select'),
+             
+             // Éléments pour RRULE
+             checkRec: document.getElementById('recurrence-check'),
+             divRec: document.getElementById('recurrence-options'),
+             selFreq: document.getElementById('rec-freq'),
+             inpRrule: document.getElementById('final-rrule')
          };
+
+         // --- PORTAL : DÉPLACEMENT DANS LE BODY ---
+         // C'est CRUCIAL : on les sort de la <dialog> pour qu'ils ne soient plus coupés
+         if (els.datepicker) document.body.appendChild(els.datepicker);
+         if (els.timepicker) document.body.appendChild(els.timepicker);
+         if (els.overlay) document.body.appendChild(els.overlay);
 
          // --- HELPER FORMATS ---
          const fmtDate = (d) => new Intl.DateTimeFormat('fr-FR', { month: 'short', day: 'numeric', year: 'numeric' }).format(d);
@@ -172,18 +220,6 @@ const icons = {
              return h + ':' + m;
          };
 
-         // --- LOGIQUE COULEUR AGENDA ---
-         //function updateColorFromAgenda() {
-         //    if (!els.agendaSelect || !els.finalColor) return;
-         //    const selectedOption = els.agendaSelect.options[els.agendaSelect.selectedIndex];
-         //    if (selectedOption) {
-         //        const color = selectedOption.getAttribute('data-color');
-         //        els.finalColor.value = color;
-         //        if (els.dotPreview) els.dotPreview.style.backgroundColor = color;
-         //    }
-         //}
-         //if (els.agendaSelect) els.agendaSelect.addEventListener('change', updateColorFromAgenda);
-
          // --- UI UPDATE ---
          function updateUI() {
              if (els.trigDStart) els.trigDStart.textContent = fmtDate(startDate);
@@ -191,23 +227,33 @@ const icons = {
              if (els.trigDEnd) els.trigDEnd.textContent = fmtDate(endDate);
              if (els.trigTEnd) els.trigTEnd.textContent = fmtTime(endDate);
 
-             // Mise à jour des styles actifs
              if (els.trigDStart) els.trigDStart.classList.toggle('active-form-date', activeDateInput === 'start' && (!els.datepicker.classList.contains('hide-datepicker')));
              if (els.trigDEnd) els.trigDEnd.classList.toggle('active-form-date', activeDateInput === 'end' && (!els.datepicker.classList.contains('hide-datepicker')));
              
-             // Mise à jour des inputs cachés
              if (els.finalStart) els.finalStart.value = startDate.toISOString();
              if (els.finalEnd) els.finalEnd.value = endDate.toISOString();
          }
 
-         // --- DATEPICKER LOGIC ---
+         function updateColorFromAgenda() {
+             if (!els.agendaSelect || !els.dotPreview) return;
+             const selectedOption = els.agendaSelect.options[els.agendaSelect.selectedIndex];
+             if (selectedOption) {
+                 const color = selectedOption.getAttribute('data-color');
+                 els.dotPreview.style.backgroundColor = color;
+             }
+         }
+
+         // --- DATEPICKER RENDER ---
          function renderCalendar(dateObj) {
              if (!els.dpTitle || !els.dpGrid) return;
              const year = dateObj.getFullYear();
              const month = dateObj.getMonth();
              els.dpTitle.textContent = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(dateObj);
              els.dpGrid.innerHTML = '';
-             const firstDay = new Date(year, month, 1).getDay();
+             const firstDay = new Date(year, month, 1).getDay(); // Dimanche = 0
+             // Ajustement pour commencer Lundi si besoin (optionnel)
+             // const startOffset = (firstDay === 0 ? 6 : firstDay - 1); 
+             
              const daysInMonth = new Date(year, month + 1, 0).getDate();
              
              for (let i = 0; i < firstDay; i++) {
@@ -220,6 +266,11 @@ const icons = {
                  cell.className = 'datepicker__body--dates-cell';
                  const span = document.createElement('div');
                  span.className = 'datepicker__body--datename';
+                 
+                 // Highlight si c'est la date sélectionnée
+                 const isSelected = (activeDateInput === 'start' ? startDate : endDate).toDateString() === new Date(year, month, d).toDateString();
+                 if (isSelected) span.classList.add('datepicker__body--datename-selected');
+
                  span.textContent = d;
                  
                  span.onclick = (e) => {
@@ -230,10 +281,8 @@ const icons = {
                      if (activeDateInput === 'start') {
                          const diff = endDate - startDate;
                          startDate = newDate;
-                         // Si la date de fin devient antérieure, on décale la fin
                          if (endDate < startDate) endDate = new Date(startDate.getTime() + Math.max(diff, 3600000));
                      } else {
-                         // Si la date de fin est avant le début, on ramène le début
                          if (newDate < startDate) startDate = new Date(newDate);
                          endDate = newDate;
                      }
@@ -244,118 +293,91 @@ const icons = {
              }
          }
 
-         // --- TIMEPICKER LOGIC (AJOUTÉE) ---
+         // --- TIMEPICKER RENDER ---
          function renderTimepicker() {
              if (!els.tpList) return;
              els.tpList.innerHTML = '';
-             
-             // Génération des créneaux toutes les 15 minutes
              for (let h = 0; h < 24; h++) {
                  for (let m = 0; m < 60; m += 15) {
                      const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
                      const div = document.createElement('div');
-                     div.className = 'timepicker-time-item'; // Assurez-vous d'avoir du CSS pour cette classe (padding, hover, etc.)
+                     div.className = 'timepicker-time'; // Utilise la classe du CSS timepicker.css
                      div.textContent = timeStr;
                      
-                     // Style basique si pas de CSS défini
-                     div.style.padding = "8px 16px";
-                     div.style.cursor = "pointer";
-                     div.style.color = "var(--white1)";
-                     div.onmouseover = () => div.style.backgroundColor = "var(--white3)";
-                     div.onmouseout = () => div.style.backgroundColor = "transparent";
-
                      div.onclick = (e) => {
                          e.stopPropagation();
                          const targetDate = activeDateInput === 'start' ? startDate : endDate;
-                         targetDate.setHours(h);
-                         targetDate.setMinutes(m);
+                         targetDate.setHours(h); targetDate.setMinutes(m);
                          
                          if (activeDateInput === 'start') {
-                             // Si on change le début et que ça dépasse la fin, on pousse la fin d'1h
-                             if (startDate > endDate) {
-                                 endDate = new Date(startDate.getTime() + 3600000);
-                             }
+                             if (startDate > endDate) endDate = new Date(startDate.getTime() + 3600000);
                          } else {
-                             // Si on change la fin et que c'est avant le début, on recule le début
-                             if (endDate < startDate) {
-                                 startDate = new Date(endDate.getTime() - 3600000);
-                             }
+                             if (endDate < startDate) startDate = new Date(endDate.getTime() - 3600000);
                          }
-                         updateUI();
-                         closePopups();
+                         updateUI(); closePopups();
                      };
                      els.tpList.appendChild(div);
                  }
              }
          }
 
-         // Fonction générique d'ouverture (Date ou Time)
+         // --- POSITIONNEMENT (LE COEUR DU FIX) ---
          function openPopup(type, inputType, triggerEl) {
              if (!els.overlay) return;
-             
-             closePopups(); // Fermer les autres
+             closePopups(); 
 
              activeDateInput = inputType;
-             const rect = triggerEl.getBoundingClientRect();
-             const dialogRect = form.closest('dialog').getBoundingClientRect();
              
-             // Position horizontale (gauche)
-             const leftPos = (rect.left - dialogRect.left) + 'px';
+             // On récupère la position du déclencheur par rapport à la Fenêtre (Viewport)
+             const rect = triggerEl.getBoundingClientRect();
+             
+             // Plus besoin de calculer par rapport à dialogRect car on est dans le body
+             const leftPos = rect.left + 'px';
 
              if (type === 'date') {
                  if (!els.datepicker) return;
-                 
                  dpCurrentDate = new Date(inputType === 'start' ? startDate : endDate);
                  renderCalendar(dpCurrentDate);
 
-                 // 1. On rend le datepicker visible mais transparent pour mesurer sa hauteur
-                 els.datepicker.style.visibility = 'hidden';
                  els.datepicker.classList.remove('hide-datepicker'); 
-                 const dpHeight = els.datepicker.offsetHeight;
-                 els.datepicker.style.visibility = 'visible';
-
-                 // 2. Logique de positionnement
-                 const spaceBelow = window.innerHeight - rect.bottom;
                  
-                 // Si c'est le champ 'end' OU s'il y a moins de 300px en bas, on met au-dessus
-                 if (inputType === 'end' || spaceBelow < dpHeight) {
-                     // Position au-dessus : Top du champ - Hauteur datepicker - 5px de marge
-                     els.datepicker.style.top = (rect.top - dialogRect.top - dpHeight - 5) + 'px';
-                 } else {
-                     // Position en dessous (comportement par défaut)
-                     els.datepicker.style.top = (rect.bottom - dialogRect.top + 5) + 'px';
-                 }
+                 // Calcul hauteur/place
+                 const dpHeight = 216; // Hauteur approximative du CSS
+                 const spaceBelow = window.innerHeight - rect.bottom;
 
+                 if (spaceBelow < dpHeight) {
+                     // Place au-dessus
+                     els.datepicker.style.top = (rect.top - dpHeight - 5) + 'px';
+                 } else {
+                     // Place en dessous
+                     els.datepicker.style.top = (rect.bottom + 5) + 'px';
+                 }
                  els.datepicker.style.left = leftPos;
 
              } else if (type === 'time') {
-                 // Même logique pour le timepicker si vous le souhaitez
                  if (!els.timepicker) return;
                  renderTimepicker();
+                 els.timepicker.style.display = 'block';
                  
-                 els.timepicker.style.display = 'block'; // On affiche pour mesurer
-                 const tpHeight = 200; // Hauteur approximative ou fixée en CSS
-                 
+                 const tpHeight = 200; 
                  const spaceBelow = window.innerHeight - rect.bottom;
 
-                 if (inputType === 'end' || spaceBelow < tpHeight) {
-                     els.timepicker.style.top = (rect.top - dialogRect.top - tpHeight - 5) + 'px';
+                 if (spaceBelow < tpHeight) {
+                     els.timepicker.style.top = (rect.top - tpHeight - 5) + 'px';
                  } else {
-                     els.timepicker.style.top = (rect.bottom - dialogRect.top + 5) + 'px';
+                     els.timepicker.style.top = (rect.bottom + 5) + 'px';
                  }
-                 
                  els.timepicker.style.left = leftPos;
                  
-                 // Scroll automatique
                  const currentHour = (inputType === 'start' ? startDate : endDate).getHours();
-                 if(els.tpList) els.tpList.scrollTop = currentHour * 4 * 34; 
+                 if(els.tpList) els.tpList.scrollTop = currentHour * 4 * 40; 
              }
              
              els.overlay.style.display = 'block';
              updateUI();
          }
 
-         // --- EVENT LISTENERS ---
+         // --- LISTENERS ---
          if (els.dpPrev) els.dpPrev.onclick = (e) => { e.stopPropagation(); dpCurrentDate.setMonth(dpCurrentDate.getMonth() - 1); renderCalendar(dpCurrentDate); };
          if (els.dpNext) els.dpNext.onclick = (e) => { e.stopPropagation(); dpCurrentDate.setMonth(dpCurrentDate.getMonth() + 1); renderCalendar(dpCurrentDate); };
          
@@ -363,35 +385,78 @@ const icons = {
              if (els.datepicker) els.datepicker.classList.add('hide-datepicker');
              if (els.timepicker) els.timepicker.style.display = 'none';
              if (els.overlay) els.overlay.style.display = 'none';
-             // Retirer les classes actives
              if (els.trigDStart) els.trigDStart.classList.remove('active-form-date');
              if (els.trigDEnd) els.trigDEnd.classList.remove('active-form-date');
          }
 
-         // Wiring Clicks
          if (els.trigDStart) els.trigDStart.onclick = (e) => openPopup('date', 'start', e.target);
          if (els.trigDEnd) els.trigDEnd.onclick = (e) => openPopup('date', 'end', e.target);
-         
-         // AJOUT : Wiring Timepicker
          if (els.trigTStart) els.trigTStart.onclick = (e) => openPopup('time', 'start', e.target);
          if (els.trigTEnd) els.trigTEnd.onclick = (e) => openPopup('time', 'end', e.target);
-
          if (els.overlay) els.overlay.onclick = closePopups;
+         if (els.agendaSelect) els.agendaSelect.addEventListener('change', updateColorFromAgenda);
+
+         // RRULE LOGIC
+         if (els.checkRec) {
+             // Init RRULE UI
+             if(els.inpRrule.value) {
+                 els.divRec.style.display = 'block';
+                 if(els.inpRrule.value.includes('DAILY')) els.selFreq.value = 'DAILY';
+                 if(els.inpRrule.value.includes('WEEKLY')) els.selFreq.value = 'WEEKLY';
+                 if(els.inpRrule.value.includes('MONTHLY')) els.selFreq.value = 'MONTHLY';
+                 if(els.inpRrule.value.includes('YEARLY')) els.selFreq.value = 'YEARLY';
+             }
+
+             const updateRruleString = () => {
+                 if(!els.checkRec.checked) {
+                     els.inpRrule.value = '';
+                     return;
+                 }
+                 els.inpRrule.value = `FREQ=${els.selFreq.value}`;
+             };
+
+             els.checkRec.addEventListener('change', () => {
+                 els.divRec.style.display = els.checkRec.checked ? 'block' : 'none';
+                 updateRruleString();
+             });
+             els.selFreq.addEventListener('change', updateRruleString);
+         }
 
          // Init
          updateUI(); 
+         updateColorFromAgenda();
 
+         // Afficher le dialog natif
          const dialog = document.getElementById('active-dialog');
-         if (dialog) {
-             dialog.showModal();
+         const backdrop = document.getElementById('manual-backdrop');
+         if (dialog) dialog.show();
+
+         const closeAll = () => {
+             document.getElementById('dialog-container').innerHTML = '';
+
+             if (els.datepicker) els.datepicker.remove();
+             if (els.timepicker) els.timepicker.remove();
+             if (els.overlay) els.overlay.remove();
+         };
+
+         if (backdrop) {
+             backdrop.addEventListener('click', closeAll);
          }
+         
+         // Sécurité supplémentaire si HTMX remplace le contenu sans déclencher 'close'
+         document.body.addEventListener('htmx:beforeSwap', (evt) => {
+             if (evt.target.id === 'dialog-container') {
+                 closeAll();
+             }
+         });
+
+         document.addEventListener('keydown', function escListener(e) {
+             if (e.key === 'Escape') {
+                 closeAll();
+                 document.removeEventListener('keydown', escListener);
+             }
+         });
 
      })();
     </script>
 </dialog>
-<style>
-    dialog::backdrop {
-        background: rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(2px);
-    }
-</style>

@@ -29,6 +29,17 @@ function saveUserSetting(key, value) {
 }
 
 /**
+ * @param {string} id
+ * @returns {string}
+ */
+function getRealId(id) {
+    if (typeof id === 'string' && id.includes('_recur_')) {
+        return id.split('_recur_')[0];
+    }
+    return id;
+}
+
+/**
  * La fonction Update. C'est une fonction pure qui calcule le nouvel état de l'application
  * en fonction de l'état actuel et du message reçu.
  *
@@ -40,7 +51,15 @@ export function update(msg, model) {
     console.log(msg.type);
     switch (msg.type) {
     case 'SET_VIEW': {
-        return { ...model, currentView: msg.payload, ui: { ...model.ui, viewSelectorOpen: false } };
+        //return { ...model, currentView: msg.payload, ui: { ...model.ui, viewSelectorOpen: false } };
+        const newView = msg.payload;
+        window.location.hash = newView;
+
+        return {
+            ...model,
+            currentView: newView,
+            ui: { ...model.ui, viewSelectorOpen: false }
+        };
     }
     case 'SET_DATE': {
         return { ...model, currentDate: startOfDay(msg.payload) };
@@ -75,15 +94,19 @@ export function update(msg, model) {
             description: event.description,
             start: event.start, // Les dates sont déjà au format ISO string dans le modèle
             end: event.end,
+            id_agenda: model.categories[event.categories]?.id,
+            rrule: event.rrule || ''
         });
         const editUrl = `/dialog/event-form?${params.toString()}`;
         triggerHtmxDialog(editUrl);
         return model;
     case 'DELETE_EVENT':
         const eventSupp = msg.payload;
+        const realId = getRealId(eventSupp.id);
+
         const paramsSupp = new URLSearchParams({
             action: "delete",
-            id: eventSupp.id,
+            id: realId,
             title: eventSupp.title,
         });
         const suppUrl = `/dialog/event-form?${paramsSupp.toString()}`;
@@ -96,7 +119,8 @@ export function update(msg, model) {
 
         if (name === 'form') {
             if (payload.id) {
-                const entry = model.entries.find(e => e.id === payload.id);
+                const realId = getRealId(payload.id);
+                const entry = model.entries.find(e => e.id === realId);
                 if (entry) {
                     const params = new URLSearchParams({
                         action: 'edit',
@@ -106,7 +130,9 @@ export function update(msg, model) {
                         start: entry.start.toISOString(),
                         end: entry.end.toISOString(),
                         color: model.categories[entry.category]?.color.replace('#', '') || '4a90e2',
-                        category: entry.category,
+                        //category: entry.category,
+                        id_agenda: model.categories[entry.category]?.id || '',
+                        rrule: entry.rrule || ''
                     });
                     triggerHtmxDialog(`/dialog/event-form?${params.toString()}`);
                 }
@@ -116,6 +142,7 @@ export function update(msg, model) {
                 // Si une date de début est fournie (ex: clic sur une cellule)
                 if (payload.startDate) {
                     params.set('start', payload.startDate.toISOString());
+                    params.set('end', addMinutes(payload.startDate, 60).toISOString());
                 }
                 triggerHtmxDialog(`/dialog/event-form?${params.toString()}`);
             }
@@ -123,7 +150,8 @@ export function update(msg, model) {
             return model;
         }
         if (name === 'entryOptions') {
-            newUiState.entryOptions = { entryId: payload.entryId, position: payload.position };
+            //newUiState.entryOptions = { entryId: payload.entryId, position: payload.position };
+            newUiState.entryOptions = { entryId: getRealId(payload.entryId), position: payload.position };
         } else if (name === 'deleteConfirmation') {
             newUiState.deleteConfirmation = { type: payload.type, id: payload.id };
         } else if (name === 'goto') {
@@ -177,21 +205,31 @@ export function update(msg, model) {
     }
     case 'CONFIRM_DELETION': {
         const { type, id } = model.ui.deleteConfirmation;
+
         if (type === 'entry' && id) {
-            const newEntries = model.entries.filter(e => e.id !== id);
+            const realId = getRealId(id);
+
+            triggerHtmxPost('/events/delete', { id: realId });
+
+            //const newEntries = model.entries.filter(e => {
+            //    const currentRealId = getRealId(e.id);
+            //    return currentRealId !== realId;
+            //});
+            const newEntries = model.entries.filter(e => e.id !== realId);
+
             const newUiState = {
                 ...model.ui,
                 activeModal: null,
                 deleteConfirmation: getInitialModel().ui.deleteConfirmation
             };
-            const newModel = {
+
+            return {
                 ...model,
                 entries: newEntries,
                 ui: newUiState,
             };
-
-            return newModel;
         }
+
         if (type === 'category' && id) {
             const categoryName = id;
             const categoryObj = model.categories[categoryName];
@@ -385,22 +423,26 @@ export function update(msg, model) {
         return newModel;
     }
     case 'SAVE_ENTRY': {
-        const savedEntry = {
-            ...msg.payload,
-            // Important : réhydrater les dates qui arrivent en string JSON
-            start: new Date(msg.payload.start),
-            end: new Date(msg.payload.end),
-        };
-        const index = model.entries.findIndex(e => e.id === savedEntry.id);
+        const savedEntry = msg.payload;
+
+        // 1. On vérifie si l'événement existe déjà (Mise à jour)
+        // Note : Dans le modèle, on stocke désormais les ID "réels" ("15", "16"), pas les virtuels
+        const exists = model.entries.some(e => e.id === savedEntry.id);
+        
         let newEntries;
 
-        if (index > -1) { // Mise à jour
-            newEntries = model.entries.map(e => e.id === savedEntry.id ? savedEntry : e);
-        } else { // Création
+        if (exists) {
+            // Remplacement : on parcourt le tableau et on remplace l'élément correspondant
+            newEntries = model.entries.map(e => 
+                e.id === savedEntry.id ? savedEntry : e
+            );
+        } else {
+            // Ajout : on ajoute à la fin
             newEntries = [...model.entries, savedEntry];
         }
-        const newModel = { ...model, entries: newEntries };
-        return newModel; // Sauvegarde dans le localStorage
+
+        // On retourne le nouveau modèle
+        return { ...model, entries: newEntries };
     }
 
     case 'ENTRY_DELETED': {

@@ -576,3 +576,105 @@
     cursor: default;
   }
 }
+
+.form-recurrence-section {
+  padding: 12px 20px; /* Même padding latéral que .entries__form--body */
+  border-top: 1px solid var(--darkgrey2);
+  margin-top: auto; /* Pousse vers le bas si espace dispo */
+  background-color: var(--black1);
+}
+
+.recurrence-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.recurrence-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary2); /* Couleur bleue du thème */
+}
+
+.recurrence-label {
+  color: var(--white2);
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.recurrence-options-container {
+  margin-top: 12px;
+  padding-left: 2px;
+  animation: fadeInRecurrence 200ms ease-in-out;
+}
+
+@keyframes fadeInRecurrence {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.form-label {
+  display: block;
+  color: var(--white3);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+/* Style identique aux inputs textuels de votre form.css */
+.form-select {
+  appearance: none; /* Retire le style natif du navigateur */
+  background-color: var(--black3);
+  border: 2px solid transparent;
+  color: var(--white1);
+  border-radius: 3px;
+  font-family: var(--primaryFont);
+  font-size: 14px;
+  font-weight: 400;
+  height: 42px;
+  line-height: 42px;
+  width: 100%;
+  padding: 0 12px;
+  cursor: pointer;
+  transition-duration: 250ms;
+  transition-property: border-color;
+  transition-timing-function: cubic-bezier(.33, 1, .68, 1);
+}
+
+.form-select:focus {
+  border-color: var(--mediumgrey2);
+  outline: none;
+}
+
+.form-select:hover {
+  background-color: var(--darkgrey0);
+}
+
+/* Wrapper pour ajouter une flèche custom (car appearance: none retire la flèche) */
+.custom-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.select-arrow {
+  position: absolute;
+  top: 0;
+  right: 12px;
+  height: 100%;
+  width: 10px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.select-arrow::after {
+  content: "";
+  border-color: var(--white3) transparent transparent transparent;
+  border-style: solid;
+  border-width: 5px 5px 0;
+  height: 0;
+  width: 0;
+}

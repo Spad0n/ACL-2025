@@ -55,13 +55,13 @@ function creerTableUtilisateur(dataBase) {
     });
 }
 
-function creerTableEvenement(dataBase){
+function creerTableEvenement(dataBase) {
     return new Promise( (res,rej) => {
-        const sql = 'CREATE TABLE IF NOT EXISTS evenements(id INTEGER PRIMARY KEY, id_agenda INTEGER, title TEXT NOT NULL, start DATETIME NOT NULL, end DATETIME NOT NULL, description TEXT, FOREIGN KEY (id_agenda) REFERENCES agendas(id))';
+        const sql = 'CREATE TABLE IF NOT EXISTS evenements(id INTEGER PRIMARY KEY, id_agenda INTEGER, title TEXT NOT NULL, start DATETIME NOT NULL, end DATETIME NOT NULL, description TEXT, rrule TEXT, FOREIGN KEY (id_agenda) REFERENCES agendas(id))';
         dataBase.run(sql, (err) => {
-            rej(new Error("Erreur lors de la création de la table evenements"));
+            if(err) rej(new Error("Erreur table evenements: " + err.message));
+            else res("Table evenements OK");
         });
-        res("Table evenements OK");
     });
 }
 
@@ -637,43 +637,32 @@ function changerEtatNotificationRefuse(dataBase, id){
 
     
 
-async function ajouterEvenement(dataBase, token,objectEvenement, callback) {
-   try{
-    const id_utilisateurRows = await recupUtilisateurID(dataBase, token);
-    if(id_utilisateurRows.length === 0){
-        throw new Error("utilisateur introuvable");
-    }
+async function ajouterEvenement(dataBase, token, objectEvenement, callback) {
+    try {
+        const id_utilisateurRows = await recupUtilisateurID(dataBase, token);
+        if(id_utilisateurRows.length === 0) throw new Error("Utilisateur introuvable");
 
-    //const id_utilisateur = id_utilisateurRows[0].id
-
-    //const agendas = await recupAgendaID(dataBase, id_utilisateur);
-    //if( agendas.length === 0){
-    //    throw new Error(" Agendas introuvable");
-    //}
-    //const id_agendas = agendas[0].id;
-   
-    const sql = 'INSERT INTO evenements(title, start, end, description, id_agenda) VALUES (?,?,?,?,?)';
-    dataBase.run(sql, [
-        objectEvenement.title,
-        objectEvenement.start,
-        objectEvenement.end,
-        objectEvenement.description,
-        //objectEvenement.color,
-        objectEvenement.id_agenda
-    ], function(err) {
-        if (err) {
-            console.error("Erreur ajout événement:", err.message);
-            if (callback) callback(err);
-        } else {
-            console.log(`Event ajouté avec l'id ${this.lastID}`);
-            objectEvenement.id = this.lastID.toString(); 
-            if (callback) callback(null, this.lastID);
-        }
-    });
-    }catch(err) {
-        console.error(err);
-    };
+        // On ajoute rrule dans l'INSERT
+        const sql = 'INSERT INTO evenements(title, start, end, description, id_agenda, rrule) VALUES (?,?,?,?,?,?)';
+        dataBase.run(sql, [
+            objectEvenement.title,
+            objectEvenement.start,
+            objectEvenement.end,
+            objectEvenement.description,
+            objectEvenement.id_agenda,
+            objectEvenement.rrule || null // Gestion du null si pas de récurrence
+        ], function(err) {
+            if (err) {
+                console.error("Erreur ajout:", err.message);
+                if (callback) callback(err);
+            } else {
+                objectEvenement.id = this.lastID.toString();
+                if (callback) callback(null, this.lastID);
+            }
+        });
+    } catch(err) { console.error(err); }
 }
+
 /**
 // ajouter un nouveau tag
 async function ajouterNouveauTag(dataBase, nomTag, id_utilisateur){
@@ -791,20 +780,20 @@ function ajouterEvenementsAgendaImporte(dataBase, idAgenda, objetEvenement) {
 
 
 function modifierEvenement(dataBase, objectEvenement, callback) {
-    const sql = 'UPDATE evenements SET title = ?, start = ?, end = ?, description = ?, id_agenda = ? WHERE id = ?';
+    const sql = 'UPDATE evenements SET title = ?, start = ?, end = ?, description = ?, id_agenda = ?, rrule = ? WHERE id = ?';
     dataBase.run(sql, [
         objectEvenement.title,
         objectEvenement.start,
         objectEvenement.end,
         objectEvenement.description,
         objectEvenement.id_agenda,
+        objectEvenement.rrule || null,
         objectEvenement.id
     ], function(err) {
         if (err) {
-            console.error("Erreur modification événement:", err.message);
+            console.error("Erreur modif:", err.message);
             if (callback) callback(err);
         } else {
-            console.log(`Event modifié avec l'id ${objectEvenement.id}`);
             if (callback) callback(null);
         }
     });

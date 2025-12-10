@@ -7,6 +7,7 @@ import { getWeekViewDates, localeFR } from '../dateUtils';
 import { Msg } from '../messages';
 import { hextorgba } from '../utils';
 import { calculateLayout } from './layoutUtils';
+import { getVisibleEvents } from '../eventUtils';
 
 /**
  * @typedef {import('../model').Model} Model
@@ -108,18 +109,18 @@ export default function weekView(model, dispatch) {
     const weekDates = getWeekViewDates(currentDate);
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
-    const activeCategories = new Set(
-        Object.keys(model.categories).filter(key => model.categories[key].active)
-    );
-    const visibleEntries = model.entries.filter(entry => activeCategories.has(entry.category));
+    // 1. Définir la fenêtre de vue (Semaine complète)
+    const viewStart = startOfDay(weekDates[0]);
+    const viewEnd = endOfDay(weekDates[6]);
 
-    const weekInterval = { start: weekDates[0], end: endOfDay(weekDates[6]) };
-    const weekEntries = visibleEntries.filter(e => isWithinInterval(e.start, weekInterval) || isWithinInterval(e.end, weekInterval) || (e.start < weekInterval.start && e.end > weekInterval.end));
+    // 2. Calcul dynamique des événements visibles
+    const weekEntries = getVisibleEvents(model.entries, viewStart, viewEnd, model.categories);
     
+    // 3. Séparation All-day / Timed
     const allDayEntries = weekEntries.filter(isMultiDayOrAllDay)
         .sort((a, b) => a.start - b.start);
 
-    // --- Logique de calcul de la disposition pour les événements "toute la journée" ---
+    // Layout All-day
     const lanes = [];
     const layoutInfo = new Map();
 
@@ -168,7 +169,6 @@ export default function weekView(model, dispatch) {
 
                 const gridColumnStart = startDayIndex + 1;
                 const gridColumnEnd = endDayIndex + 2;
-
                 const info = layoutInfo.get(entry.id);
 
                 return h('div.wv-allday-entry', {
@@ -176,7 +176,7 @@ export default function weekView(model, dispatch) {
                     style: {
                         gridColumn: `${gridColumnStart} / ${gridColumnEnd}`,
                         gridRow: `${info.lane} / ${info.lane + 1}`,
-                        backgroundColor: model.categories[entry.category]?.color || '#333',
+                        backgroundColor: entry.color || '#333',
                     },
                     on: {
                         click: (e) => {

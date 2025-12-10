@@ -18,6 +18,7 @@
     "gsap": "^3.13.0",
     "htmx.org": "^2.0.8",
     "pixi.js": "^8.14.0",
+    "rrule": "^2.8.1",
     "snabbdom": "^3.6.3"
   },
   "devDependencies": {

@@ -1,6 +1,8 @@
 import { h } from 'snabbdom';
 import { format, isSameDay, isToday, isSameMonth, getMonthViewDates } from '../dateUtils';
 import { Msg } from '../messages';
+import { getVisibleEvents } from '../eventUtils';
+import { startOfDay, endOfDay } from 'date-fns';
 
 /**
  * @typedef {import('../model').Model} Model
@@ -47,12 +49,6 @@ function renderCell(date, model, entriesByDate, dispatch) {
     const dateString = format(date, 'yyyy-MM-dd');
     const dayEntries = entriesByDate.get(dateString) || [];
     
-    // Logique pour afficher un nombre limité d'événements et grouper le reste
-    //const maxVisibleEntries = 2; // Peut être ajusté en fonction de la taille de la cellule
-    //const visibleEntries = dayEntries.slice(0, maxVisibleEntries);
-    const visibleEntries = dayEntries;
-    const hiddenEntriesCount = dayEntries.length - visibleEntries.length;
-
     // Définition des classes CSS pour la cellule et le numéro du jour
     const cellClasses = {
         'monthview--day': true,
@@ -82,24 +78,7 @@ function renderCell(date, model, entriesByDate, dispatch) {
             // Au clic sur une zone vide de la cellule, on ouvre le formulaire de création
             on: { click: () => dispatch(Msg.OpenModal('form', { startDate: date })) }
         }, [
-            ...visibleEntries.map(entry => renderEntry(entry, model, dispatch)),
-            // Affiche le groupe "+X de plus" s'il y a des événements cachés
-            //h('div.monthview--daygroup', {
-            //    on: { click: (e) => { e.stopPropagation(); handleDayClick(); } } // Cliquer sur le groupe mène aussi à la vue journalière
-            //}, [
-            //    h('div.monthview--grouped', [
-            //        h('div.monthview--daycontent__grouped-title', `+${hiddenEntriesCount} more`)
-            //    ])
-            //])
-            //hiddenEntriesCount > 0
-            //    ? h('div.monthview--daygroup', {
-            //        on: { click: (e) => { e.stopPropagation(); handleDayClick(); } } // Cliquer sur le groupe mène aussi à la vue journalière
-            //      }, [
-            //          h('div.monthview--grouped', [
-            //              h('div.monthview--daycontent__grouped-title', `+${hiddenEntriesCount} more`)
-            //          ])
-            //      ])
-            //    : null
+            ...dayEntries.map(entry => renderEntry(entry, model, dispatch)),
         ])
     ]);
 }
@@ -112,16 +91,14 @@ function renderCell(date, model, entriesByDate, dispatch) {
  */
 export default function monthView(model, dispatch) {
     const { currentDate } = model;
+    
     const dates = getMonthViewDates(currentDate);
-    //const weekdays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-    const weekdays = ['MON','TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    
+    const viewStart = startOfDay(dates[0]);
+    const viewEnd = endOfDay(dates[dates.length - 1]);
 
-    const activeCategories = new Set(
-        Object.keys(model.categories).filter(key => model.categories[key].active)
-    );
-    const visibleEntries = model.entries.filter(entry => activeCategories.has(entry.category));
+    const visibleEntries = getVisibleEvents(model.entries, viewStart, viewEnd, model.categories);
 
-    // Pré-traitement des événements pour les grouper par date (optimisation)
     const entriesByDate = visibleEntries.reduce((acc, entry) => {
         const dateKey = format(new Date(entry.start), 'yyyy-MM-dd');
         if (!acc.has(dateKey)) {
@@ -131,7 +108,7 @@ export default function monthView(model, dispatch) {
         return acc;
     }, new Map());
 
-    // La vue mensuelle peut avoir 5 ou 6 semaines
+    const weekdays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
     const isFiveWeeks = dates.length <= 35;
 
     return h('div.monthview', [

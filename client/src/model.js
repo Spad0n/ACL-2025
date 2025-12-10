@@ -101,7 +101,7 @@ const today = startOfDay(new Date());
 
         // --- Préférences utilisateur ---
         settings: {
-            theme: 'dark',
+            theme: 'light',
             sidebarCollapsed: false,
             language: language
         },

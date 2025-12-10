@@ -105,6 +105,18 @@ html, body {
     font-size: 1rem;
 }
 
+#pageSwitch {
+    display: flex;
+    margin-top: 5px;
+    margin-left: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background: #145dbb;
+    color: white;
+    font-size: 1rem;
+}
 
 
 #connexionBouton {
@@ -117,6 +129,10 @@ html, body {
     background: #145dbb;
 }
 
+#pageSwitch:hover {
+    background: #0e4081;
+}
+
 #connexionBouton:hover {
     background: #0e4081;
 }
@@ -124,3 +140,5 @@ html, body {
 #inscriptionBouton:hover {
     background: #0e4081;
 }
+
+

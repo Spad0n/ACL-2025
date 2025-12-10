@@ -1,37 +1,45 @@
-<h3>Demandes de partage</h3>
+<%
+  const isEn = userLang === 'en'; 
+%>
+
+<h3 style="color:var(--white3)"><%= isEn ? "Share requests" : "Demandes de partage" %></h3>
 
 <% if (!notificationsDemande || notificationsDemande.length === 0) { %>
-    <p>Aucune demande.</p>
+    <p style="color:var(--white3)"><%= isEn ? "No requests." : "Aucune demande." %></p>
 <% } else { %>
     <% notificationsDemande.forEach(n => { %>
         <div class="notif-item">
-            <strong><%= n.envoyeur %></strong> souhaite partager l’agenda 
+            <strong><%= n.envoyeur %></strong> <%= isEn ? "wants to share the calendar" : "souhaite partager l’agenda" %> 
             <em><%= n.agenda_nom %></em>
             <div>
                 <button 
                     hx-post="/notification/accepter"
                     hx-vals='{"id": <%= n.id %>}'  
-                    class="btn btn_primary">Accepter</button>
-
+                    class="btn btn_primary"><%= isEn ? "Accept" : "Accepter" %></button>
                 <button 
                     hx-post="/notification/refuser"
                     hx-vals='{"id": <%= n.id %>}'  
-                    class="btn">Refuser</button>
+                    class="btn"><%= isEn ? "Refuse" : "Refuser" %></button>
             </div>
         </div>
     <% }); %>
 <% } %>
 
+---
 
-<h3>Réponses à vos demandes</h3>
+<h3 style="color:var(--white3)"><%= isEn ? "Responses to your requests" : "Réponses à vos demandes" %></h3>
 
 <% if (!notificationRefusAcceptation || notificationRefusAcceptation.length === 0) { %>
-    <p>Aucune nouvelle réponse.</p>
+    <p style="color:var(--white3)"><%= isEn ? "No new responses." : "Aucune nouvelle réponse." %></p>
 <% } else { %>
     <% notificationRefusAcceptation.forEach(r => { %>
         <div class="notif-item" id="notif-<%= r.id %>">
-            <strong><%= r.type.toUpperCase() %></strong> – votre demande de partage pour l'agenda <strong><%= r.agenda_nom %></strong> à <strong><%= r.nom_utilisateur %></strong> a été pour 
-            <%= r.type === 'acceptation' ? "acceptée" : "refusée" %>
+            <strong><%= r.type.toUpperCase() %></strong> – 
+            <%= isEn ? "your share request for the calendar" : "votre demande de partage pour l'agenda" %> 
+            <strong><%= r.agenda_nom %></strong> 
+            <%= isEn ? "to" : "à" %> <strong><%= r.nom_utilisateur %></strong> 
+            <%= isEn ? "has been" : "a été" %> 
+            <%= r.type === 'acceptation' ? (isEn ? "accepted" : "acceptée") : (isEn ? "refused" : "refusée") %>
 
             <div>
                 <button

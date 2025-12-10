@@ -351,121 +351,124 @@ svg {
 }
 
 /* ===========================
-   LAYOUT GLOBAL
+   PAGE INFORMATIONS
 =========================== */
 
 body {
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--white1);
 }
 
-/* ===========================
-   CONTAINERS
-=========================== */
-
-.container {
-  width: 90%;
-  max-width: 800px;
-  padding: 1.5rem;
-  border-radius: 8px;
-  background-color: var(--black1);
-  color: var(--white1);
-  box-shadow: var(--box-shadow4);
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+h1 {
+    color: var(--white1);
+    font-size: 2rem;
+    margin-bottom: 1rem;
 }
 
-/* Titre dans container */
-.container > label:first-child {
-  font-size: 1.3rem;
-  font-weight: 500;
-  color: var(--white1);
-}
-
-/* ===========================
-   BOUTONS
-=========================== */
-
-button {
-  cursor: pointer;
-  background-color: var(--primary3);
-  color: var(--taskcolor0);
-  border-radius: 6px;
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
-  border: var(--bordergrey);
-  transition: 0.2s ease;
-  align-self: start; /* boutons alignés à gauche proprement */
-}
-
-button:hover {
-  background-color: var(--primary1);
-  box-shadow: var(--box-shadow2-hover);
-}
-
-/* Bouton retour un peu différent */
+/* Bouton retour */
 #boutonRetour {
-  background-color: var(--darkgrey3);
+    align-self: flex-start;
+    background-color: var(--darkgrey3);
+    color: var(--white1);
+    padding: 0.6rem 1rem;
+    border: var(--bordergrey);
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+    transition: 0.2s ease;
 }
 
 #boutonRetour:hover {
-  background-color: var(--primarylight1);
+    background-color: var(--primarylight1);
 }
 
 /* ===========================
-   INPUTS
+   FORMULAIRE
 =========================== */
 
-input[type="file"],
-select {
-  width: 100%;
-  max-width: 350px;
-  padding: 0.6rem;
-  border-radius: 6px;
-  background-color: var(--black0);
-  color: var(--white1);
-  border: var(--bordergrey);
-  font-size: 1rem;
+.form-container {
+    background-color: var(--black1);
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: var(--box-shadow4);
+    width: 90%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
 }
 
-/* ===========================
-   LABELS
-=========================== */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
 
+/* Labels */
 label {
-  font-weight: 500;
-  color: var(--white2);
+    font-weight: 500;
+    color: var(--white2);
 }
 
-/* ===========================
-   MESSAGES
-=========================== */
-
-#messageImporte {
-  margin-top: 0.5rem;
-  font-weight: 600;
-  color: var(--green1);
+/* Inputs */
+input[type="text"],
+input[type="password"] {
+    background-color: var(--black0);
+    color: var(--white1);
+    border: var(--bordergrey);
+    border-radius: 6px;
+    padding: 0.7rem;
+    font-size: 1rem;
+    width: 100%;
 }
 
-/* ===========================
-   RESPONSIVE
-=========================== */
+input[type="text"]:focus,
+input[type="password"]:focus {
+    outline: 2px solid var(--primary1);
+}
 
+/* Messages d’erreur */
+.error-label,
+#userPerr {
+    color: var(--error);
+    font-size: 0.9rem;
+}
+
+.info-text {
+    margin-top: 0.5rem;
+    color: var(--offwhite1);
+    font-size: 0.95rem;
+}
+
+/* Bouton submit */
+.submit-btn {
+    margin-top: 1rem;
+    background-color: var(--primary3);
+    color: var(--taskcolor0);
+    padding: 0.8rem 1.2rem;
+    border: var(--bordergrey);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s ease;
+    font-size: 1rem;
+}
+
+.submit-btn:hover {
+    background-color: var(--primary1);
+    box-shadow: var(--box-shadow2-hover);
+}
+
+/* Responsive */
 @media (max-width: 600px) {
-  .container {
-    width: 95%;
-  }
+    #boutonRetour {
+        width: 100%;
+    }
 
-  button {
-    width: 100%;
-  }
-
-  input[type="file"],
-  select {
-    width: 100%;
-  }
+    .form-container {
+        padding: 1.5rem;
+    }
 }
+

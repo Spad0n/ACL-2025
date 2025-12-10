@@ -55,24 +55,69 @@
 </script>
 
 <div id="conteneur1" class="actif">
-    <h1>Bienvenue chez le<br>CROQUEMITAINE</h1>
+     <button id="pageSwitch">ENG</button>
+    <h1 id="pageTitre">Bienvenue chez le<br>CROQUEMITAINE</h1>
     <form name="accountCreation" action="/account/new" method="POST">
-        <label for="username">Entrez le nom d'utilisateur</label>
+        <label id="pageUsername" for="username">Entrez le nom d'utilisateur</label>
         <input id="username" name="username" value="<%= locals.username ?? '' %>" />
         <label style="color: red"><%= locals.message ?? '' %></label>
-        <label for="password">Entrez le mot de passe</label>
+        <label id="password" for="password">Entrez le mot de passe</label>
         <input id="password" type="password" name="password" value="" />
         <label id="passwordMessage" style="color: red"></label>
-        <label for="passwordRepeated">Confirmez le mot de passe</label>
+        <label id="confirmPassword" for="passwordRepeated">Confirmez le mot de passe</label>
         <input type="password" id="passwordRepeated" value="" />
         <label id="passwordRepeatedMessage" style="color: red"></label>
         <input id="connexionBouton" type="submit" value="Créer le compte" />
     </form>
     <div id="boutons">
-        <p>ou</p>
-        <button id="inscriptionBouton" onclick="window.location.href='/login';">Se connecter</button>
+        <button id="inscriptionBouton" onclick="redirect();">Se connecter</button>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const bouton = document.getElementById("pageSwitch");
+        const username = document.getElementById("pageUsername");
+        const password = document.getElementById("password");
+        const confirmPassword = document.getElementById("confirmPassword");
+        const titre = document.getElementById("pageTitre");
+       
+        function appliquerLangue(langue){
+            if(langue === "ENG"){
+                titre.textContent = "Welcome at Boogeyman";
+                username.textContent = "Enter the username";
+                password.textContent = "Enter the password";
+                confirmPassword.textContent = "Confirm password"
+
+                document.getElementById("connexionBouton").value = "Create account";
+                document.getElementById("inscriptionBouton").textContent = "Login";
+                bouton.textContent = "FR";
+            }
+            else if(langue === "FR"){
+                titre.textContent ="Bienvenue chez le CROQUEMITAINE ";
+                username.textContent = "Entrez le nom d'utilisateur";
+                password.textContent = "Entrez le mot de passe";
+                confirmPassword.textContent = "Confirmez le mot de passe"
+
+                document.getElementById("connexionBouton").value = "Créer le compte";
+                document.getElementById("inscriptionBouton").textContent = "Se connecter";
+                bouton.textContent = "ENG"
+            }
+            localStorage.setItem("langue", langue);
+        }
+        const langueStockee = localStorage.getItem("langue") || "FR";
+        appliquerLangue(langueStockee);
+
+        bouton.addEventListener("click", () => {
+            const nouvelleLangue = (localStorage.getItem("langue") === "FR") ? "ENG" : "FR";
+            appliquerLangue(nouvelleLangue);
+        });
+    });
+
+   function redirect(){
+        window.location.href = "/login";
+   }
+</script>
 
 </body>
 </html>

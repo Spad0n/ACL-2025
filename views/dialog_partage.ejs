@@ -47,7 +47,7 @@
       }
     }
       (async function() {
-        const langue = await fetch("/getLangue", {method: 'POST'});
+        const langue = await fetch("/getLanguage", {method: 'POST'});
         const langueJson = await langue.json();
         const L = langueJson.language || "fr";
 

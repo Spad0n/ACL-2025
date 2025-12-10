@@ -29,7 +29,9 @@ import {
     agendaPartagePour,
     supprimerNotificationPartage,
     ajouterNotification,
-    recupNotificationTypeRefusAcceptation
+    recupNotificationTypeRefusAcceptation,
+    getSettings,
+    saveSettings,
 } from './fonctionsBdd.js';
 import { tr } from 'date-fns/locale';
 import { error } from 'console';
@@ -82,6 +84,41 @@ app.post("/account/new", routes.createAccount);
 
 app.post("/logUser", routes.login);
 
+app.get('/settings', async (req, res) => {
+    try {
+        const tokenSigne = req.cookies.accessToken;
+        if (!tokenSigne) return res.json({}); // Pas connecté = params par défaut
+
+        const token = jwt.verify(tokenSigne, process.env.SECRET);
+        const userRows = await recupUtilisateurID(bdd, token.username);
+        
+        if (userRows.length === 0) return res.status(404).json({});
+        
+        const settings = await getSettings(bdd, userRows[0].id);
+        res.json(settings);
+    } catch (err) {
+        console.error("Erreur chargement settings:", err);
+        res.status(500).json({}); // Fallback
+    }
+});
+
+app.post('/settings', async (req, res) => {
+    try {
+        const tokenSigne = req.cookies.accessToken;
+        if (!tokenSigne) return res.status(401).send();
+
+        const token = jwt.verify(tokenSigne, process.env.SECRET);
+        const userRows = await recupUtilisateurID(bdd, token.username);
+        
+        if (userRows.length > 0) {
+            await saveSettings(bdd, userRows[0].id, req.body);
+            res.json({ success: true });
+        }
+    } catch (err) {
+        console.error("Erreur sauvegarde settings:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 app.get('/events', async (req, res) => {
     const tokenSigne = req.cookies.accessToken;

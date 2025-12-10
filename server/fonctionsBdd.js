@@ -11,14 +11,47 @@ import levenshtein from "fast-levenshtein";
 
 const sqlite3 = sqlite3pkg.verbose();
 
+function getSettings(dataBase, userId) {
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT settings FROM utilisateurs WHERE id = ?";
+        dataBase.get(sql, [userId], (err, row) => {
+            if (err) return reject(err);
+            try {
+                const settings = row && row.settings ? JSON.parse(row.settings) : {};
+                resolve(settings);
+            } catch (e) {
+                resolve({});
+            }
+        });
+    });
+}
+
+function saveSettings(dataBase, userId, newSettingsPart) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const currentSettings = await getSettings(dataBase, userId);
+            
+            const updatedSettings = { ...currentSettings, ...newSettingsPart };
+            
+            const sql = "UPDATE utilisateurs SET settings = ? WHERE id = ?";
+            dataBase.run(sql, [JSON.stringify(updatedSettings), userId], function(err) {
+                if (err) return reject(err);
+                resolve(updatedSettings);
+            });
+        } catch (e) {
+            reject(e);
+        }
+    });
+}
+
 // Permet de créer la table UTILISATEURS dans le fichier bdd.db
 function creerTableUtilisateur(dataBase) {
     return new Promise( (res,rej) => {
-        const sql = `CREATE TABLE IF NOT EXISTS utilisateurs(id INTEGER PRIMARY KEY, username, password)`;
+        const sql = `CREATE TABLE IF NOT EXISTS utilisateurs(id INTEGER PRIMARY KEY, username TEXT, password TEXT, settings TEXT DEFAULT '{}')`;
         dataBase.run(sql, (err) => {
-            rej(new Error("Erreur lors de la création de la table utilisateurs"));
-        }) ;
-        res("Table utilisateurs OK");
+            if (err) rej(new Error("Erreur table utilisateurs: " + err.message));
+            else res("Table utilisateurs OK");
+        });
     });
 }
 
@@ -1041,5 +1074,7 @@ export { bdd ,
          supprimerNotificationPartage,
          ajouterNotification,
          recupNotificationTypeRefusAcceptation,
-         updateCouleurAgenda
+         updateCouleurAgenda,
+         getSettings,
+         saveSettings,
        };

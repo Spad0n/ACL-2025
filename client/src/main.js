@@ -86,11 +86,23 @@ export function triggerHtmxPost(url, data) {
     try {
         console.log("Tentative de récupération des données...");
         
-        // On charge d'abord les agendas (catégories) car on en a besoin pour mapper les événements
-        model.categories = await fetchAgendasFromBDD();
+        const [agendas, serverEvents, settingsRes] = await Promise.all([
+            fetchAgendasFromBDD(),
+            fetch('/events').then(r => r.json()),
+            fetch('/settings').then(r => r.json())
+        ]);
 
-        const response = await fetch('/events');
-        const serverEvents = await response.json();
+        model.categories = agendas;
+        model.settings = {
+            ...model.settings,
+            ...settingsRes,
+        };
+
+        localStorage.setItem('theme', model.settings.theme);
+        //model.categories = await fetchAgendasFromBDD();
+
+        //const response = await fetch('/events');
+        //const serverEvents = await response.json();
 
         const hydratedEntries = serverEvents.map(entry => {
             // On trouve le nom de la catégorie via l'ID agenda

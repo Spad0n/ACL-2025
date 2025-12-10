@@ -20,6 +20,14 @@ import deleteConfirmationView from './components/deleteConfirmationView';
  * @property {{key: string, value: any} | any} [payload] - Les données nécessaires pour exécuter la commande.
  */
 
+function saveUserSetting(key, value) {
+    fetch('/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value })
+    }).catch(err => console.error("Erreur sauvegarde setting:", err));
+}
+
 /**
  * La fonction Update. C'est une fonction pure qui calcule le nouvel état de l'application
  * en fonction de l'état actuel et du message reçu.
@@ -347,7 +355,15 @@ export function update(msg, model) {
         return { ...model, ui: { ...model.ui, goto: newGotoState } }; // Retourner un tableau vide
     }
     case 'SET_THEME': {
-        const newSettings = { ...model.settings, theme: msg.payload };
+        //const newSettings = { ...model.settings, theme: msg.payload };
+        //return { ...model, settings: newSettings };
+        const newTheme = msg.payload;
+        
+        // Sauvegarde asynchrone (Side Effect)
+        saveUserSetting('theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+
+        const newSettings = { ...model.settings, theme: newTheme };
         return { ...model, settings: newSettings };
     }
     case 'EXPORT_DATA': {

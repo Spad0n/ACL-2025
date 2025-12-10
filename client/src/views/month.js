@@ -108,8 +108,8 @@ export default function monthView(model, dispatch) {
     const dates = getMonthViewDates(currentDate);
     const locale = getLocale(model.settings.language);
     const weekdays = Array.from({ length: 7 }, (_, i) =>
-        format(new Date(1970, 0, i + 4), 'EEEEEE', { locale })
-        .charAt(0).toUpperCase() + format(new Date(1970, 0, i + 4), 'EEEEEE', { locale }).slice(1).toLowerCase()
+        format(new Date(1970, 0, i + 5), 'EEEEEE', { locale })
+        .charAt(0).toUpperCase() + format(new Date(1970, 0, i + 5), 'EEEEEE', { locale }).slice(1).toLowerCase()
     );
     
     const viewStart = startOfDay(dates[0]);

@@ -762,13 +762,14 @@ async function recupEvenementsTag(dataBase, id_tag){
 // --------------------------------------------------------------------------
 function ajouterEvenementsAgendaImporte(dataBase, idAgenda, objetEvenement) {
     return new Promise( (resolve,reject) => {
-	const sql = 'INSERT INTO evenements(title, start, end, description, id_agenda) VALUES (?,?,?,?,?)';
+	const sql = 'INSERT INTO evenements(title, start, end, description, id_agenda, rrule) VALUES (?,?,?,?,?,?)';
 	dataBase.run(sql, [
             objetEvenement.title,
             objetEvenement.start,
             objetEvenement.end,
             objetEvenement.description,
-            idAgenda
+            idAgenda,
+            objetEvenement.rrule || null
 	], (err) => {
 	    if(err) {
 		reject(err);
